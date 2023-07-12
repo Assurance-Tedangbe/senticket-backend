@@ -5,6 +5,7 @@ import java.util.List;
 import sn.estm.managingrestauranttickets.entities.Etudiant;
 
 public interface EtudiantService {
+    
         List<Etudiant> getAllEtudiants();
 
         void createEtudiant(Etudiant  etu);

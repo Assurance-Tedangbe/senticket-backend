@@ -5,7 +5,8 @@ import java.util.List;
 import sn.estm.managingrestauranttickets.entities.Menu;
 
 public interface MenuService {
-     List<Menu> getAllMenus();
+
+        List<Menu> getAllMenus();
 
         void createMenu(Menu menu);
 

@@ -1,43 +1,70 @@
 package sn.estm.managingrestauranttickets.services.serviceImpl;
 
 import java.util.List;
+import java.util.Optional;
 
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import lombok.extern.slf4j.Slf4j;
 import sn.estm.managingrestauranttickets.entities.Menu;
+import sn.estm.managingrestauranttickets.repositories.MenuRepository;
 import sn.estm.managingrestauranttickets.services.serviceInterfaces.MenuService;
 
 @Service
+@Slf4j
 public class MenuServiceImpl implements MenuService{
+
+    @Autowired
+    MenuRepository menuRepository;
 
     @Override
     public List<Menu> getAllMenus() {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getAllMenus'");
+        return menuRepository.findAll();
     }
 
     @Override
     public void createMenu(Menu menu) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'createMenu'");
+        menuRepository.save(menu);
+        log.info("added object {}", menu);
     }
 
     @Override
     public Menu getMenuById(Long idMenu) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'getMenuById'");
+        
+        Optional<Menu> optional = menuRepository.findById(idMenu);
+	    Menu menu = null;
+		if(optional.isPresent())
+		{
+			menu = optional.get(); 
+		}
+		else
+		{
+			throw new RuntimeException("This object doesn't exist" +idMenu);
+		}
+		   return menu;
     }
 
     @Override
-    public void updateMenu(Long idMenu, Menu menu) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'updateMenu'");
+    public void updateMenu(Long idMenu, Menu newMenu) {
+        Menu menu = this.getMenuById(idMenu);
+        
+        if(menu==null) 
+        throw new UnsupportedOperationException("update failed");
+        
+        else{
+          menu.setIdMenu(newMenu.getIdMenu());
+          menu.setTypeMenu(newMenu.getTypeMenu());
+          menu.setTicket(newMenu.getTicket());
+          menu.setEtudiant(newMenu.getEtudiant());
+          menuRepository.save(menu);
+          log.info("returned to postaman the update object {}", menu);
+        }
     }
 
     @Override
     public void deleteMenuById(Long idMenu) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'deleteMenuById'");
+        menuRepository.deleteById(idMenu);
     }
     
 }

@@ -12,7 +12,7 @@ public interface VendeurService {
 
     Vendeur getVendeurById(Long idVendeur);
 
-    void updateVendeur(Long idVendeur, Vendeur vendeur);
+    void updateVendeur(Long idVendeur, Vendeur newVendeur);
     
     void deleteVendeurById(Long idVendeur);
 
