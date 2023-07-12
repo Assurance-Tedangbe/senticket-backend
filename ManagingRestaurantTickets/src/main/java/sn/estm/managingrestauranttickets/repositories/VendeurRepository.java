@@ -1,0 +1,11 @@
+package sn.estm.managingrestauranttickets.repositories;
+
+import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.stereotype.Repository;
+
+import sn.estm.managingrestauranttickets.entities.Vendeur;
+
+@Repository
+public interface VendeurRepository extends JpaRepository<Vendeur, Long>{
+    
+}
