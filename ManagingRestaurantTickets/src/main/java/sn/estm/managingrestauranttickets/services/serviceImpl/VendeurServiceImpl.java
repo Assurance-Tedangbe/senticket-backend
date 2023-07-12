@@ -62,7 +62,7 @@ public class VendeurServiceImpl implements VendeurService{
         }
         else
 		 throw new UnsupportedOperationException("update failed");
-          //return null  
+         
     }
 
     @Override

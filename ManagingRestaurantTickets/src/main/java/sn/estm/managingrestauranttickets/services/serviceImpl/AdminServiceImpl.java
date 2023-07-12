@@ -8,8 +8,6 @@ import org.springframework.stereotype.Service;
 
 import lombok.extern.slf4j.Slf4j;
 import sn.estm.managingrestauranttickets.entities.Administrateur;
-import sn.estm.managingrestauranttickets.entities.Etudiant;
-import sn.estm.managingrestauranttickets.entities.Vendeur;
 import sn.estm.managingrestauranttickets.repositories.AdminRepository;
 import sn.estm.managingrestauranttickets.services.serviceInterfaces.AdminService;
 
