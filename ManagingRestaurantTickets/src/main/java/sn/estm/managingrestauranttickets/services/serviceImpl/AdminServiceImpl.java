@@ -25,7 +25,7 @@ public class AdminServiceImpl implements AdminService{
     }
 
     @Override
-    public void createTicket(Administrateur admin) {
+    public void createAdmin(Administrateur admin) {
           adminRepository.save(admin);    }
 
     @Override
