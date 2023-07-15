@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import sn.estm.managingrestauranttickets.entities.Crediter;
-import sn.estm.managingrestauranttickets.entities.Ticket;
 import sn.estm.managingrestauranttickets.services.serviceInterfaces.CrediterService;
 
 @RestController

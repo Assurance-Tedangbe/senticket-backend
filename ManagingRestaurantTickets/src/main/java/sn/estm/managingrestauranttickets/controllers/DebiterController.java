@@ -28,7 +28,7 @@ public class DebiterController {
         return debiterService.getAllDebits();
     }
     @PostMapping()
-    public void addDebit(@RequestBody Debiter debit) {
+    public void createDebit(@RequestBody Debiter debit) {
         debiterService.createDebit(debit);
     }
 

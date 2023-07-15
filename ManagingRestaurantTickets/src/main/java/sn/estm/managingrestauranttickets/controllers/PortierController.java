@@ -28,7 +28,7 @@ public class PortierController {
         return portierService.getAllPortiers();
     }
     @PostMapping()
-    public void addPortier(@RequestBody Portier portier) {
+    public void createPortier(@RequestBody Portier portier) {
         portierService.createPortier(portier);
     }
 

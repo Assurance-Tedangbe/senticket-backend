@@ -8,7 +8,7 @@ public interface AdminService {
 
         List<Administrateur> getAllAdmins();
 
-        void createTicket(Administrateur admin);
+        void createAdmin(Administrateur admin);
 
         Administrateur getAdminById(Long idAdmin);
 

@@ -28,7 +28,7 @@ public class MenuController {
         return menuService.getAllMenus();
     }
     @PostMapping()
-    public void addMenu(@RequestBody Menu newMenu) {
+    public void createMenu(@RequestBody Menu newMenu) {
         menuService.createMenu(newMenu);
     }
 

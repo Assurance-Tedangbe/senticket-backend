@@ -27,7 +27,7 @@ public class TicketController {
         return ticketService.getAllTickets();
     }
     @PostMapping()
-    public void addEleve(@RequestBody Ticket newTicket) {
+    public void createEleve(@RequestBody Ticket newTicket) {
         ticketService.createTicket(newTicket);
     }
 

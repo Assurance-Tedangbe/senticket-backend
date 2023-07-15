@@ -28,7 +28,7 @@ public class VendeurController {
         return vendeurService.getAllVendeurs();
     }
     @PostMapping()
-    public void addEleve(@RequestBody Vendeur newVendeur) {
+    public void createEleve(@RequestBody Vendeur newVendeur) {
         vendeurService.createVendeur(newVendeur);
     }
 

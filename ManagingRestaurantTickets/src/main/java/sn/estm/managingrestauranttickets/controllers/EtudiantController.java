@@ -28,7 +28,7 @@ public class EtudiantController {
         return etudiantService.getAllEtudiants();
     }
     @PostMapping()
-    public void addEtudiant(@RequestBody Etudiant etu) {
+    public void createEtudiant(@RequestBody Etudiant etu) {
         etudiantService.createEtudiant(etu);;
     }
 
