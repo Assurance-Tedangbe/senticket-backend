@@ -13,7 +13,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import sn.estm.managingrestauranttickets.entities.Administrateur;
-import sn.estm.managingrestauranttickets.entities.Compte;
 import sn.estm.managingrestauranttickets.services.serviceInterfaces.AdminService;
 
 @RestController
