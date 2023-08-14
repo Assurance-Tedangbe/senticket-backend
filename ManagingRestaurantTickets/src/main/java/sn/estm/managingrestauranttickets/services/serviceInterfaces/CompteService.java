@@ -15,5 +15,16 @@ public interface CompteService {
     void updateCompte(Long idCpt, Compte cpt);
     
     void deleteCompteById(Long idCompte);
+  //  custom methods
+
+     void  activerCompte(Long idCompte,Compte compte);
+
+     void  desactiverCompte(Long idCompte, Compte compte);
+
+     void crediterCompte(Compte compte, float amount);
+
+     void annulerRecharge(Long idCompte);
+
+     void débiterCompte(Long idCompte);
      
 }
