@@ -10,7 +10,7 @@ public interface EtudiantService {
     
         List<Etudiant> getAllEtudiants();
 
-        void createEtudiant(Etudiant  etu);
+        void createEtudiant(Etudiant  etudiant);
 
         Etudiant getEtudiantById(Long idEtudiant);
 
@@ -19,11 +19,15 @@ public interface EtudiantService {
         void deleteEtudiantById(Long idEtudiant);
     
         //  custom methods
-       void  activerCompte(Long idEtudiant, Compte compte);
 
        void  acheterTicket(Compte cpt, Ticket ticket);
 
-       Etudiant consulterCompte(Long idEtudiant);
+       void consulterCompte(Long idEtudiant);
 
-       void transfertArggent()
+       void transfertArgent(Etudiant etudiant, float montant);
+
+       void annulerTransfert(Etudiant etudiant, float montant);
+
+
+       
 }

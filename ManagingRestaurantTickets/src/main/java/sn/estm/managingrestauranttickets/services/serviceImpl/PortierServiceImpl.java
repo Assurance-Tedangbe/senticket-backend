@@ -66,5 +66,13 @@ public class PortierServiceImpl implements PortierService{
     @Override
     public void deletePortierById(Long idPortier) {
         portierRepository.deleteById(idPortier);
+    }
+
+    @Override
+    public void scannerCode() {
+    }
+
+    @Override
+    public void debiterCompte(Long idCompte, float amount) {
     }  
 }

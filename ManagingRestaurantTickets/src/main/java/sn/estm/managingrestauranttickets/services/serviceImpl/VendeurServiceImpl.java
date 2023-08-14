@@ -70,4 +70,5 @@ public class VendeurServiceImpl implements VendeurService{
 
         vendeurRepository.deleteById(idVendeur);
     }
+
 }

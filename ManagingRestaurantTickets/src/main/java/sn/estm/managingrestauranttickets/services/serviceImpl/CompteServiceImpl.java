@@ -66,5 +66,27 @@ public class CompteServiceImpl implements CompteService{
     public void deleteCompteById(Long idCompte) {
        compteRepository.deleteById(idCompte);        
     }
+
+    @Override
+    public void activerCompte(Long idCompte, Compte compte) {
+        // TODO Auto-generated method stub
+        throw new UnsupportedOperationException("Unimplemented method 'activerCompte'");
+    }
+
+    @Override
+    public void desactiverCompte(Long idCompte, Compte compte) {
+    }
+
+    @Override
+    public void crediterCompte(Compte compte, float amount) {
+    }
+
+    @Override
+    public void annulerRecharge(Long idCompte) {
+    }
+
+    @Override
+    public void debiterCompte(Long idCompte) {
+    }
     
 }

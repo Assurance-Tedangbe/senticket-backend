@@ -7,7 +7,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import lombok.extern.slf4j.Slf4j;
+import sn.estm.managingrestauranttickets.entities.Compte;
 import sn.estm.managingrestauranttickets.entities.Etudiant;
+import sn.estm.managingrestauranttickets.entities.Ticket;
 import sn.estm.managingrestauranttickets.repositories.EtudiantRepository;
 import sn.estm.managingrestauranttickets.services.serviceInterfaces.EtudiantService;
 
@@ -66,10 +68,51 @@ public class EtudiantServiceImpl implements EtudiantService{
         }
       
     }
-
     @Override
     public void deleteEtudiantById(Long idEtudiant) {
         etudiantRepository.deleteById(idEtudiant);
     }
+
+   @Override
+   public void acheterTicket(Compte cpt, Ticket ticket) {
+      
+   }
+
+   @Override
+   public void consulterCompte(Long idEtudiant) {
+      Etudiant etu = this.getEtudiantById(idEtudiant);
+      etu.getCompte().getSolde();
+      etu.getIdEtudiant();
+      etu.getCompte().getIdCpt();
+   }
+
+   @Override
+   public void transfertArgent(Etudiant etudiant, float montant) {
+   }
+
+   @Override
+   public void annulerTransfert(Etudiant etudiant, float montant) {
+   }
+
+   @Override
+   public void crediterCompte(Compte compte, float amount) {
+   }
+
+   @Override
+   public void annulerRecharge(Long idCompte, float amount) {
+   }
+
+    //custom services
+    /*
+     Etudiant consulterCompte(Long idEtudiant)
+     {
+
+     }
+     @GetMapping("/consultercompte/{idetu}")
+	 public Compte consultercompte(@PathVariable("idetu") Long idEtudiant) {
+		 Etudiant etu = this.getEtudiant(idEtudiant);
+		 return etu.getCompte();	
+	 }
+     */
     
 }
