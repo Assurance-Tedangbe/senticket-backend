@@ -69,8 +69,6 @@ public class CompteServiceImpl implements CompteService{
 
     @Override
     public void activerCompte(Long idCompte, Compte compte) {
-        // TODO Auto-generated method stub
-        throw new UnsupportedOperationException("Unimplemented method 'activerCompte'");
     }
 
     @Override
@@ -78,15 +76,39 @@ public class CompteServiceImpl implements CompteService{
     }
 
     @Override
-    public void crediterCompte(Compte compte, float amount) {
+    public void crediterCompte(Compte compte, Double amount, Long idCpt) {
+        Compte cpt = this.getCompteById(idCpt);
+        Double newAccount;
+        Double solde;
+        if(cpt==null)
+         throw new UnsupportedOperationException("operation failed");        
+        else{
+        solde = cpt.getSolde();
+        newAccount = solde+amount;
+        compte.setSolde(newAccount);
+        }
     }
 
-    @Override
-    public void annulerRecharge(Long idCompte) {
-    }
-
-    @Override
-    public void debiterCompte(Long idCompte) {
-    }
+     @Override
+    public void annulerRecharge(Compte compte, Long idCpt, Double amount) {
     
+        Compte cpt = this.getCompteById(idCpt);
+        Double oldAccount;
+        Double solde;
+        if(cpt==null)
+         throw new UnsupportedOperationException("operation failed");        
+        else{
+        solde = cpt.getSolde();
+        oldAccount = solde-amount;
+        compte.setSolde(oldAccount);
+        }
+    }
+
+    @Override
+    public void debiterCompte(Long idCompte, Double amount, Compte compte) {
+    
+        
+    
+    }
+
 }

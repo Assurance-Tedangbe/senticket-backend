@@ -15,16 +15,17 @@ public interface CompteService {
     void updateCompte(Long idCpt, Compte cpt);
     
     void deleteCompteById(Long idCompte);
-  //  custom methods
+ 
+    //  custom methods
+ 
+     void crediterCompte(Compte compte, Double amount, Long idCpt);
 
-     void  activerCompte(Long idCompte,Compte compte);
+     void annulerRecharge(Long idCpt, Double amount);
+   
+     void debiterCompte(Long idCompte, Double amount, Compte compte);
+
+     void  activerCompte(Long idCompte, Compte compte);
 
      void  desactiverCompte(Long idCompte, Compte compte);
-
-     void crediterCompte(Compte compte, float amount);
-
-     void annulerRecharge(Long idCompte);
-
-     void débiterCompte(Long idCompte);
      
 }
