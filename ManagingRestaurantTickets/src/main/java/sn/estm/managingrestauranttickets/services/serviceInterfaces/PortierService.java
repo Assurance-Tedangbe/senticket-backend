@@ -15,7 +15,5 @@ public interface PortierService {
     
     void deletePortierById(Long idPortier);
 
-   // custom methods
-
      void scannerCode();
 }

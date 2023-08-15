@@ -71,8 +71,5 @@ public class PortierServiceImpl implements PortierService{
     @Override
     public void scannerCode() {
     }
-
-    @Override
-    public void debiterCompte(Long idCompte, float amount) {
-    }  
+ 
 }

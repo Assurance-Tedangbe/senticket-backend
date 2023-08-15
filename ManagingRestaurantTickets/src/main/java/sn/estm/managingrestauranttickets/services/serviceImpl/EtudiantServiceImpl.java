@@ -93,26 +93,5 @@ public class EtudiantServiceImpl implements EtudiantService{
    @Override
    public void annulerTransfert(Etudiant etudiant, float montant) {
    }
-
-   @Override
-   public void crediterCompte(Compte compte, float amount) {
-   }
-
-   @Override
-   public void annulerRecharge(Long idCompte, float amount) {
-   }
-
-    //custom services
-    /*
-     Etudiant consulterCompte(Long idEtudiant)
-     {
-
-     }
-     @GetMapping("/consultercompte/{idetu}")
-	 public Compte consultercompte(@PathVariable("idetu") Long idEtudiant) {
-		 Etudiant etu = this.getEtudiant(idEtudiant);
-		 return etu.getCompte();	
-	 }
-     */
     
 }

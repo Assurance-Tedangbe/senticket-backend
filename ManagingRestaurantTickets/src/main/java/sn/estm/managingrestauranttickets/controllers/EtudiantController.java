@@ -16,7 +16,7 @@ import sn.estm.managingrestauranttickets.entities.Etudiant;
 import sn.estm.managingrestauranttickets.services.serviceInterfaces.EtudiantService;
 
 @RestController
-@RequestMapping("/api/etudints")
+@RequestMapping("/api/etudiants")
 public class EtudiantController {
 
     @Autowired
