@@ -76,7 +76,7 @@ public class CompteServiceImpl implements CompteService{
     }
 
     @Override
-    public void crediterCompte(Compte compte, Double amount, Long idCpt) {
+    public void crediterCompte(Compte compte, Double addedAmount, Long idCpt) {
         Compte cpt = this.getCompteById(idCpt);
         Double newAccount;
         Double solde;
@@ -84,13 +84,16 @@ public class CompteServiceImpl implements CompteService{
          throw new UnsupportedOperationException("operation failed");        
         else{
         solde = cpt.getSolde();
-        newAccount = solde+amount;
+        newAccount = solde+addedAmount;
         compte.setSolde(newAccount);
         }
+        /*  formulaire operation depot comportant
+         montant deposé,frais(OF),statut(effectué),nom de l'agent(facultatif),date et heure,
+          nouveau solde,ID transaction(lettres/digits) */
     }
 
      @Override
-    public void annulerRecharge(Compte compte, Double amount, Long idCpt) {
+    public void annulerRecharge(Compte compte, Double addedAmount, Long idCpt) {
     
         Compte cpt = this.getCompteById(idCpt);
         Double oldAccount;
@@ -99,16 +102,27 @@ public class CompteServiceImpl implements CompteService{
          throw new UnsupportedOperationException("operation failed");        
         else{
         solde = cpt.getSolde();
-        oldAccount = solde-amount;
+        oldAccount = solde-addedAmount;
         compte.setSolde(oldAccount);
         }
+         /*  formulaire operation annuler comportant
+         montant ,frais(OF),statut(annulé),date et heure, nouveau solde, ID transaction */
     }
 
     @Override
     public void debiterCompte(Long idCompte, Double amount, Compte compte) {
     
         
-    
+    /* formulaire operation retrait comportant
+       montant retiré,frais(OF),statut(effectué),nom de l'agent(facultatif),date et heure, 
+       nouveau solde, ID transaction */
     }
+
+    /* formulaire operation paiement(achat)
+     montant,statut(effectué),date et heure,nouveau solde; ID transaction */
+
+     /* formulaire operation transfert
+     montant reçu,frais(somme),statut(effectué),date et heure, nouveau solde, ID transaction */ 
+
 
 }
