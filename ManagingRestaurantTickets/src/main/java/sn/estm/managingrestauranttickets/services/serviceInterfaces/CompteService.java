@@ -20,7 +20,7 @@ public interface CompteService {
  
      void crediterCompte(Compte compte, Double amount, Long idCpt);
 
-     void annulerRecharge(Long idCpt, Double amount);
+     void annulerRecharge(Compte compte, Double amount, Long idCpt);
    
      void debiterCompte(Long idCompte, Double amount, Compte compte);
 

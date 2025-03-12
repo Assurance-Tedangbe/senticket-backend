@@ -1,0 +1,82 @@
+package sn.estm.managingrestauranttickets.controllers;
+
+import lombok.Data;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PutMapping;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.PatchMapping;
+
+import sn.estm.managingrestauranttickets.dto.UserDTO;
+import sn.estm.managingrestauranttickets.services.serviceInterfaces.UserService;
+
+import java.util.List;
+
+@Data
+@Slf4j
+@RestController
+@RequestMapping("/api/users")
+@RequiredArgsConstructor
+public class UserController {
+
+    private final UserService userService;
+
+    @PostMapping(consumes = "application/json")
+    @ResponseStatus(HttpStatus.CREATED)
+    public ResponseEntity<UserDTO> createUser(@RequestBody UserDTO userDto) {
+        return ResponseEntity.ok(userService.createUser(userDto));
+    }
+
+    @GetMapping(produces = "application/json")
+    public ResponseEntity<List<UserDTO>> getAllUsers() {
+        return ResponseEntity.ok(userService.findAllUsers());
+    }
+
+    @PutMapping(consumes = "application/json")
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity<UserDTO> updateUser(@RequestBody UserDTO userDto) {
+        return ResponseEntity.ok(userService.updateUser(userDto));
+    }
+
+    @DeleteMapping("/{userId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public ResponseEntity<Void> deleteUser(@PathVariable Long userId) {
+        userService.deleteUser(userId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PatchMapping(value = "/{userId}/password", consumes = "application/json")
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity<Void> updatePassword(@PathVariable Long userId, @RequestBody String password) {
+        userService.updatePassword(userId, password);
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping(value = "/{userId}", produces = "application/json")
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity<UserDTO> getUserById(@PathVariable Long userId) {
+        return ResponseEntity.ok(userService.readUserByUserId(userId));
+    }
+
+    @GetMapping(value = "/username/{username}", produces = "application/json")
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity<UserDTO> getUserByUsername(@PathVariable String username) {
+        return ResponseEntity.ok(userService.readUserByUsername(username));
+    }
+
+    @PostMapping(value = "/{username}/roles/{roleName}", consumes = "application/json")
+    public ResponseEntity<Void> addRoleToUser(@PathVariable String username, @PathVariable String roleName) {
+        userService.addRoleToUser(username, roleName);
+        return ResponseEntity.ok().build();
+    }
+
+}
