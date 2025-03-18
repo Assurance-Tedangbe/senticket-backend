@@ -45,7 +45,7 @@ public class Etudiant implements Serializable{
 	
 	@OneToOne(mappedBy="etudiant", cascade=CascadeType.ALL)
 	@JsonManagedReference
-	private Compte compte;
+	private Account compte;
 	//@JsonProperty(access=Access.WRITE_ONLY)
 	// to deal with bidirectional relationships in Jackson
 	//infinite recursion problem

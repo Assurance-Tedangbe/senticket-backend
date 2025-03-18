@@ -53,8 +53,8 @@ public class MenuServiceImpl implements MenuService{
         throw new UnsupportedOperationException("update failed");
         
         else{
-          menu.setIdMenu(newMenu.getIdMenu());
-          menu.setTypeMenu(newMenu.getTypeMenu());
+          menu.setMenuId(newMenu.getMenuId());
+          menu.setMenuType(newMenu.getMenuType());
           menu.setTicket(newMenu.getTicket());
           menu.setEtudiant(newMenu.getEtudiant());
           menuRepository.save(menu);

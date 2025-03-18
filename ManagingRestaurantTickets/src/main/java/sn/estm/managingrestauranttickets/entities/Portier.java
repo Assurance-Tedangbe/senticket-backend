@@ -38,7 +38,7 @@ public class Portier implements Serializable {
 	
 	@OneToMany(mappedBy="portier",cascade=CascadeType.ALL)
 	@JsonManagedReference
-	List<Debiter> listDebits;
+	List<Debit> listDebits;
 	
 	@OneToMany(mappedBy="portier",cascade=CascadeType.ALL)
 	@JsonManagedReference

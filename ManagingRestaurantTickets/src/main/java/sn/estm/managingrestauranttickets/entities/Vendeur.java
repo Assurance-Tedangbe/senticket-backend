@@ -38,6 +38,6 @@ public class Vendeur implements Serializable {
 	
 	@OneToMany(mappedBy="vendeur",cascade=CascadeType.ALL)
 	@JsonManagedReference
-	List<Crediter> listCredits;
+	List<Credit> listCredits;
     
 }

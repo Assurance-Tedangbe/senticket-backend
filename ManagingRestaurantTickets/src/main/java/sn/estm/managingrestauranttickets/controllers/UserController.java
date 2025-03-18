@@ -28,6 +28,14 @@ import java.util.List;
 @RequiredArgsConstructor
 public class UserController {
 
+    /*
+        role  Admin:
+        /api/users/
+        Crud utilisateurs,
+        Activer/Désactiver compte utilisateur
+        addAccountToUser
+        majProfil(=updateUser??) :  /{userId}/profil
+     */
     private final UserService userService;
 
     @PostMapping(consumes = "application/json")
@@ -41,9 +49,9 @@ public class UserController {
         return ResponseEntity.ok(userService.findAllUsers());
     }
 
-    @PutMapping(consumes = "application/json")
+    @PutMapping(value = "/{userId}", consumes = "application/json")
     @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity<UserDTO> updateUser(@RequestBody UserDTO userDto) {
+    public ResponseEntity<UserDTO> updateUser(@PathVariable("userId") Long userId, @RequestBody UserDTO userDto) {
         return ResponseEntity.ok(userService.updateUser(userDto));
     }
 
@@ -78,5 +86,7 @@ public class UserController {
         userService.addRoleToUser(username, roleName);
         return ResponseEntity.ok().build();
     }
+
+    //addCompteToUser:    @PostMapping(value = "/{username}/account/{accountName}"
 
 }

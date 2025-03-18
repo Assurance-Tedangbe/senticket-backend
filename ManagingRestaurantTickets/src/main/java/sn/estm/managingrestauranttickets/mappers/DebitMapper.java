@@ -1,5 +1,5 @@
 package sn.estm.managingrestauranttickets.mappers;
 
-public interface CrediterMapper {
+public interface DebitMapper {
     
 }

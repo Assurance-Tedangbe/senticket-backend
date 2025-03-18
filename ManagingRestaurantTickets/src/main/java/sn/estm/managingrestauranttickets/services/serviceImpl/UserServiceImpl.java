@@ -25,6 +25,13 @@ import java.util.stream.Collectors;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class UserServiceImpl implements UserService {
 
+    /*
+        Crud utilisateurs,
+        Activer/Désactiver compte utilisateur
+        addRoleToUser
+        addAccountToUser
+        majProfil
+     */
     final UserRepository userRepository;
     final RoleRepository roleRepository;
     final UserMapper userMapper;
@@ -116,4 +123,6 @@ public class UserServiceImpl implements UserService {
         user.getRoles().add(role);
         userRepository.save(user);
     }
+
+    //majProfilUser
 }

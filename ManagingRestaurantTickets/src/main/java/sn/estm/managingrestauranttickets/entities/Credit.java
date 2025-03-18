@@ -3,6 +3,7 @@ package sn.estm.managingrestauranttickets.entities;
 import java.io.Serializable;
 import java.time.LocalDate;
 
+
 import com.fasterxml.jackson.annotation.JsonBackReference;
 
 import jakarta.persistence.Entity;
@@ -20,25 +21,26 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "Debiter")
+@Table(name = "credits")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Debiter implements Serializable{
-    @Id
+public class Credit implements Serializable {
+   @Id
 	@GeneratedValue(strategy =GenerationType.IDENTITY)
-	private Long idDebit;
+	private Long creditId;
 	@Temporal(TemporalType.DATE)
-	private LocalDate dateDebit;
-	
+	private LocalDate creditDate;
+
 	@ManyToOne
-	@JoinColumn(name="idCpt")
+	@JoinColumn(name="accountId")
 	@JsonBackReference 
-	private Compte compte;
-	
+	private Account account;
+
 	@ManyToOne
-	@JoinColumn(name="idPortier")
-	@JsonBackReference 
-	private Portier portier;
+	@JoinColumn(name="userId")
+	@JsonBackReference
+	private User user;
+
 }

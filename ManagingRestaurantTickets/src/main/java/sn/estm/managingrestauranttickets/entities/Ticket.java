@@ -17,7 +17,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name = "Ticket")
+@Table(name = "tickets")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -25,15 +25,21 @@ import lombok.NoArgsConstructor;
 public class Ticket implements Serializable {
    @Id
    @GeneratedValue(strategy =GenerationType.IDENTITY)
-   private Long idTicket;
-   private double prix;
-   private Integer codePayement;
-   private boolean reserve;
-   
+   private Long ticketId;
+   private double price;
+   private Integer payementCode;
+   private boolean booked;
+
+   // asso avec compte necessaire
    @ManyToOne
-   @JoinColumn(name="idEtudiant")
+   @JoinColumn(name="accountId")
    @JsonBackReference
-   private Etudiant etudiant;
+   private Account account;
+
+   @ManyToOne
+   @JoinColumn(name="userId")
+   @JsonBackReference
+   private User user;
    
    @ManyToOne
    @JoinColumn(name="idMenu")

@@ -7,34 +7,34 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import lombok.extern.slf4j.Slf4j;
-import sn.estm.managingrestauranttickets.entities.Crediter;
-import sn.estm.managingrestauranttickets.repositories.CrediterRepository;
-import sn.estm.managingrestauranttickets.services.serviceInterfaces.CrediterService;
+import sn.estm.managingrestauranttickets.entities.Credit;
+import sn.estm.managingrestauranttickets.repositories.CreditRepository;
+import sn.estm.managingrestauranttickets.services.serviceInterfaces.CreditService;
 
 @Service
 @Slf4j
-public class CrediterServiceImpl implements CrediterService {
+public class CreditServiceImpl implements CreditService {
     
     @Autowired
-    CrediterRepository creditRepository;
+    CreditRepository creditRepository;
 
     @Override
-    public List<Crediter> getAllCredits() {
+    public List<Credit> getAllCredits() {
 
         return creditRepository.findAll();
     }
 
     @Override
-    public void createCredit(Crediter credit) {
+    public void createCredit(Credit credit) {
         
         creditRepository.save(credit);
         log.info("added object {}", credit);
         }
 
     @Override
-    public Crediter getCreditById(Long idCredit) {
-       Optional<Crediter> optional = creditRepository.findById(idCredit);
-	   Crediter credit = null;
+    public Credit getCreditById(Long idCredit) {
+       Optional<Credit> optional = creditRepository.findById(idCredit);
+	   Credit credit = null;
 		if(optional.isPresent())
 		{
 			credit = optional.get(); 
@@ -47,13 +47,13 @@ public class CrediterServiceImpl implements CrediterService {
         }
 
     @Override
-    public void updateCredit(Long idCredit, Crediter newCredit) {
+    public void updateCredit(Long idCredit, Credit newCredit) {
           
-		Crediter credit = this.getCreditById(idCredit);
+		Credit credit = this.getCreditById(idCredit);
         if(credit!=null) {
-            credit.setIdCredit(newCredit.getIdCredit());
-            credit.setDateCredit(newCredit.getDateCredit());
-            credit.setCompte(newCredit.getCompte());
+            credit.setCreditId(newCredit.getCreditId());
+            credit.setCreditDate(newCredit.getCreditDate());
+            credit.setAccount(newCredit.getAccount());
             credit.setVendeur(newCredit.getVendeur());
             creditRepository.save(credit);
             log.info("returned to postaman the update object {}", credit);

@@ -7,31 +7,31 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import lombok.extern.slf4j.Slf4j;
-import sn.estm.managingrestauranttickets.entities.Compte;
-import sn.estm.managingrestauranttickets.repositories.CompteRepository;
-import sn.estm.managingrestauranttickets.services.serviceInterfaces.CompteService;
+import sn.estm.managingrestauranttickets.entities.Account;
+import sn.estm.managingrestauranttickets.repositories.AccountRepository;
+import sn.estm.managingrestauranttickets.services.serviceInterfaces.AccountService;
 
 @Service
 @Slf4j
-public class CompteServiceImpl implements CompteService{
+public class AccountServiceImpl implements AccountService {
 
     @Autowired
-    CompteRepository compteRepository;
+    AccountRepository compteRepository;
     @Override
-    public List<Compte> getAllComptes() {
+    public List<Account> getAllComptes() {
         return compteRepository.findAll();
     }
 
     @Override
-    public void createCompte(Compte cpt) {
+    public void createCompte(Account cpt) {
         compteRepository.save(cpt);
     }
 
     @Override
-    public Compte getCompteById(Long idCpt) {
+    public Account getCompteById(Long idCpt) {
         
-        Optional<Compte> optional = compteRepository.findById(idCpt);
-	    Compte compte = null;
+        Optional<Account> optional = compteRepository.findById(idCpt);
+	    Account compte = null;
 		if(optional.isPresent())
 		{
 			compte = optional.get(); 
@@ -44,15 +44,15 @@ public class CompteServiceImpl implements CompteService{
     }
 
     @Override
-    public void updateCompte(Long idCpt, Compte newCpt) {
-      Compte cpt = this.getCompteById(idCpt);
+    public void updateCompte(Long idCpt, Account newCpt) {
+      Account cpt = this.getCompteById(idCpt);
         
         if(cpt==null) 
         throw new UnsupportedOperationException("update failed");        
         else{
-          cpt.setIdCpt(newCpt.getIdCpt());
-          cpt.setNumeroCompte(newCpt.getNumeroCompte());
-          cpt.setSolde(newCpt.getSolde());
+          cpt.setAccountId(newCpt.getAccountId());
+          cpt.setAccountNumber(newCpt.getAccountNumber());
+          cpt.setBalance(newCpt.getBalance());
           cpt.setDateCreation(newCpt.getDateCreation());
           cpt.setEtudiant(newCpt.getEtudiant());
           cpt.setListCredits(newCpt.getListCredits());
@@ -68,24 +68,24 @@ public class CompteServiceImpl implements CompteService{
     }
 
     @Override
-    public void activerCompte(Long idCompte, Compte compte) {
+    public void activerCompte(Long idCompte, Account compte) {
     }
 
     @Override
-    public void desactiverCompte(Long idCompte, Compte compte) {
+    public void desactiverCompte(Long idCompte, Account compte) {
     }
 
     @Override
-    public void crediterCompte(Compte compte, Double addedAmount, Long idCpt) {
-        Compte cpt = this.getCompteById(idCpt);
+    public void crediterCompte(Account compte, Double addedAmount, Long idCpt) {
+        Account cpt = this.getCompteById(idCpt);
         Double newAccount;
         Double solde;
         if(cpt==null)
          throw new UnsupportedOperationException("operation failed");        
         else{
-        solde = cpt.getSolde();
+        solde = cpt.getBalance();
         newAccount = solde+addedAmount;
-        compte.setSolde(newAccount);
+        compte.setBalance(newAccount);
         }
         /*  formulaire operation depot comportant
          montant deposé,frais(OF),statut(effectué),nom de l'agent(facultatif),date et heure,
@@ -93,24 +93,24 @@ public class CompteServiceImpl implements CompteService{
     }
 
      @Override
-    public void annulerRecharge(Compte compte, Double addedAmount, Long idCpt) {
+    public void annulerRecharge(Account compte, Double addedAmount, Long idCpt) {
     
-        Compte cpt = this.getCompteById(idCpt);
+        Account cpt = this.getCompteById(idCpt);
         Double oldAccount;
         Double solde;
         if(cpt==null)
          throw new UnsupportedOperationException("operation failed");        
         else{
-        solde = cpt.getSolde();
+        solde = cpt.getBalance();
         oldAccount = solde-addedAmount;
-        compte.setSolde(oldAccount);
+        compte.setBalance(oldAccount);
         }
          /*  formulaire operation annuler comportant
          montant ,frais(OF),statut(annulé),date et heure, nouveau solde, ID transaction */
     }
 
     @Override
-    public void debiterCompte(Long idCompte, Double amount, Compte compte) {
+    public void debiterCompte(Long idCompte, Double amount, Account compte) {
     
         
     /* formulaire operation retrait comportant

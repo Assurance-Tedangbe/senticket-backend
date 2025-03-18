@@ -53,10 +53,10 @@ public class TicketServiceImpl implements TicketService{
         throw new UnsupportedOperationException("Unimplemented method 'updateTicket'");
         
         else{
-          ticket.setIdTicket(newTicket.getIdTicket());
-          ticket.setCodePayement(newTicket.getCodePayement());
-          ticket.setPrix(newTicket.getPrix());
-          ticket.setReserve(newTicket.isReserve());
+          ticket.setTicketId(newTicket.getTicketId());
+          ticket.setPayementCode(newTicket.getPayementCode());
+          ticket.setPrice(newTicket.getPrice());
+          ticket.setBooked(newTicket.isBooked());
           ticket.setMenu(newTicket.getMenu());
           ticket.setEtudiant(newTicket.getEtudiant());
           ticketRepository.save(ticket);

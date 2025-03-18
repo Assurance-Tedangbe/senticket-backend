@@ -8,34 +8,34 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import lombok.extern.slf4j.Slf4j;
-import sn.estm.managingrestauranttickets.entities.Debiter;
-import sn.estm.managingrestauranttickets.repositories.DebiterRepository;
-import sn.estm.managingrestauranttickets.services.serviceInterfaces.DebiterService;
+import sn.estm.managingrestauranttickets.entities.Debit;
+import sn.estm.managingrestauranttickets.repositories.DebitRepository;
+import sn.estm.managingrestauranttickets.services.serviceInterfaces.DebitService;
 
 @Service
 @Slf4j
-public class DebiterServiceImpl implements DebiterService{
+public class DebitServiceImpl implements DebitService {
     
     @Autowired
-    DebiterRepository debitRepository;
+    DebitRepository debitRepository;
     
     @Override
-    public List<Debiter> getAllDebits() {
+    public List<Debit> getAllDebits() {
         return debitRepository.findAll();
     }
 
     @Override
-    public void createDebit(Debiter debit) {
+    public void createDebit(Debit debit) {
         
         debitRepository.save(debit);
         log.info("added object {}", debit);
         }
 
     @Override
-    public Debiter getDebitById(Long idDebit) {
+    public Debit getDebitById(Long idDebit) {
         
-       Optional<Debiter> optional = debitRepository.findById(idDebit);
-	   Debiter debit = null;
+       Optional<Debit> optional = debitRepository.findById(idDebit);
+	   Debit debit = null;
 		if(optional.isPresent())
 		{
 			debit = optional.get(); 
@@ -48,14 +48,13 @@ public class DebiterServiceImpl implements DebiterService{
 	    }
 
     @Override
-    public void updateDebit(Long idDebit, Debiter newDebit) {
+    public void updateDebit(Long idDebit, Debit newDebit) {
        
-        Debiter debit = this.getDebitById(idDebit);
+        Debit debit = this.getDebitById(idDebit);
         if(debit!=null) {
-            debit.setIdDebit(newDebit.getIdDebit());
-            debit.setDateDebit(newDebit.getDateDebit());
-            debit.setCompte(newDebit.getCompte());
-            debit.setPortier(newDebit.getPortier());
+            debit.setDebitId(newDebit.getDebitId());
+            debit.setDebitDate(newDebit.getDebitDate());
+            debit.setAccount(newDebit.getAccount());
             debitRepository.save(debit);
             log.info("returned to postaman the update object {}", debit);
             

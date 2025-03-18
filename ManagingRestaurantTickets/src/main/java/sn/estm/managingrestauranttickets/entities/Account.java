@@ -2,8 +2,6 @@ package sn.estm.managingrestauranttickets.entities;
 
 import java.io.Serializable;
 import java.time.LocalDate;
-import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
@@ -27,39 +25,41 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Entity
-@Table(name="Compte")
+@Table(name="accounts")
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class Compte implements Serializable {
+public class Account implements Serializable {
     @Id
 	@GeneratedValue(strategy =GenerationType.IDENTITY)
-	private Long idCpt;
+	private Long accountId;
 	@Column(length=25)
-	private String numeroCompte;
-	private Double solde;
+	private String accountNumber;
+	private Double balance;
 	@Temporal(TemporalType.DATE) //pour stocker que la date
 	private LocalDate dateCreation;
-	
+
 	@OneToOne
-	@JoinColumn(name="idEtudiant")
-	@JsonBackReference 
+	@JoinColumn(name="userId")
+	@JsonBackReference
 	// to deal with bidirectional relationships in Jackson
 	//infinite recursion problem
-	private Etudiant etudiant;
+	private User user;
 	
-	@OneToMany(mappedBy="compte",cascade=CascadeType.ALL)
+	@OneToMany(mappedBy="account",cascade=CascadeType.ALL)
 	@JsonManagedReference 
-	List<Crediter> listCredits;
+	List<Credit> listCredits;
 	
-	@OneToMany(mappedBy="compte",cascade=CascadeType.ALL)
+	@OneToMany(mappedBy="account",cascade=CascadeType.ALL)
 	@JsonManagedReference
-	List<Debiter> listDebits;
+	List<Debit> listDebits;
 	
-/* 	public Compte() {
+    /* 	public Compte() {
 	listCredits = new ArrayList<>();
 	listDebits = new ArrayList<>();
 	}
     */
+
+
 }
