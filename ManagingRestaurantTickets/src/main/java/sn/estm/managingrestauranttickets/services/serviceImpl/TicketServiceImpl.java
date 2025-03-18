@@ -58,7 +58,7 @@ public class TicketServiceImpl implements TicketService{
           ticket.setPrice(newTicket.getPrice());
           ticket.setBooked(newTicket.isBooked());
           ticket.setMenu(newTicket.getMenu());
-          ticket.setEtudiant(newTicket.getEtudiant());
+          ticket.setUser(newTicket.getUser());
           ticketRepository.save(ticket);
           log.info("returned to postaman the update object {}", ticket);
         }

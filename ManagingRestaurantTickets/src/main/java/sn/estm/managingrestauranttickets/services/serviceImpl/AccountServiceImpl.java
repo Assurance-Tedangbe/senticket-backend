@@ -54,7 +54,7 @@ public class AccountServiceImpl implements AccountService {
           cpt.setAccountNumber(newCpt.getAccountNumber());
           cpt.setBalance(newCpt.getBalance());
           cpt.setDateCreation(newCpt.getDateCreation());
-          cpt.setEtudiant(newCpt.getEtudiant());
+          cpt.setUser(newCpt.getUser());
           cpt.setListCredits(newCpt.getListCredits());
           cpt.setListDebits(newCpt.getListDebits());
           compteRepository.save(cpt);

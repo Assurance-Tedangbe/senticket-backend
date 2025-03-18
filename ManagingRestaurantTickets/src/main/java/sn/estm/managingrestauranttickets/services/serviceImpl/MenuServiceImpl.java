@@ -56,7 +56,7 @@ public class MenuServiceImpl implements MenuService{
           menu.setMenuId(newMenu.getMenuId());
           menu.setMenuType(newMenu.getMenuType());
           menu.setTicket(newMenu.getTicket());
-          menu.setEtudiant(newMenu.getEtudiant());
+          menu.setUser(newMenu.getUser());
           menuRepository.save(menu);
           log.info("returned to postaman the update object {}", menu);
         }

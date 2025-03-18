@@ -54,7 +54,7 @@ public class CreditServiceImpl implements CreditService {
             credit.setCreditId(newCredit.getCreditId());
             credit.setCreditDate(newCredit.getCreditDate());
             credit.setAccount(newCredit.getAccount());
-            credit.setVendeur(newCredit.getVendeur());
+            credit.setUser(newCredit.getUser());
             creditRepository.save(credit);
             log.info("returned to postaman the update object {}", credit);
            
