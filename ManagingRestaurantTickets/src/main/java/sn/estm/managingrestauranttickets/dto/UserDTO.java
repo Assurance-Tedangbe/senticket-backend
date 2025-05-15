@@ -24,6 +24,8 @@ public class UserDTO {
     @NotEmpty(message = "Username cannot be empty")
     String username;
 
+    String password;
+
     @NotEmpty(message = "UserFirstName cannot be empty")
     String userFirstName;
 

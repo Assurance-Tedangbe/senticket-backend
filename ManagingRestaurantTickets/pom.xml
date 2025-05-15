@@ -94,6 +94,7 @@
             <version>0.12.6</version>
         </dependency> -->
 
+        <!-- JWT (using io.jsonwebtoken library) -->
         <!-- JJWT API -->
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
