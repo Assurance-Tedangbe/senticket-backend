@@ -29,28 +29,31 @@ public class AuthController {
 
     /**
      * this method aims to authenticate the user and return a JWT token
-     * it authenticates a user using their username and password,
-     * and if the credentials are valid, generate and return a JWT token
-     * so the user can securely access protected endpoints in the application
-     *
-     * handles a login request by verifying the user's credentials using Spring Security,
-     * and if authentication is successful, it generates a JWT token and returns it
-     * in a structured JSON response. This allows the client to use the token
-     * for accessing protected resources.
+     * It handles a login request by verifying the user's credentials using Spring Security,
+     * and if the credentials are valid, generate  a JWT token and returns it in a structured
+     * JSON response so the user can use the token for accessing protected resources
      * @param authRequest
      * @return
      */
     @PostMapping("/login")
-    public ResponseEntity<?> authenticate(@RequestBody AuthRequest authRequest) {
+    public ResponseEntity<?> login(
+            @RequestBody AuthRequest authRequest) {
+        /* Takes a JSON payload with username and password from the client */
+
+        /* Verifies the credentials using Spring Security.
+           If invalid, it throws an exception automatically */
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(authRequest.getUsername(),
                         authRequest.getPassword())
         );
 
+        /* Loads full user details (roles, permissions, etc.) by username  */
         final UserDetails user = userDetailsService.loadUserByUsername(authRequest.getUsername());
+
+        /* Generates a JWT using the user’s username  */
         final String token = jwtService.generateToken(user);
 
+        /* Returns a 200 OK response with a JSON body */
         return ResponseEntity.ok(new AuthResponse(token));
     }
-
 }
