@@ -1,6 +1,8 @@
 package sn.estm.managingrestauranttickets.security.config;
 
-import org.springframework.beans.factory.annotation.Autowired;
+import lombok.AccessLevel;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -17,49 +19,32 @@ import org.springframework.security.web.SecurityFilterChain;
 import sn.estm.managingrestauranttickets.security.jwt.filter.JwtFilter;
 import sn.estm.managingrestauranttickets.services.CustomUserDetailsService;
 
-@Configuration
+/**
+ * Set up the SecurityFilterChain to secure endpoints and integrate the JWT filter.
+ */
+
 //@EnableWebSecurity
+@FieldDefaults(level = AccessLevel.PRIVATE)
+@RequiredArgsConstructor
+@Configuration
 public class SecurityConfig{
 
-    @Autowired
-    private CustomUserDetailsService customUserDetailsService;
-
-    private JwtFilter jwtFilter;
-
-   /* public SecurityConfig(CustomUserDetailsService userDetailsService) {
-        this.customUserDetailsService = userDetailsService;
-    }*/
-
-   /* final RestTemplateBuilder restTemplateBuilder;
-
-    final SecurityOauth2Properties securityOauth2Properties;
-
-    final AbstractRoleService abstractRoleService;*/
+    final CustomUserDetailsService customUserDetailsService;
 
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain securityFilterChain(HttpSecurity http,JwtFilter jwtFilter) throws Exception {
 
-       /* JwtIssuerAuthenticationManagerResolver jwtIssuerAuthenticationManagerResolver = new JwtIssuerAuthenticationManagerResolver(
-                new CustomTrustedIssuerJwtAuthenticationManagerResolver(
-                        Collections.unmodifiableCollection(securityOauth2Properties.issuerUris())::contains,
-                        restTemplateBuilder, securityOauth2Properties.proxyEnabled(),
-                        securityOauth2Properties.proxyHost(), securityOauth2Properties.proxyPort(),
-                        new GrantedAuthoritiesExtractor(abstractRoleService)));*/
-
-        /*
-          security management via HttpSecurity
-        */
+        /*  security management via HttpSecurity  */
         http
                 //.csrf(csrf -> csrf.disable())
                 .csrf(AbstractHttpConfigurer::disable)
-                // protection CSRF desactivation
 
+                // Desactivate session management (utile for JWT)
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                // Desactivate session management (utile for JWT)
 
+                // customUserDetailsService registration
                 .userDetailsService(customUserDetailsService)
-                // Register the customUserDetailsService
 
                 .headers(headers -> headers
                         .frameOptions(frame -> frame.disable()))
@@ -78,18 +63,9 @@ public class SecurityConfig{
                         // Toute autre requête emise vers l'appli doit être authentifiée
 
                 )
-
-               // .addFilter(new JwtAuthenticationFilter(authenticationManagerBean()))
-              //  .addFilterBefore(new JwtAuthorizationFilter(), UsernamePasswordAuthenticationFilter.class)
-
+                /*  jwtFilter is your custom filter that checks for a Bearer token
+                    in the header and sets the user context  */
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
-              /*  jwtFilter is your custom filter that checks for a Bearer token
-                in the header and sets the user context.*/
-
-
-              //  .oauth2ResourceServer(oauth2 -> oauth2.jwt(Customizer.withDefaults()))
-               /* .oauth2ResourceServer(oauth2 -> oauth2.jwt(jwt ->
-                        jwt.jwtAuthenticationConverter(jwtAuthenticationConverter())));*/
 
         return http.build();
     }
@@ -97,7 +73,9 @@ public class SecurityConfig{
     @Bean
     public AuthenticationManager authenticationManager(
             AuthenticationConfiguration authConfig) throws Exception {
-        return authConfig.getAuthenticationManager(); // uses your userDetailsService + PasswordEncoder automatically
+        return authConfig.getAuthenticationManager();
+        /*  Spring auto-registers DaoAuthenticationProvider and uses
+             userDetailsService + PasswordEncoder automatically      */
     }
 
     @Bean
@@ -105,7 +83,7 @@ public class SecurityConfig{
         return new BCryptPasswordEncoder(); // Password encryption, should be called later
     }
 
-   /* @Bean
+ /*  @Bean
     public DaoAuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new
                 DaoAuthenticationProvider();

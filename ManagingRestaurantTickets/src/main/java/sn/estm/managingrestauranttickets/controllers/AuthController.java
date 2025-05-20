@@ -1,7 +1,9 @@
 package sn.estm.managingrestauranttickets.controllers;
 
 
+import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -18,14 +20,15 @@ import sn.estm.managingrestauranttickets.services.JwtService;
 @RestController
 @RequestMapping("/authenticate")
 @RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class AuthController {
     /**
      * This controller will provide an endpoint to authenticate and generate the JWT token
      */
 
-    private final AuthenticationManager authenticationManager;
-    private final JwtService jwtService;
-    private final CustomUserDetailsService userDetailsService;
+    final AuthenticationManager authenticationManager;
+    final JwtService jwtService;
+    final CustomUserDetailsService userDetailsService;
 
     /**
      * this method aims to authenticate the user and return a JWT token

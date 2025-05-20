@@ -4,7 +4,8 @@ import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import lombok.RequiredArgsConstructor;
+import lombok.AccessLevel;
+import lombok.experimental.FieldDefaults;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -18,6 +19,7 @@ import sn.estm.managingrestauranttickets.services.JwtService;
 import java.io.IOException;
 
 @Component
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class JwtFilter extends OncePerRequestFilter {
     /**
      * It checks incoming HTTP requests for a JWT token,
@@ -29,9 +31,9 @@ public class JwtFilter extends OncePerRequestFilter {
     /* OncePerRequestFilter ensures this filter runs once per HTTP request */
 
     @Autowired
-    private JwtService jwtService;
+    JwtService jwtService;
     @Autowired
-    private CustomUserDetailsService userDetailsService;
+    CustomUserDetailsService userDetailsService;
 
     /**
      * This method contains the actual filtering logic that runs for every request
