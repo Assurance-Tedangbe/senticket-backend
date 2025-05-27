@@ -30,12 +30,12 @@ import java.util.Set;
 @Builder
 public class User {
     @Column(unique = true, nullable = false)
-    @NotBlank(message = "Your User needs a username.")
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long userId;
 
     @Column(nullable = false, unique = true)
+    @NotBlank(message = "User needs a username.")
     @Size(min = 3, max = 100)
     private String username;
 

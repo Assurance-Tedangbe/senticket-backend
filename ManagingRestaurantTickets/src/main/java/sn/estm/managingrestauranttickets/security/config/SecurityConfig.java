@@ -23,7 +23,6 @@ import sn.estm.managingrestauranttickets.services.CustomUserDetailsService;
  * Set up the SecurityFilterChain to secure endpoints and integrate the JWT filter.
  */
 
-//@EnableWebSecurity
 @FieldDefaults(level = AccessLevel.PRIVATE)
 @RequiredArgsConstructor
 @Configuration
@@ -83,7 +82,7 @@ public class SecurityConfig{
         return new BCryptPasswordEncoder(); // Password encryption, should be called later
     }
 
- /*  @Bean
+    /* @Bean
     public DaoAuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new
                 DaoAuthenticationProvider();

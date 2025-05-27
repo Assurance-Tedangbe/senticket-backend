@@ -59,4 +59,5 @@ public class AuthController {
         /* Returns a 200 OK response with a JSON body */
         return ResponseEntity.ok(new AuthResponse(token));
     }
+
 }

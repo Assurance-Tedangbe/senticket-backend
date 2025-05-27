@@ -19,7 +19,7 @@ import java.util.Set;
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class UserDTO {
 
-    private Long userId;
+    Long userId;
 
     @NotEmpty(message = "Username cannot be empty")
     String username;

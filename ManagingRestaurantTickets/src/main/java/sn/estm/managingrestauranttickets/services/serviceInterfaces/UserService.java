@@ -1,7 +1,6 @@
 package sn.estm.managingrestauranttickets.services.serviceInterfaces;
 
 import sn.estm.managingrestauranttickets.dto.UserDTO;
-import sn.estm.managingrestauranttickets.entities.User;
 
 import java.util.List;
 
