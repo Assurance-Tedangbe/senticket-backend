@@ -16,6 +16,7 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
 
 import org.springframework.security.web.SecurityFilterChain;
+import sn.estm.managingrestauranttickets.security.jwt.filter.JwtAuthenticationFilter;
 import sn.estm.managingrestauranttickets.security.jwt.filter.JwtFilter;
 import sn.estm.managingrestauranttickets.services.CustomUserDetailsService;
 
@@ -71,12 +72,18 @@ public class SecurityConfig{
     }
 
     @Bean
-    public AuthenticationManager authenticationManager(
+    public AuthenticationManager authenticationManagerBean(
             AuthenticationConfiguration authConfig) throws Exception {
         return authConfig.getAuthenticationManager();
         /*  Spring auto-registers DaoAuthenticationProvider and uses
              userDetailsService + PasswordEncoder automatically      */
     }
+
+    // this figure in video screenshot
+   /* @Bean
+    public AuthenticationManager authenticationManagerBean() throws Exception {
+        return super.authenticationManagerBean();
+    }*/
 
     @Bean
     public PasswordEncoder passwordEncoder() {
