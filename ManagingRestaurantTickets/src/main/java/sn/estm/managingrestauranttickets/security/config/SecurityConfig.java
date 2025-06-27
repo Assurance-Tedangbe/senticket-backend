@@ -60,8 +60,9 @@ public class SecurityConfig{
                                 .requestMatchers( new AntPathRequestMatcher("/api/debits/**")).hasAnyRole("ADMIN", "PORTIER")
                                 .anyRequest().authenticated()
                         // Toute autre requête emise vers l'appli doit être authentifiée
-
+                        //hasAuthority("ADMIN") or hasRole("ADMIN")
                 )
+               // .addFilter(new JwtAuthenticationFilter(authenticationManagerBean()))
                 /*  jwtFilter is your custom filter that checks for a Bearer token
                     in the header and sets the user context  */
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);

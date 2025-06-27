@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PostAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -39,12 +40,14 @@ public class UserController {
     private final UserService userService;
 
     @PostMapping(consumes = "application/json")
+    @PostAuthorize("hasAuthority('ADMIN')")
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<UserDTO> createUser(@RequestBody UserDTO userDto) {
         return ResponseEntity.ok(userService.createUser(userDto));
     }
 
     @GetMapping(produces = "application/json")
+    @PostAuthorize("hasAuthority('ADMIN')")
     public ResponseEntity<List<UserDTO>> getAllUsers() {
         return ResponseEntity.ok(userService.findAllUsers());
     }
@@ -56,6 +59,7 @@ public class UserController {
     }
 
     @DeleteMapping("/{userId}")
+    @PostAuthorize("hasAuthority('ADMIN')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public ResponseEntity<Void> deleteUser(@PathVariable Long userId) {
         userService.deleteUser(userId);
@@ -82,6 +86,7 @@ public class UserController {
     }
 
     @PostMapping(value = "/{username}/roles/{roleName}", consumes = "application/json")
+    @PostAuthorize("hasAuthority('@PostAuthorize(\"hasAuthority('ADMIN')\")')")
     public ResponseEntity<Void> addRoleToUser(@PathVariable String username, @PathVariable String roleName) {
         userService.addRoleToUser(username, roleName);
         return ResponseEntity.ok().build();

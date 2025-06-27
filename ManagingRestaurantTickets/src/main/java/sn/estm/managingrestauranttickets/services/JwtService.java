@@ -1,5 +1,6 @@
 package sn.estm.managingrestauranttickets.services;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
@@ -11,6 +12,10 @@ import org.springframework.stereotype.Service;
 import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
+
+import static org.springframework.security.config.Elements.JWT;
 
 @Service
 public class JwtService {
@@ -32,6 +37,18 @@ public class JwtService {
      * @return
      */
     public String generateToken(UserDetails userDetails) {
+       /* le refresh-token must be created after the access-token
+       String jwtRefreshToken = JWT.create()
+                .withSubject(userDetails.getUsername())
+                .withExpiresAt(new Date(System.currentTimeMillis()+15*60*1000))
+                .withIssuer(request.getRequestURL().toString())
+                .sign(algo1); // Algorithm algo1=Algorithm.HMAC256("mySecret1234");
+        Map<String,String> idToken=new HashMap<>();
+        idToken.put("access-token", jwtAccesToken);
+        idToken.put("access-token", jwtRefreshToken);
+        response.setContentType("application/json");
+        new ObjectMapper().writeValue(response.getOutputStream(), idToken);  */
+
         return Jwts.builder()
                 .setSubject(userDetails.getUsername())  // sets the username in the token payload
                 .setIssuedAt(new Date())                // sets the creation time

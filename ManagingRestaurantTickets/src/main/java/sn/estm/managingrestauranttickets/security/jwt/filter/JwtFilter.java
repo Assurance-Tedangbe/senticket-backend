@@ -1,5 +1,6 @@
 package sn.estm.managingrestauranttickets.security.jwt.filter;
 
+import com.nimbusds.jose.Algorithm;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -8,6 +9,8 @@ import lombok.AccessLevel;
 import lombok.experimental.FieldDefaults;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
@@ -17,6 +20,10 @@ import sn.estm.managingrestauranttickets.services.CustomUserDetailsService;
 import sn.estm.managingrestauranttickets.services.JwtService;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Collection;
+
+import static org.springframework.security.config.Elements.JWT;
 
 @Component
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -57,8 +64,28 @@ public class JwtFilter extends OncePerRequestFilter {
         /* Verifies that the header exists and starts with "Bearer ".
            Extracts the token and retrieves the username from it   */
         if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
-            jwt = authorizationHeader.substring(7);
-            username = jwtService.extractUsername(jwt);
+            //from resource 68,72-88,
+            try {
+                jwt = authorizationHeader.substring(7);
+                username = jwtService.extractUsername(jwt);
+
+                Algorithm algorithm=Algorithm.HMAC256("mysecret1234");
+                JWTVerifier jwtVerifier= JWT.require(algorithm).build();
+                DecodedJWT decodedJWT = jwtVerifier.verify(jwt);
+                username= decodedJWT.getSubject();
+                String[] roles=decodedJWT.getClaim("roles").asArray(String.class);
+                Collection<GrantedAuthority> authorities = new ArrayList<>();
+                for (String r:roles){
+                authorities.add(new SimpleGrantedAuthority(r));
+                }
+                UsernamePasswordAuthenticationToken authenticationToken=
+                    new UsernamePasswordAuthenticationToken(username,null,authorities);
+                SecurityContextHolder.getContext().setAuthentication(authenticationToken);
+
+            } catch (Exception e) {
+                response.setHeader("error-message", e.getMessage());
+                response.sendError(HttpServletResponse.SC_FORBIDDEN);
+            }
         }
 
         /* Continues only if: a username was extracted from the token.
