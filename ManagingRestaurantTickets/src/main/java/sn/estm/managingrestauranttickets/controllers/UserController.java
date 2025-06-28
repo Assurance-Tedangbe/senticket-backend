@@ -1,7 +1,9 @@
 package sn.estm.managingrestauranttickets.controllers;
 
+import lombok.AccessLevel;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,8 +29,8 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
+@FieldDefaults(level = AccessLevel.PRIVATE)
 public class UserController {
-
     /*
         role  Admin:
         /api/users/
@@ -37,7 +39,7 @@ public class UserController {
         addAccountToUser
         majProfil(=updateUser??) :  /{userId}/profil
      */
-    private final UserService userService;
+    final UserService userService;
 
     @PostMapping(consumes = "application/json")
     @PostAuthorize("hasAuthority('ADMIN')")
@@ -94,4 +96,24 @@ public class UserController {
 
     //addCompteToUser:    @PostMapping(value = "/{username}/account/{accountName}"
 
+/*    @GetMapping()
+    public List<UserDTO> listUsers(){
+        return userService.findAllUsers();
+    }
+
+    @PostMapping()
+    public UserDTO saveUser(@RequestBody UserDTO userDTO){
+        return  userService.createUser(userDTO);
+    }
+
+    @PostMapping(value = "/{username}/roles/{roleName}")
+    public void  addRoleToUser(@RequestBody RoleUserForm roleUserForm){
+        userService.addRoleToUser(roleUserForm.getUsername(), roleUserForm.getRoleName());
+    }*/
+
+}
+@Data
+class RoleUserForm{
+    private String username;
+    private String roleName;
 }
