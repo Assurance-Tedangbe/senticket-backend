@@ -1,5 +1,6 @@
 package sn.estm.managingrestauranttickets.entities;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import jakarta.persistence.Id;
@@ -41,6 +42,7 @@ public class User {
 
     @Column(nullable = false)
     @Size(min = 3, max = 100)
+    //@JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
 
     @Column(name = "UserFirstName")

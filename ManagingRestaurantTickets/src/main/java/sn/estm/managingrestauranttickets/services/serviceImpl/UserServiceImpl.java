@@ -4,6 +4,7 @@ import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import sn.estm.managingrestauranttickets.dto.UserDTO;
@@ -36,11 +37,13 @@ public class UserServiceImpl implements UserService {
     final RoleRepository roleRepository;
     final UserMapper userMapper;
     final RoleMapper roleMapper;
+    PasswordEncoder passwordEncoder;
 
     @Override
     public UserDTO createUser(UserDTO userDto) {
         log.info("Creating user with details: {}", userDto);
-
+        String pw=userDto.getPassword();
+        userDto.setPassword(passwordEncoder.encode(pw));
         User user = userMapper.toUser(userDto);
         User savedUser = userRepository.save(user);
 
