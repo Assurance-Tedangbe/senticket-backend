@@ -42,26 +42,27 @@ public class UserController {
     final UserService userService;
 
     @PostMapping(consumes = "application/json")
-    @PostAuthorize("hasAuthority('ADMIN')")
+    //@PostAuthorize("hasAuthority('ADMIN')")
     @ResponseStatus(HttpStatus.CREATED)
     public ResponseEntity<UserDTO> createUser(@RequestBody UserDTO userDto) {
         return ResponseEntity.ok(userService.createUser(userDto));
     }
 
     @GetMapping(produces = "application/json")
-    @PostAuthorize("hasAuthority('ADMIN')")
+    //@PostAuthorize("hasAnyAuthority('ADMIN', 'AGENT', 'ETUDIANT', 'PORTIER')")
     public ResponseEntity<List<UserDTO>> getAllUsers() {
         return ResponseEntity.ok(userService.findAllUsers());
     }
 
     @PutMapping(value = "/{userId}", consumes = "application/json")
+    //@PostAuthorize("hasAuthority('ADMIN')")
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<UserDTO> updateUser(@PathVariable("userId") Long userId, @RequestBody UserDTO userDto) {
         return ResponseEntity.ok(userService.updateUser(userDto));
     }
 
     @DeleteMapping("/{userId}")
-    @PostAuthorize("hasAuthority('ADMIN')")
+    //@PostAuthorize("hasAuthority('ADMIN')")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public ResponseEntity<Void> deleteUser(@PathVariable Long userId) {
         userService.deleteUser(userId);
@@ -69,6 +70,7 @@ public class UserController {
     }
 
     @PatchMapping(value = "/{userId}/password", consumes = "application/json")
+    //@PostAuthorize("hasAuthority('ADMIN')")
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<Void> updatePassword(@PathVariable Long userId, @RequestBody String password) {
         userService.updatePassword(userId, password);
@@ -76,19 +78,21 @@ public class UserController {
     }
 
     @GetMapping(value = "/{userId}", produces = "application/json")
+    //@PostAuthorize("hasAnyAuthority('ADMIN', 'AGENT', 'ETUDIANT', 'PORTIER')")
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<UserDTO> getUserById(@PathVariable Long userId) {
         return ResponseEntity.ok(userService.readUserByUserId(userId));
     }
 
     @GetMapping(value = "/username/{username}", produces = "application/json")
+    //@PostAuthorize("hasAnyAuthority('ADMIN', 'AGENT', 'ETUDIANT', 'PORTIER')")
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<UserDTO> getUserByUsername(@PathVariable String username) {
         return ResponseEntity.ok(userService.readUserByUsername(username));
     }
 
     @PostMapping(value = "/{username}/roles/{roleName}", consumes = "application/json")
-    @PostAuthorize("hasAuthority('@PostAuthorize(\"hasAuthority('ADMIN')\")')")
+    //@PostAuthorize("hasAuthority('@PostAuthorize(\"hasAuthority('ADMIN')\")')")
     public ResponseEntity<Void> addRoleToUser(@PathVariable String username, @PathVariable String roleName) {
         userService.addRoleToUser(username, roleName);
         return ResponseEntity.ok().build();

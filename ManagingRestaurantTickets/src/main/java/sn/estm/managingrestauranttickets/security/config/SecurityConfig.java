@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.experimental.FieldDefaults;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -39,6 +40,8 @@ public class SecurityConfig{
                 //.csrf(csrf -> csrf.disable())
                 .csrf(AbstractHttpConfigurer::disable)
 
+                //.formLogin(withDefaults()) // disable it when using jwt
+
                 // Desactivate session management (utile for JWT)
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
@@ -52,18 +55,26 @@ public class SecurityConfig{
                 .authorizeHttpRequests(auth -> auth
                                 .requestMatchers("/authenticate/login").permitAll()
                                 .requestMatchers("/api/menus/**").permitAll()
-                                .requestMatchers( new AntPathRequestMatcher("/api/roles/**")).hasRole("ADMIN")
-                                .requestMatchers( new AntPathRequestMatcher("/api/users/**")).hasRole("ADMIN")
-                                .requestMatchers( new AntPathRequestMatcher("/api/users/{userId}/profil")).hasAnyRole("ADMIN", "ETUDIANT")
+                                .requestMatchers(HttpMethod.GET, "/api/users/**").permitAll()
+                                .requestMatchers(HttpMethod.GET, "/api/roles/**").permitAll()
+                                .requestMatchers(HttpMethod.POST, "/api/users/**").hasAuthority("ADMIN")
+                                .requestMatchers(HttpMethod.PUT, "/api/users/**").hasAuthority("ADMIN")
+                                .requestMatchers(HttpMethod.PATCH, "/api/users/**").hasAuthority("ADMIN")
+                                .requestMatchers(HttpMethod.DELETE, "/api/users/**").hasAuthority("ADMIN")
+                                .requestMatchers(HttpMethod.POST, "/api/roles/**").hasAuthority("ADMIN")
+                                .requestMatchers(HttpMethod.PUT, "/api/roles/**").hasAuthority("ADMIN")
+                                .requestMatchers(HttpMethod.DELETE, "/api/roles/**").hasAuthority("ADMIN")
+                                //.requestMatchers( new AntPathRequestMatcher("/api/roles/**")).hasRole("ADMIN")
+                                //.requestMatchers( new AntPathRequestMatcher("/api/users/**")).hasRole("ADMIN")
+                                //.requestMatchers( new AntPathRequestMatcher("/api/users/{userId}/profil")).hasAnyRole("ADMIN", "ETUDIANT")
                                 .requestMatchers( new AntPathRequestMatcher("/api/comptes/**")).hasAnyRole("ADMIN", "AGENT", "ETUDIANT")
                                 .requestMatchers( new AntPathRequestMatcher("/api/credits/**")).hasAnyRole("ADMIN", "AGENT", "ETUDIANT")
                                 .requestMatchers( new AntPathRequestMatcher("/api/tickets/**")).hasAnyRole("ADMIN", "ETUDIANT")
                                 .requestMatchers( new AntPathRequestMatcher("/api/debits/**")).hasAnyRole("ADMIN", "PORTIER")
                                 .anyRequest().authenticated()
                         // Toute autre requête emise vers l'appli doit être authentifiée
-                        //hasAuthority("ADMIN") or hasRole("ADMIN")
                 )
-               // .addFilter(new JwtAuthenticationFilter(authenticationManagerBean()))
+               // .addFilter(new JwtAuthenticationFilter(authenticationManagerBean())) // from videos
                 /*  jwtFilter is your custom filter that checks for a Bearer token
                     in the header and sets the user context  */
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
@@ -75,6 +86,7 @@ public class SecurityConfig{
     public AuthenticationManager authenticationManagerBean(
             AuthenticationConfiguration authConfig) throws Exception {
         return authConfig.getAuthenticationManager();
+        // return super.authenticationManagerBean(); //from videos
         /*  Spring auto-registers DaoAuthenticationProvider and uses
              userDetailsService + PasswordEncoder automatically      */
     }
