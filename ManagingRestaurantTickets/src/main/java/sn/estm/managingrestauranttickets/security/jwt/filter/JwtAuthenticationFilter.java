@@ -1,5 +1,6 @@
 package sn.estm.managingrestauranttickets.security.jwt.filter;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.Algorithm;
 import com.nimbusds.jwt.JWT;
 import jakarta.servlet.FilterChain;
@@ -12,9 +13,12 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import sn.estm.managingrestauranttickets.entities.Role;
 
 import java.io.IOException;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilter {
@@ -47,6 +51,19 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
                 .withIssuer(request.getRequestId().toString())
                 .withClaim("roles", user.getAuthorities().stream().map(ga-> ga.getAuthority()).collect(Collectors.toList()))
                 .sign(alogo1);
+
+        String jwtRefreshToken= JWT.create()
+                .withSubject(user.getUsername())
+                .withExpiresAt(new Date(System.currentTimeMillis()+15*60*100))
+                .withIssuer(request.getRequestURL().toString())
+               // .withClaim("roles", user.getAuthorities().stream().map(ga-> ga.getAuthority()).collect(Collectors.toList()))
+                .sign(alogo1);
+        Map<String, String> idToken=new HashMap<>();
+        idToken.put("access-token",jwtAccessToken);
+        idToken.put("refresh-token",jwtRefreshToken);
+        response.setContentType("application/json");
+        new ObjectMapper().writeValue(response.getOutputStream(),idToken);
+
         response.setHeader("Authorization",jwtAccessToken);
 
        super.successfulAuthentication(request, response, chain, authResult);

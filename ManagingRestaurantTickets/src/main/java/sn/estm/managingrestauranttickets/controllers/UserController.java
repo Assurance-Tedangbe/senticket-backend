@@ -1,5 +1,7 @@
 package sn.estm.managingrestauranttickets.controllers;
 
+import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpServletResponse;
 import lombok.AccessLevel;
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -96,6 +98,11 @@ public class UserController {
     public ResponseEntity<Void> addRoleToUser(@PathVariable String username, @PathVariable String roleName) {
         userService.addRoleToUser(username, roleName);
         return ResponseEntity.ok().build();
+    }
+
+    @GetMapping(path = "/refreshToken")
+    public void refreshToken(HttpServletRequest request, HttpServletResponse response){
+
     }
 
     //addCompteToUser:    @PostMapping(value = "/{username}/account/{accountName}"
