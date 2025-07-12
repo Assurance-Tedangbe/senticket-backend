@@ -14,11 +14,6 @@ import lombok.experimental.FieldDefaults;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.access.prepost.PostAuthorize;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -30,8 +25,8 @@ import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.PatchMapping;
 
+import sn.estm.managingrestauranttickets.constantes.JWTUtil;
 import sn.estm.managingrestauranttickets.dto.UserDTO;
-import sn.estm.managingrestauranttickets.entities.User;
 import sn.estm.managingrestauranttickets.services.serviceInterfaces.UserService;
 
 import java.util.*;
@@ -113,28 +108,21 @@ public class UserController {
 
     /**
      * its purpose is to renew the AccessToken
+     * This endpoint must be accessible without authentication(permitAll())
      * @param request
      * @param response
      * @throws Exception
      */
     @GetMapping(path = "/refreshToken")
     public void refreshToken(HttpServletRequest request, HttpServletResponse response) throws  Exception{
-       String authToken = request.getHeader("Authorization");
-        if (authToken != null && authToken.startsWith("Bearer ")){
+       String authToken = request.getHeader(JWTUtil.AUTH_HEADER);
+        if (authToken != null && authToken.startsWith(JWTUtil.PREFIX_BEARER)){
             try {
-                String refreshToken = authToken.substring(7);
-                Algorithm algorithm=Algorithm.HMAC256("mysecret1234");
+                String refreshToken = authToken.substring(JWTUtil.PREFIX_BEARER.length());
+                Algorithm algorithm=Algorithm.HMAC256(JWTUtil.SECRET);
                 JWTVerifier jwtVerifier= JWT.require(algorithm).build();
                 DecodedJWT decodedJWT = jwtVerifier.verify(refreshToken);
                 String username= decodedJWT.getSubject();
-               /* String[] roles=decodedJWT.getClaim("roles").asArray(String.class);
-                Collection<GrantedAuthority> authorities = new ArrayList<>();
-                for (String r:roles){
-                    authorities.add(new SimpleGrantedAuthority(r));
-                }*/
-                /*UsernamePasswordAuthenticationToken authenticationToken=
-                        new UsernamePasswordAuthenticationToken(username,null,authorities);
-                SecurityContextHolder.getContext().setAuthentication(authenticationToken);*/
 
                 //check the blacklist
                 UserDTO userDTO = userService.readUserByUsername(username);
@@ -142,7 +130,7 @@ public class UserController {
                 //generate a new accessToken
                 String accessToken= JWT.create()
                         .withSubject(userDTO.getUsername())
-                        .withExpiresAt(new Date(System.currentTimeMillis()+5*60*1000))
+                        .withExpiresAt(new Date(System.currentTimeMillis()+JWTUtil.EXPIRE_ACCESS_TOKEN))
                         .withIssuer(request.getRequestURL().toString())
                         .withClaim("roles", userDTO.getRoles().stream().map(r-> r.getRoleName()).collect(Collectors.toList()))
                         .sign(algorithm);
@@ -156,8 +144,6 @@ public class UserController {
 
             } catch (Exception e) {
                 throw e;
-                /*response.setHeader("error-message", e.getMessage());
-                response.sendError(HttpServletResponse.SC_FORBIDDEN);*/
             }
         }
         else {
