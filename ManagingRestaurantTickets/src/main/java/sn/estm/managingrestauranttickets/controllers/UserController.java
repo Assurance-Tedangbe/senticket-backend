@@ -1,5 +1,10 @@
 package sn.estm.managingrestauranttickets.controllers;
 
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.JWTVerifier;
+import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.interfaces.DecodedJWT;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.AccessLevel;
@@ -10,6 +15,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PostAuthorize;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -22,9 +31,11 @@ import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.PatchMapping;
 
 import sn.estm.managingrestauranttickets.dto.UserDTO;
+import sn.estm.managingrestauranttickets.entities.User;
 import sn.estm.managingrestauranttickets.services.serviceInterfaces.UserService;
 
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Data
 @Slf4j
@@ -100,9 +111,58 @@ public class UserController {
         return ResponseEntity.ok().build();
     }
 
+    /**
+     * its purpose is to renew the AccessToken
+     * @param request
+     * @param response
+     * @throws Exception
+     */
     @GetMapping(path = "/refreshToken")
-    public void refreshToken(HttpServletRequest request, HttpServletResponse response){
+    public void refreshToken(HttpServletRequest request, HttpServletResponse response) throws  Exception{
+       String authToken = request.getHeader("Authorization");
+        if (authToken != null && authToken.startsWith("Bearer ")){
+            try {
+                String refreshToken = authToken.substring(7);
+                Algorithm algorithm=Algorithm.HMAC256("mysecret1234");
+                JWTVerifier jwtVerifier= JWT.require(algorithm).build();
+                DecodedJWT decodedJWT = jwtVerifier.verify(refreshToken);
+                String username= decodedJWT.getSubject();
+               /* String[] roles=decodedJWT.getClaim("roles").asArray(String.class);
+                Collection<GrantedAuthority> authorities = new ArrayList<>();
+                for (String r:roles){
+                    authorities.add(new SimpleGrantedAuthority(r));
+                }*/
+                /*UsernamePasswordAuthenticationToken authenticationToken=
+                        new UsernamePasswordAuthenticationToken(username,null,authorities);
+                SecurityContextHolder.getContext().setAuthentication(authenticationToken);*/
 
+                //check the blacklist
+                UserDTO userDTO = userService.readUserByUsername(username);
+
+                //generate a new accessToken
+                String accessToken= JWT.create()
+                        .withSubject(userDTO.getUsername())
+                        .withExpiresAt(new Date(System.currentTimeMillis()+5*60*1000))
+                        .withIssuer(request.getRequestURL().toString())
+                        .withClaim("roles", userDTO.getRoles().stream().map(r-> r.getRoleName()).collect(Collectors.toList()))
+                        .sign(algorithm);
+
+                Map<String, String> idToken=new HashMap<>();
+                idToken.put("access-token",accessToken);
+                idToken.put("refresh-token",refreshToken);
+                response.setContentType("application/json"); //indicate to the client that the response body content contains json data
+                new ObjectMapper().writeValue(response.getOutputStream(),idToken); //send the object in json format in the response body
+
+
+            } catch (Exception e) {
+                throw e;
+                /*response.setHeader("error-message", e.getMessage());
+                response.sendError(HttpServletResponse.SC_FORBIDDEN);*/
+            }
+        }
+        else {
+            throw new RuntimeException("Refresh token required");
+        }
     }
 
     //addCompteToUser:    @PostMapping(value = "/{username}/account/{accountName}"

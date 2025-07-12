@@ -1,6 +1,9 @@
 package sn.estm.managingrestauranttickets.security.jwt.filter;
 
-import com.nimbusds.jose.Algorithm;
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.JWTVerifier;
+import com.auth0.jwt.algorithms.Algorithm;
+import com.auth0.jwt.interfaces.DecodedJWT;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -22,8 +25,6 @@ import sn.estm.managingrestauranttickets.services.JwtService;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
-
-import static org.springframework.security.config.Elements.JWT;
 
 @Component
 @FieldDefaults(level = AccessLevel.PRIVATE)

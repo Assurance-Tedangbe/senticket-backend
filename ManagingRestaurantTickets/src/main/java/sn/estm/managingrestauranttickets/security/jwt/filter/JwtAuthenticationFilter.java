@@ -1,8 +1,8 @@
 package sn.estm.managingrestauranttickets.security.jwt.filter;
 
+import com.auth0.jwt.JWT;
+import com.auth0.jwt.algorithms.Algorithm;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.nimbusds.jose.Algorithm;
-import com.nimbusds.jwt.JWT;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServletRequest;
@@ -71,21 +71,21 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
                                             FilterChain chain, Authentication authResult) throws IOException, ServletException {
         System.out.println("SuccessfulAuthentication");
         User user=(User) authResult.getPrincipal();
-        Algorithm alogo1=Algorithm.HMAC256("mysecret1234");
+        Algorithm algo1=Algorithm.HMAC256("mysecret1234");
         String jwtAccessToken= JWT.create()
                 .withSubject(user.getUsername())
-                .withExpiresAt(new Date(System.currentTimeMillis()+5*60*100))
+                .withExpiresAt(new Date(System.currentTimeMillis()+5*60*1000))
                 .withIssuer(request.getRequestURL().toString())
                 .withClaim("roles", user.getAuthorities().stream().map(ga-> ga.getAuthority()).collect(Collectors.toList()))
-                .sign(alogo1);
+                .sign(algo1);
 
        // response.setHeader("Authorization",jwtAccessToken);
 
         String jwtRefreshToken= JWT.create()
                 .withSubject(user.getUsername())
-                .withExpiresAt(new Date(System.currentTimeMillis()+15*60*100))
+                .withExpiresAt(new Date(System.currentTimeMillis()+15*60*1000))
                 .withIssuer(request.getRequestURL().toString())
-                .sign(alogo1);
+                .sign(algo1);
         Map<String, String> idToken=new HashMap<>();
         idToken.put("access-token",jwtAccessToken);
         idToken.put("refresh-token",jwtRefreshToken);
