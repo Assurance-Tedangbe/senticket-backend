@@ -82,6 +82,12 @@ public class SecurityConfig{
         return http.build();
     }
 
+    /**
+     * with bean, I have the possibility to inject this object where I want
+     * @param authConfig
+     * @return
+     * @throws Exception
+     */
     @Bean
     public AuthenticationManager authenticationManagerBean(
             AuthenticationConfiguration authConfig) throws Exception {
