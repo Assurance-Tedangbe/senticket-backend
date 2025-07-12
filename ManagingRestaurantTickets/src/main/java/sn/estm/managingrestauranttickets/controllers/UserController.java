@@ -29,6 +29,7 @@ import sn.estm.managingrestauranttickets.constantes.JWTUtil;
 import sn.estm.managingrestauranttickets.dto.UserDTO;
 import sn.estm.managingrestauranttickets.services.serviceInterfaces.UserService;
 
+import java.security.Principal;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -149,6 +150,16 @@ public class UserController {
         else {
             throw new RuntimeException("Refresh token required");
         }
+    }
+
+    /**
+     * Given the authenticated user (principal), the method returns his profile
+     * @param principal
+     * @return
+     */
+    @GetMapping(path = "/profile")
+    public UserDTO profile(Principal principal){
+       return  userService.readUserByUsername(principal.getName());
     }
 
     //addCompteToUser:    @PostMapping(value = "/{username}/account/{accountName}"
