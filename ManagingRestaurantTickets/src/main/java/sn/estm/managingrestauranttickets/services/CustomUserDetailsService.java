@@ -16,6 +16,8 @@ import sn.estm.managingrestauranttickets.services.serviceInterfaces.UserService;
 import java.util.ArrayList;
 import java.util.Collection;
 
+import static org.hibernate.query.sqm.tree.SqmNode.log;
+
 /**
  * This service will load user details from the database or any data source.
  * In other words, it allows Spring Security to authenticate a user by fetching
@@ -41,7 +43,8 @@ public class CustomUserDetailsService implements UserDetailsService {
 
         // Fetch user from the database using userService
         UserDTO userDTO = userService.readUserByUsername(username);
-                //.orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
+        log.info(username);
+        //.orElseThrow(() -> new UsernameNotFoundException("User not found: " + username));
         Collection<GrantedAuthority> authorities = new ArrayList<>();
         userDTO.getRoles().forEach(r ->{
             authorities.add(new SimpleGrantedAuthority(r.getRoleName()));

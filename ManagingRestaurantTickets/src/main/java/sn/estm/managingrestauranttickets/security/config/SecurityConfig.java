@@ -57,7 +57,7 @@ public class SecurityConfig{
                                 .requestMatchers("/api/menus/**").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/api/users/**").permitAll()
                                 .requestMatchers(HttpMethod.GET, "/api/roles/**").permitAll()
-                                .requestMatchers(HttpMethod.POST, "/api/users/**").hasAuthority("ADMIN")
+                                .requestMatchers(HttpMethod.POST, "/api/users/**").permitAll()
                                 .requestMatchers(HttpMethod.PUT, "/api/users/**").hasAuthority("ADMIN")
                                 .requestMatchers(HttpMethod.PATCH, "/api/users/**").hasAuthority("ADMIN")
                                 .requestMatchers(HttpMethod.DELETE, "/api/users/**").hasAuthority("ADMIN")
@@ -71,7 +71,7 @@ public class SecurityConfig{
                                 .requestMatchers( new AntPathRequestMatcher("/api/credits/**")).hasAnyRole("ADMIN", "AGENT", "ETUDIANT")
                                 .requestMatchers( new AntPathRequestMatcher("/api/tickets/**")).hasAnyRole("ADMIN", "ETUDIANT")
                                 .requestMatchers( new AntPathRequestMatcher("/api/debits/**")).hasAnyRole("ADMIN", "PORTIER")
-                                .anyRequest().authenticated()
+                              //  .anyRequest().authenticated()
                         // Toute autre requête emise vers l'appli doit être authentifiée
                 )
                // .addFilter(new JwtAuthenticationFilter(authenticationManagerBean())) // from videos
