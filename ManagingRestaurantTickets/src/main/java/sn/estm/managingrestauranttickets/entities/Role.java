@@ -32,6 +32,18 @@ public class Role {
     @Column(nullable = false, unique = true)
     private String roleName;
 
+    /**
+     * Association bidirectionnelle Many-to-Many entre Role et User.
+     * Cette collection représente l'ensemble des utilisateurs associés à ce rôle.
+     * Le mapping est géré par l'attribut "roles" dans l'entité User.
+     */
     @ManyToMany(mappedBy = "roles")
+    @Builder.Default
     private Set<User> users = new HashSet<>();
+
+    /*
+     * Set ne permet pas de doublons. Chaque User ne peut apparaître
+     * qu'une seule fois dans le Set.
+     * avec List, le même utilisateur peut être ajouté plusieurs fois.
+     */
 }

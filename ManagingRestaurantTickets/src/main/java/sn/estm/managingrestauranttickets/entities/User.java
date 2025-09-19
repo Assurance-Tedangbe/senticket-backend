@@ -57,13 +57,21 @@ public class User {
     @Column(name = "UserEmailAddress")
     private String userEmailAddress;
 
-    @ManyToMany(fetch = FetchType.EAGER)
+    /**
+     * Représente la relation plusieurs-à-plusieurs entre l'utilisateur et les rôles.
+     * Cette propriété permet d'associer un ou plusieurs rôles à chaque
+     *  utilisateur via la table de jointure "users_roles".
+     * Le chargement des rôles est effectué de manière immédiate (EAGER). 
+     * Un utilisateur peut avoir plusieurs rôles.
+     * Et chaque rôle peut être attribué à plusieurs utilisateurs
+     */
+     @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
-            name = "user_roles",
-            joinColumns = @JoinColumn(name = "userId"),
-            inverseJoinColumns = @JoinColumn(name = "roleId")
+        name = "users_roles",
+        joinColumns = @JoinColumn(name = "user_id", referencedColumnName = "userId"),
+        inverseJoinColumns = @JoinColumn(name = "role_id", referencedColumnName = "roleId")
     )
-    private Set<Role> roles = new HashSet<>();
-
+    @Builder.Default
+    private Set<Role> roles = new HashSet<>();  
 
 }

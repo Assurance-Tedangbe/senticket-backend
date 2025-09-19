@@ -1,14 +1,19 @@
+/**
+ * Génères la classe UserDTO correspondant à la classe User en prenant
+ * en compte tous les attributs, y compris les validations, les
+ * annotations Lombok et les l'attribut role.
+ **/
+ 
 package sn.estm.managingrestauranttickets.dto;
-
-import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
-import jakarta.validation.constraints.NotEmpty;
-import lombok.Data;
-import lombok.NoArgsConstructor;
+import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.Size;
+import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
-import lombok.AccessLevel;
-import lombok.experimental.FieldDefaults;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.util.Set;
 
@@ -16,26 +21,28 @@ import java.util.Set;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-@FieldDefaults(level = AccessLevel.PRIVATE)
 public class UserDTO {
+    private Long userId;
 
-    Long userId;
+    @NotBlank(message = "Le nom d'utilisateur est obligatoire")
+    @Size(min = 3, max = 100, message = "Le nom d'utilisateur doit contenir entre 3 et 100 caractères")
+    private String username;
 
-    @NotEmpty(message = "Username cannot be empty")
-    String username;
+    @NotBlank(message = "Le mot de passe est obligatoire")
+    @Size(min = 6, message = "Le mot de passe doit contenir au moins 6 caractères")
+    private String password;
 
-    String password;
+    @NotBlank(message = "L'email est obligatoire")
+    @Email(message = "L'email doit être valide")
+    private String email;
 
-    @NotEmpty(message = "UserFirstName cannot be empty")
-    String userFirstName;
+    @NotNull(message = "Le rôle est obligatoire")
+    private Set<@Valid RoleDTO> roles;
 
-    @NotEmpty(message = "UserLastname cannot be empty")
-    String userLastName;
+    @NotBlank(message = "Le prénom est obligatoire")
+    private String userFirstName;
 
-    @Email
-    @NotEmpty(message = "Fill it out with your email")
-    String userEmailAddress;
+    @NotBlank(message = "Le nom est obligatoire")
+    private String userLastName;
 
-    @NotEmpty(message = "User must have at least one role")
-    Set<@Valid RoleDTO> roles; //Valide les objets à l'intérieur de la collection (ici, chaque RoleDTO).
 }
