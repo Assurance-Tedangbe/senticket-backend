@@ -1,4 +1,4 @@
-package sn.estm.managingrestauranttickets.services.serviceImpl;
+/* package sn.estm.managingrestauranttickets.services.serviceImpl;
 
 import java.util.List;
 import java.util.Optional;
@@ -89,7 +89,7 @@ public class AccountServiceImpl implements AccountService {
         }
         /*  formulaire operation depot comportant
          montant deposé,frais(OF),statut(effectué),nom de l'agent(facultatif),date et heure,
-          nouveau solde,ID transaction(lettres/digits) */
+          nouveau solde,ID transaction(lettres/digits) 
     }
 
      @Override
@@ -105,24 +105,25 @@ public class AccountServiceImpl implements AccountService {
         oldAccount = solde-addedAmount;
         compte.setBalance(oldAccount);
         }
-         /*  formulaire operation annuler comportant
-         montant ,frais(OF),statut(annulé),date et heure, nouveau solde, ID transaction */
+           formulaire operation annuler comportant
+         montant ,frais(OF),statut(annulé),date et heure, nouveau solde, ID transaction 
     }
 
     @Override
     public void debiterCompte(Long idCompte, Double amount, Account compte) {
     
         
-    /* formulaire operation retrait comportant
+     formulaire operation retrait comportant
        montant retiré,frais(OF),statut(effectué),nom de l'agent(facultatif),date et heure, 
-       nouveau solde, ID transaction */
+       nouveau solde, ID transaction 
     }
 
-    /* formulaire operation paiement(achat)
-     montant,statut(effectué),date et heure,nouveau solde; ID transaction */
+     formulaire operation paiement(achat)
+     montant,statut(effectué),date et heure,nouveau solde; ID transaction
 
-     /* formulaire operation transfert
-     montant reçu,frais(somme),statut(effectué),date et heure, nouveau solde, ID transaction */ 
+     formulaire operation transfert
+     montant reçu,frais(somme),statut(effectué),date et heure, nouveau solde, ID transaction 
 
 
 }
+ */

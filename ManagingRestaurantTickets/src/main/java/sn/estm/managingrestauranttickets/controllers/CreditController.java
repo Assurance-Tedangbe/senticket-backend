@@ -1,4 +1,4 @@
-package sn.estm.managingrestauranttickets.controllers;
+/* package sn.estm.managingrestauranttickets.controllers;
 
 import java.util.List;
 
@@ -19,11 +19,11 @@ import sn.estm.managingrestauranttickets.services.serviceInterfaces.CreditServic
 @RequestMapping("/api/credits")
 public class CreditController {
 
-    /*
+    
         role Admin, Etudiant,  Agent:    /api/credits:
         Transférer crédit(de compte à compte)   :      @PostMapping("{idCptExp}/compte/{idCptDest}")
         Annuler transfert crédit : @PostMapping("/{creditId}")
-     */
+     
     @Autowired
     CreditService creditService;
 
@@ -51,3 +51,4 @@ public class CreditController {
     }
     
 }
+ */

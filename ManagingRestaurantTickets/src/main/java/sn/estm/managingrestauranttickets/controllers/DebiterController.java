@@ -1,4 +1,4 @@
-package sn.estm.managingrestauranttickets.controllers;
+/* package sn.estm.managingrestauranttickets.controllers;
 
 import java.util.List;
 
@@ -19,12 +19,12 @@ import sn.estm.managingrestauranttickets.services.serviceInterfaces.DebitService
 @RequestMapping("/api/debits")
 public class DebiterController {
 
-    /*
+    
         role Admin, Portier:
         /api/debits:
         Débiter compte : @PostMapping("{idCpt}/compte/")
         Scanner code/vérifier identité étudiant :  @GetMapping("/code")
-     */
+     
     @Autowired
     DebitService debitService;
 
@@ -52,3 +52,4 @@ public class DebiterController {
     }
     
 }
+ */

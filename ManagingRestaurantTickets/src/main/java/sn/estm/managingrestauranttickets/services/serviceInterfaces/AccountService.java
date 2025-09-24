@@ -1,4 +1,4 @@
-package sn.estm.managingrestauranttickets.services.serviceInterfaces;
+/* package sn.estm.managingrestauranttickets.services.serviceInterfaces;
 
 import java.util.List;
 
@@ -29,3 +29,4 @@ public interface AccountService {
      void  desactiverCompte(Long idCompte, Account compte);
      
 }
+ */

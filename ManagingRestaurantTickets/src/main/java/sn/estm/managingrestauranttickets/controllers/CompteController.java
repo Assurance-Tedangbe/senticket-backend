@@ -1,4 +1,4 @@
-package sn.estm.managingrestauranttickets.controllers;
+/* package sn.estm.managingrestauranttickets.controllers;
 
 import java.util.List;
 
@@ -19,13 +19,13 @@ import sn.estm.managingrestauranttickets.services.serviceInterfaces.AccountServi
 @RequestMapping("/api/comptes")
 public class CompteController {
 
-    /*
+    
         role: Admin, Etudiant, Agent:   /api/comptes:
         Créditer/recharge compte :             @PostMapping("/{idCpt}/credit")
         Annuler recharge     :                 @PostMapping(/{idCpt})
         Consulter compte(= getcompteById) :    @GetMapping("/{idCpt}")
         crud compte (5 op)
-     */
+     
     @Autowired
     AccountService accountService;
 
@@ -52,3 +52,4 @@ public class CompteController {
        accountService.deleteCompteById(idCpt);
     }
 }
+ */
