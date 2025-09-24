@@ -8,7 +8,7 @@ public interface UserService {
 
     UserDTO createUser(UserDTO userDto);
 
-    List<UserDTO> findAllUsers();
+    List<UserDTO> readUsers();
 
     UserDTO updateUser(UserDTO userDto);
 

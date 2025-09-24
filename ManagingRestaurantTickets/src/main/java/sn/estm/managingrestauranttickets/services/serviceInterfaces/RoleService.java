@@ -8,7 +8,7 @@ public interface RoleService {
 
     RoleDTO createRole(RoleDTO roleDTO);
 
-    List<RoleDTO> findAllRoles();
+    List<RoleDTO> readRoles();
 
     RoleDTO readRoleByRoleId(Long roleId);
 

@@ -16,5 +16,11 @@ public interface UserRepository extends JpaRepository<User, Long> {
     /* Returns an Optional<User> to safely handle cases where a user
      with the given username may not exist, avoiding null pointer exceptions. */
     Optional<User> findByUsername(String username);
+
+    Optional<User> findByUserId(Long userId);
+
+    boolean existsByUsername(String username);
+
+    boolean existsAllByRoleRoleId(Long roleId);
 }
 

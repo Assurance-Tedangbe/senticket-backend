@@ -40,9 +40,9 @@ public class UserDTO {
     private Set<@Valid RoleDTO> roles;
 
     @NotBlank(message = "Le prénom est obligatoire")
-    private String userFirstName;
+    private String firstName;
 
     @NotBlank(message = "Le nom est obligatoire")
-    private String userLastName;
+    private String lastName;
 
 }

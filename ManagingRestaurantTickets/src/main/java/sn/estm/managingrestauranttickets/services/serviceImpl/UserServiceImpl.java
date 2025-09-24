@@ -1,131 +1,125 @@
+/* UserServiceImpl class implementing the UserService interface. */
 package sn.estm.managingrestauranttickets.services.serviceImpl;
 
-import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
-import lombok.experimental.FieldDefaults;
-import lombok.extern.slf4j.Slf4j;
-import org.springframework.security.crypto.password.PasswordEncoder;
+
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+
 import sn.estm.managingrestauranttickets.dto.UserDTO;
-import sn.estm.managingrestauranttickets.entities.Role;
 import sn.estm.managingrestauranttickets.entities.User;
+import sn.estm.managingrestauranttickets.exceptions.ResourceNotFoundException;
 import sn.estm.managingrestauranttickets.mappers.RoleMapper;
 import sn.estm.managingrestauranttickets.mappers.UserMapper;
-import sn.estm.managingrestauranttickets.repositories.RoleRepository;
 import sn.estm.managingrestauranttickets.repositories.UserRepository;
 import sn.estm.managingrestauranttickets.services.serviceInterfaces.UserService;
 
+import java.text.MessageFormat;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @Service
 @RequiredArgsConstructor
-@Slf4j
-@Transactional
-@FieldDefaults(level = AccessLevel.PRIVATE)
 public class UserServiceImpl implements UserService {
 
-    /*
-        Crud utilisateurs,
-        Activer/Désactiver compte utilisateur
-        addRoleToUser
-        addAccountToUser
-        majProfil
-     */
-    final UserRepository userRepository;
-    final RoleRepository roleRepository;
-    final UserMapper userMapper;
-    final RoleMapper roleMapper;
-    PasswordEncoder passwordEncoder;
+    private final UserRepository userRepository;
+    private final UserMapper userMapper;
+    private final RoleMapper roleMapper;
 
     @Override
     public UserDTO createUser(UserDTO userDto) {
         log.info("Creating user with details: {}", userDto);
-        String pw=userDto.getPassword();
-        userDto.setPassword(passwordEncoder.encode(pw));
-        User user = userMapper.toUser(userDto);
+        
+        User user = userMapper.toEntity(userDto);
         User savedUser = userRepository.save(user);
 
-        return userMapper.toUserDTO(savedUser);
-
+        log.info("User created successfully with ID: {}", savedUser.getUserId());
+       
+        return userMapper.toDto(savedUser);
     }
 
     @Override
-    public List<UserDTO> findAllUsers() {
-
-        return userRepository.findAll().stream()
-                .map(userMapper::toUserDTO)
+    public List<UserDTO> readUsers() {
+        List<User> users = userRepository.findAll();
+        return users.stream()
+                .map(userMapper::toDto)
                 .collect(Collectors.toList());
     }
 
     @Override
     public UserDTO updateUser(UserDTO userDto) {
-
         log.info("Updating user details: {}", userDto);
 
-        User user = userRepository.findById(userDto.getUserId())
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        user.setUsername(userDto.getUsername());
-        user.setUserFirstName(userDto.getUserFirstName());
-        user.setUserLastname(userDto.getUserFirstName());
-        user.setUserEmailAddress(user.getUserEmailAddress());
-        User updatedUser = userRepository.save(user);
+        User existingUser = userRepository.findById(userDto.getUserId())
+                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format("User not found with ID: {0}", userDto.getUserId())));
+        existingUser.setUsername(userDto.getUsername());
+        existingUser.setFirstName(userDto.getFirstName());
+        existingUser.setLastName(userDto.getLastName());
+        existingUser.setEmail(userDto.getEmail());
+        existingUser.setRoles(roleMapper.toEntitySet(userDto.getRoles()));
+        
+        User updatedUser = userRepository.save(existingUser);
 
-        return userMapper.toUserDTO(updatedUser);
+        log.info("User updated successfully with username: {}", updatedUser.getUsername());
+        
+        return userMapper.toDto(updatedUser);
     }
 
     @Override
     public void deleteUser(Long userId) {
-
         log.info("Deleting user with userId: {}", userId);
 
-        userRepository.deleteById(userId);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format("User not found with ID: {0}", userId)));
+        userRepository.delete(user);
+
+        log.info("deleteUser end ok - userId: {}", userId);
     }
 
     @Override
     public void updatePassword(Long userId, String password) {
-
         log.info("Updating password for user with userId: {}", userId);
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-        user.setPassword(password); // Ideally, hash the password before saving
+                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format("User not found with ID: {0}", userId)));
+        user.setPassword(password); // In a real application, ensure to hash the password before saving
+        
+        log.debug("Password updated for userId: {}", userId);
+        
         userRepository.save(user);
     }
 
     @Override
     public UserDTO readUserByUserId(Long userId) {
-
         log.info("Reading user by userId: {}", userId);
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new RuntimeException("User not found"));
-
-        return userMapper.toUserDTO(user);
+                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format("User not found with ID: {0}", userId)));
+        return userMapper.toDto(user);
     }
 
     @Override
     public UserDTO readUserByUsername(String username) {
-
         log.info("Reading user by username: {}", username);
 
-        User user = userRepository.findByUsername(username);
-               // .orElseThrow(() -> new RuntimeException("User not found"));
-
-        return userMapper.toUserDTO(user);
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format("User not found with username: {0}", username)));
+        return userMapper.toDto(user);
     }
 
     @Override
     public void addRoleToUser(String username, String roleName) {
+        log.info("Adding role '{}' to user '{}'", roleName, username);
 
-        User user = userRepository.findByUsername(username);
-              //  .orElseThrow(() -> new RuntimeException("User not found"));
-        Role role = roleRepository.findByRoleName(roleName);
-             //   .orElseThrow(() -> new RuntimeException("Role not found"));
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format("User not found with username: {0}", username)));
+        
+        var role = roleMapper.toEntity(roleMapper.toDto(roleMapper.toEntity(new sn.estm.managingrestauranttickets.dto.RoleDTO(null, roleName, null))));
+        // ou use this Role role = roleRepository.findByRoleName(roleName);
+       
         user.getRoles().add(role);
         userRepository.save(user);
     }
-
-    //majProfilUser
 }

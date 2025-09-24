@@ -1,95 +1,85 @@
+/* RoleServiceImpl class implementing the RoleService interface. */
 package sn.estm.managingrestauranttickets.services.serviceImpl;
 
-import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
-import lombok.experimental.FieldDefaults;
-import lombok.extern.slf4j.Slf4j;
+
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import sn.estm.managingrestauranttickets.dto.RoleDTO;
 import sn.estm.managingrestauranttickets.entities.Role;
+import sn.estm.managingrestauranttickets.exceptions.ForbiddenActionException;
+import sn.estm.managingrestauranttickets.exceptions.ResourceNotFoundException;
 import sn.estm.managingrestauranttickets.mappers.RoleMapper;
 import sn.estm.managingrestauranttickets.repositories.RoleRepository;
 import sn.estm.managingrestauranttickets.repositories.UserRepository;
 import sn.estm.managingrestauranttickets.services.serviceInterfaces.RoleService;
-
 import java.util.List;
 import java.util.stream.Collectors;
+import java.text.MessageFormat;
 
+import lombok.extern.slf4j.Slf4j;
+
+@Slf4j
 @Service
 @RequiredArgsConstructor
-@Slf4j
-@FieldDefaults(level = AccessLevel.PRIVATE)
 public class RoleServiceImpl implements RoleService {
 
-    final RoleRepository roleRepository;
-    final RoleMapper roleMapper;
-    final UserRepository userRepository;
+    private final UserRepository userRepository;
 
+    private final RoleRepository roleRepository;
+    private final RoleMapper roleMapper;
+
+    /* RoleServiceImpl(UserRepository userRepository) {
+        this.userRepository = userRepository;
+    } */
 
     @Override
-    public RoleDTO createRole(RoleDTO roleDto) {
-
-        log.info("Creating role with details: {}", roleDto);
-
-        Role role = roleMapper.toRole(roleDto);
+    public RoleDTO createRole(RoleDTO roleDTO) {
+        Role role = roleMapper.toEntity(roleDTO);
         Role savedRole = roleRepository.save(role);
-
-        return roleMapper.toRoleDTO(savedRole);
+        return roleMapper.toDto(savedRole);
     }
 
     @Override
-    public List<RoleDTO> findAllRoles() {
-
-        return roleRepository.findAll().stream()
-                .map(roleMapper::toRoleDTO)
+    public List<RoleDTO> readRoles() {
+        List<Role> roles = roleRepository.findAll();
+        return roles.stream()
+                .map(roleMapper::toDto)
                 .collect(Collectors.toList());
-
     }
 
     @Override
     public RoleDTO readRoleByRoleId(Long roleId) {
-
-        log.info("readRoleByRoleId end ok - roleId: {}", roleId);
-
         Role role = roleRepository.findById(roleId)
-                .orElseThrow(() -> new RuntimeException("Role not found"));
-
-        return roleMapper.toRoleDTO(role);
+                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format("Role not found with ID: {0}", roleId)));
+        return roleMapper.toDto(role);
     }
 
     @Override
     public RoleDTO readRoleByRoleName(String roleName) {
-
-        Role role = roleRepository.findByRoleName(roleName);
-             //   .orElseThrow(() -> new RuntimeException("Role not found"));
-        log.info("readRoleByRoleName end ok - roleName: {}", roleName);
-        log.trace("get role by name was ok - role: {}", role);
-
-        return roleMapper.toRoleDTO(role);
-
+        Role role = roleRepository.findByName(roleName)
+                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format("Role not found with name: {0}", roleName)));
+        return roleMapper.toDto(role);
     }
 
     @Override
     public RoleDTO updateRole(RoleDTO roleDTO) {
-
-        Role role = roleRepository.findById(roleDTO.getRoleId())
-                .orElseThrow(() -> new RuntimeException("Role not found"));
-        role.setRoleName(roleDTO.getRoleName());
-        Role updatedRole = roleRepository.save(role);
-
-        log.info("updateRole end ok -  name: {}", roleDTO.getRoleName());
-        log.trace("updateRole end ok - roles: {}", updatedRole);
-
-        return roleMapper.toRoleDTO(updatedRole);
-
+        Role existingRole = roleRepository.findById(roleDTO.getRoleId())
+                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format("Role not found with ID: {0}", roleDTO.getRoleId())));
+        existingRole.setRoleName(roleDTO.getRoleName());
+        Role updatedRole = roleRepository.save(existingRole);
+        return roleMapper.toDto(updatedRole);
     }
 
     @Override
     public void deleteRole(Long roleId) {
-
+        var role = readRoleByRoleId(roleId);
+        if(userRepository.existsAllByRoleRoleId(roleId)){
+            throw new ForbiddenActionException(HttpStatus.FORBIDDEN, "Cannot delete role assigned to users");
+        }
         roleRepository.deleteById(roleId);
-
-        log.info("deleteRole end ok -  roleId: {}", roleId);
-        log.trace("deleteRole end ok - roleId: {}", roleId);
+       
+        log.info("deleteRole end ok -  role: {}", role);
+        log.trace("deleteRole end ok - role: {}", role);
     }
 }

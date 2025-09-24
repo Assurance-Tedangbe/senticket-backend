@@ -18,8 +18,8 @@ public class UserResponseDTO {
     String token;
     String username;
     Set<@Valid RoleDTO> roles;
-    String userFirstName;
-    String userLastName;
-    String userEmailAddress;
+    String firstName;
+    String lastName;
+    String email;
 
 }

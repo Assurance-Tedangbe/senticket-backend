@@ -45,17 +45,17 @@ public class User {
     //@JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
 
-    @Column(name = "UserFirstName")
+    @Column(name = "firstName")
     @Size(min = 3, max = 100)
-    private String userFirstName;
+    private String firstName;
 
-    @Column(name = "UserLastName")
+    @Column(name = "lastName")
     @Size(min = 3, max = 100)
-    private String userLastname;
+    private String lastName;
 
     @Size(min = 3, max = 100)
-    @Column(name = "UserEmailAddress")
-    private String userEmailAddress;
+    @Column(name = "email")
+    private String email;
 
     /**
      * Représente la relation plusieurs-à-plusieurs entre l'utilisateur et les rôles.
