@@ -35,6 +35,11 @@ public class RoleServiceImpl implements RoleService {
 
     @Override
     public RoleDTO createRole(RoleDTO roleDTO) {
+        /* Checking if resource already exists */
+        if (roleRepository.existsByName(roleDTO.getName())) {
+            throw new ForbiddenActionException(HttpStatus.FORBIDDEN, "Role with name " + roleDTO.getName() + " already exists");
+        }
+
         Role role = roleMapper.toEntity(roleDTO);
         Role savedRole = roleRepository.save(role);
         return roleMapper.toDto(savedRole);
@@ -66,7 +71,7 @@ public class RoleServiceImpl implements RoleService {
     public RoleDTO updateRole(RoleDTO roleDTO) {
         Role existingRole = roleRepository.findById(roleDTO.getRoleId())
                 .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format("Role not found with ID: {0}", roleDTO.getRoleId())));
-        existingRole.setRoleName(roleDTO.getRoleName());
+        existingRole.setName(roleDTO.getName());
         Role updatedRole = roleRepository.save(existingRole);
         return roleMapper.toDto(updatedRole);
     }

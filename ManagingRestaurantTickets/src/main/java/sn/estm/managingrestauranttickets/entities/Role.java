@@ -27,11 +27,13 @@ import java.util.Set;
 public class Role {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+     @Column(name = "RoleId", unique = true, nullable = false)
     private Long roleId;
 
     @Size(min = 3, max = 100)
-    @Column(nullable = false, unique = true)
-    private String roleName;
+    @Column(name = "RoleName", nullable = false, unique = true)
+    String name;
+
 
    /* Genères l'association OneToMany entre Role et User en te basant sur l'attribut "role" dans l'entité User. */
    @OneToMany(mappedBy = "role", cascade = CascadeType.ALL)
