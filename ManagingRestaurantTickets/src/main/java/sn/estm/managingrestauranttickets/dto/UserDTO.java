@@ -9,13 +9,11 @@ import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
-import jakarta.validation.Valid;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Set;
 
 @Data
 @NoArgsConstructor
@@ -37,7 +35,7 @@ public class UserDTO {
     private String email;
 
     @NotNull(message = "Le rôle est obligatoire")
-    private Set<@Valid RoleDTO> roles;
+    private RoleDTO role;
 
     @NotBlank(message = "Le prénom est obligatoire")
     private String firstName;

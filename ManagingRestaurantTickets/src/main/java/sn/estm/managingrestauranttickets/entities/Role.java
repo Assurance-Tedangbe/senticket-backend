@@ -5,9 +5,10 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Id;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.ManyToMany;
-
+import jakarta.persistence.OneToMany;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -32,14 +33,10 @@ public class Role {
     @Column(nullable = false, unique = true)
     private String roleName;
 
-    /**
-     * Association bidirectionnelle Many-to-Many entre Role et User.
-     * Cette collection représente l'ensemble des utilisateurs associés à ce rôle.
-     * Le mapping est géré par l'attribut "roles" dans l'entité User.
-     */
-    @ManyToMany(mappedBy = "roles")
-    @Builder.Default
-    private Set<User> users = new HashSet<>();
+   /* Genères l'association OneToMany entre Role et User en te basant sur l'attribut "role" dans l'entité User. */
+   @OneToMany(mappedBy = "role", cascade = CascadeType.ALL)
+   @Builder.Default
+   private Set<User> users = new HashSet<>();
 
     /*
      * Set ne permet pas de doublons. Chaque User ne peut apparaître

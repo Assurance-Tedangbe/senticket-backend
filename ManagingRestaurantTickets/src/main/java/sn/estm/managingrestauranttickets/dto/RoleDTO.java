@@ -24,6 +24,7 @@ public class RoleDTO {
     @NotBlank(message = "Le nom du rôle est obligatoire")
     @Size(min = 3, max = 100, message = "Le nom du rôle doit contenir entre 3 et 100 caractères")
     private String roleName;
+    
     /**
      * A set of users associated with this role.
      * The collection is initialized as an empty {@link HashSet} to avoid {@code NullPointerException}

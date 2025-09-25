@@ -20,6 +20,6 @@ public interface UserService {
 
     UserDTO readUserByUsername(String username);
 
-    void addRoleToUser(String username, String roleName);
+   // void addRoleToUser(String username, String roleName);
 
 }

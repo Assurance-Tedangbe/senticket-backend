@@ -58,7 +58,7 @@ public class UserServiceImpl implements UserService {
         existingUser.setFirstName(userDto.getFirstName());
         existingUser.setLastName(userDto.getLastName());
         existingUser.setEmail(userDto.getEmail());
-        existingUser.setRoles(roleMapper.toEntitySet(userDto.getRoles()));
+        existingUser.setRole(roleMapper.toEntity(userDto.getRole()));
         
         User updatedUser = userRepository.save(existingUser);
 
@@ -109,7 +109,7 @@ public class UserServiceImpl implements UserService {
         return userMapper.toDto(user);
     }
 
-    @Override
+  /* @Override
     public void addRoleToUser(String username, String roleName) {
         log.info("Adding role '{}' to user '{}'", roleName, username);
 
@@ -119,7 +119,7 @@ public class UserServiceImpl implements UserService {
         var role = roleMapper.toEntity(roleMapper.toDto(roleMapper.toEntity(new sn.estm.managingrestauranttickets.dto.RoleDTO(null, roleName, null))));
         // ou use this Role role = roleRepository.findByRoleName(roleName);
        
-        user.getRoles().add(role);
+        user.getRole().add(role);
         userRepository.save(user);
-    }
+    }*/
 }

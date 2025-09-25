@@ -1,10 +1,12 @@
 package sn.estm.managingrestauranttickets.dto;
 
-import jakarta.validation.Valid;
-import lombok.*;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
 import lombok.experimental.FieldDefaults;
 
-import java.util.Set;
 
 @Data
 @NoArgsConstructor
@@ -17,7 +19,7 @@ public class UserResponseDTO {
 
     String token;
     String username;
-    Set<@Valid RoleDTO> roles;
+    RoleDTO role;
     String firstName;
     String lastName;
     String email;

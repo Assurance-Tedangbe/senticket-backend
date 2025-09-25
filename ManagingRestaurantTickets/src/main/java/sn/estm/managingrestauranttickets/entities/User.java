@@ -1,17 +1,14 @@
 package sn.estm.managingrestauranttickets.entities;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.persistence.Entity;
 import jakarta.persistence.Table;
 import jakarta.persistence.Id;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.Column;
-import jakarta.persistence.ManyToMany;
+import jakarta.persistence.ManyToOne;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.JoinTable;
-
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -19,9 +16,6 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-
-import java.util.HashSet;
-import java.util.Set;
 
 @Entity
 @Table(name = "users")
@@ -58,20 +52,14 @@ public class User {
     private String email;
 
     /**
-     * Représente la relation plusieurs-à-plusieurs entre l'utilisateur et les rôles.
-     * Cette propriété permet d'associer un ou plusieurs rôles à chaque
-     *  utilisateur via la table de jointure "users_roles".
+     * Représente la relation OneToMany entre l'utilisateur et les rôles.
+     * Cette propriété permet d'associer un ou un seul rôle à chaque
+     *  utilisateur.
      * Le chargement des rôles est effectué de manière immédiate (EAGER). 
-     * Un utilisateur peut avoir plusieurs rôles.
+     * Un utilisateur peut avoir un et un seul rôle.
      * Et chaque rôle peut être attribué à plusieurs utilisateurs
      */
-     @ManyToMany(fetch = FetchType.EAGER)
-    @JoinTable(
-        name = "users_roles",
-        joinColumns = @JoinColumn(name = "user_id", referencedColumnName = "userId"),
-        inverseJoinColumns = @JoinColumn(name = "role_id", referencedColumnName = "roleId")
-    )
-    @Builder.Default
-    private Set<Role> roles = new HashSet<>();  
-
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "role_id")
+    private Role role;
 }
