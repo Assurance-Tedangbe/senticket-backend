@@ -6,10 +6,12 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import sn.estm.managingrestauranttickets.dto.UserDTO;
+import sn.estm.managingrestauranttickets.entities.Role;
 import sn.estm.managingrestauranttickets.entities.User;
 import sn.estm.managingrestauranttickets.exceptions.ResourceNotFoundException;
 import sn.estm.managingrestauranttickets.mappers.RoleMapper;
 import sn.estm.managingrestauranttickets.mappers.UserMapper;
+import sn.estm.managingrestauranttickets.repositories.RoleRepository;
 import sn.estm.managingrestauranttickets.repositories.UserRepository;
 import sn.estm.managingrestauranttickets.services.serviceInterfaces.UserService;
 
@@ -27,6 +29,7 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final RoleMapper roleMapper;
+    private final RoleRepository roleRepository;
 
     @Override
     public UserDTO createUser(UserDTO userDto) {
@@ -109,17 +112,20 @@ public class UserServiceImpl implements UserService {
         return userMapper.toDto(user);
     }
 
-  /* @Override
-    public void addRoleToUser(String username, String roleName) {
-        log.info("Adding role '{}' to user '{}'", roleName, username);
+    @Override
+    public void addRoleToUser(Long userId, Long roleId) {
+        log.info("Adding role {} to user with userId: {}", roleId, userId);
 
-        User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format("User not found with username: {0}", username)));
-        
-        var role = roleMapper.toEntity(roleMapper.toDto(roleMapper.toEntity(new sn.estm.managingrestauranttickets.dto.RoleDTO(null, roleName, null))));
-        // ou use this Role role = roleRepository.findByRoleName(roleName);
-       
-        user.getRole().add(role);
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format("User not found with ID: {0}", userId)));        
+
+        Role role = roleRepository.findById(roleId)
+                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format("Role not found with ID: {0}", roleId)));
+
+        user.setRole(role);
+
         userRepository.save(user);
-    }*/
+
+        log.info("Role {} added to user with userId: {}", roleId, userId);
+    }
 }

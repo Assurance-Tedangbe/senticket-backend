@@ -107,5 +107,16 @@ public class UserController {
        
         return new ResponseEntity<>(user, HttpStatus.OK);
     }
+    //@PostAuthorize("hasAuthority('ADMIN')")
+    @PostMapping(value = "/{userId}/roles/{roleId}")
+    @ResponseStatus(HttpStatus.OK)
+    public void addRoleToUser(@PathVariable Long userId, @PathVariable Long roleId) {
+        log.info("Adding role with ID: {} to user with ID: {}", roleId, userId);
+       
+        userService.addRoleToUser(userId, roleId);
+       
+        log.info("Role with ID: {} added to user with ID: {}", roleId, userId);
+    }
+    
 }
 
