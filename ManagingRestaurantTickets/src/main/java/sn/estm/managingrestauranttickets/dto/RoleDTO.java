@@ -22,7 +22,7 @@ public class RoleDTO {
     private Long roleId;
 
     @NotBlank(message = "Le nom du rôle est obligatoire")
-    @Size(min = 3, max = 100, message = "Le nom du rôle doit contenir entre 3 et 100 caractères")
+    @Size(min = 3, max = 50, message = "Le nom du rôle doit contenir entre 3 et 100 caractères")
     private String name;
     
     /**

@@ -30,8 +30,8 @@ public class Role {
      @Column(name = "RoleId", unique = true, nullable = false)
     private Long roleId;
 
-    @Size(min = 3, max = 100)
-    @Column(name = "RoleName", nullable = false, unique = true)
+    @Size(min = 3, max = 50)
+    @Column(name = "RoleName", length = 50, nullable = false, unique = true)
     String name;
 
 

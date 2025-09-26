@@ -23,7 +23,7 @@ public class UserDTO {
     private Long userId;
 
     @NotBlank(message = "Le nom d'utilisateur est obligatoire")
-    @Size(min = 3, max = 100, message = "Le nom d'utilisateur doit contenir entre 3 et 100 caractères")
+    @Size(min = 3, max = 70, message = "Le nom d'utilisateur doit contenir entre 3 et 70 caractères")
     private String username;
 
     @NotBlank(message = "Le mot de passe est obligatoire")

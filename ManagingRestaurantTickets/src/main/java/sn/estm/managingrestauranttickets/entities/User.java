@@ -29,9 +29,9 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long userId;
 
-    @Column(nullable = false, unique = true)
+    @Column(length = 70, nullable = false, unique = true)
     @NotBlank(message = "User needs a username.")
-    @Size(min = 3, max = 100)
+    @Size(min = 3, max = 70)
     private String username;
 
     @Column(nullable = false)
