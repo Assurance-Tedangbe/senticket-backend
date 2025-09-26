@@ -73,9 +73,9 @@ public class RoleController {
     }
 
     //@PostAuthorize("hasAuthority('ADMIN')")
-    @PutMapping(consumes = "application/json", produces = "application/json")
-    public ResponseEntity<RoleDTO> updateRole(@RequestBody RoleDTO roleDTO) {
-        log.info("Updating role with details: {}", roleDTO);
+    @PutMapping(value = "/{roleId}", consumes = "application/json", produces = "application/json")
+    public ResponseEntity<RoleDTO> updateRole(@PathVariable Long roleId, @RequestBody RoleDTO roleDTO) {
+        log.info("Updating role with ID: {} with details: {}", roleId, roleDTO);
        
         RoleDTO updatedRole = roleService.updateRole(roleDTO);
        

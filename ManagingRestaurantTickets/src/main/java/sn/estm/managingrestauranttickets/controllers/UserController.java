@@ -77,8 +77,8 @@ public class UserController {
     }
 
     //@PostAuthorize("hasAnyAuthority('ADMIN', 'AGENT', 'ETUDIANT', 'PORTIER')")
-    @PutMapping(value = "/{userId}/password", consumes = "application/json")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @PutMapping(value = "/password/{userId}", consumes = "application/json")
+    @ResponseStatus(HttpStatus.OK)
     public void updatePassword(@PathVariable Long userId, @RequestBody String password) {
         log.info("Updating password for user with ID: {}", userId);
        
