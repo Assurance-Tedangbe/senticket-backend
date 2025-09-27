@@ -11,10 +11,10 @@ import java.util.Set;
 @Mapper(componentModel = "spring", uses = {UserMapper.class})
 public interface RoleMapper {
 
-    @Mapping(target = "users", ignore = true) // Prevent circular mapping
+   // @Mapping(source = "users", target = "userDTO")
     RoleDTO toDto(Role role);
 
-    @Mapping(target = "users", ignore = true)
+  //  @Mapping(target = "users", ignore = true)
     Role toEntity(RoleDTO roleDTO);
 
     Set<RoleDTO> toDtoSet(Set<Role> roles);

@@ -33,5 +33,5 @@ public class RoleDTO {
      * eliminating the need for null checks.
      */
     @Builder.Default
-    private Set<UserDTO> users = new HashSet<>();
+    private Set<UserDTO> userDTO = new HashSet<>();
 }
