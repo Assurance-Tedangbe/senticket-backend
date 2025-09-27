@@ -5,6 +5,7 @@
  **/
  
 package sn.estm.managingrestauranttickets.dto;
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -34,8 +35,9 @@ public class UserDTO {
     @Email(message = "L'email doit être valide")
     private String email;
 
+    @Valid
     @NotNull(message = "Le rôle est obligatoire")
-    private RoleDTO role;
+    private RoleDTO roleDTO;
 
     @NotBlank(message = "Le prénom est obligatoire")
     private String firstName;

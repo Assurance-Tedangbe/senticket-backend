@@ -59,7 +59,7 @@ public class User {
      * Un utilisateur peut avoir un et un seul rôle.
      * Et chaque rôle peut être attribué à plusieurs utilisateurs
      */
-    @ManyToOne(fetch = FetchType.EAGER)
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "role_id")
     private Role role;
 }

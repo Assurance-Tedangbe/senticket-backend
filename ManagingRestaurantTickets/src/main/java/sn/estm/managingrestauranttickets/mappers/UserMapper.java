@@ -17,7 +17,7 @@ public interface UserMapper {
      * @param user the User entity to convert
      * @return the corresponding UserDTO
      */
-    @Mapping(target = "role", ignore = true) // Prevent circular mapping
+    @Mapping(source = "role", target = "roleDTO")
     UserDTO toDto(User user);
 
     /** Convert a UserDTO to a User entity.
@@ -26,7 +26,6 @@ public interface UserMapper {
      * @param userDTO the UserDTO to convert
      * @return the corresponding User entity
      */
-    @Mapping(target = "role", ignore = true)
     User toEntity(UserDTO userDTO);
 
     /** Convert a set of User entities to a set of UserDTOs.
