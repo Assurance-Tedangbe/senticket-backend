@@ -31,7 +31,7 @@ public class RoleDTO {
      * when adding or accessing users. Instead of using {@code @NotNull}, initializing the collection
      * ensures that it is always non-null, simplifying code that interacts with this field and
      * eliminating the need for null checks.
-     */
-    @Builder.Default
-    private Set<UserDTO> userDTO = new HashSet<>();
+     *
+     * @Builder.Default
+     * private Set<UserDTO> userDTO = new HashSet<>();*/
 }

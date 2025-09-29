@@ -7,7 +7,6 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
-import jakarta.persistence.ManyToMany;
 import jakarta.persistence.OneToMany;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
@@ -35,10 +34,11 @@ public class Role {
     String name;
 
 
-   /* Genères l'association OneToMany entre Role et User en te basant sur l'attribut "role" dans l'entité User. */
-   @OneToMany(mappedBy = "role", cascade = CascadeType.ALL)
+   /* Genères l'association OneToMany entre Role et User en te basant sur
+       l'attribut "role" dans l'entité User. */
+ /*  @OneToMany(mappedBy = "role", cascade = CascadeType.ALL)
    @Builder.Default
-   private Set<User> users = new HashSet<>();
+   private Set<User> users = new HashSet<>();*/
 
     /*
      * Set ne permet pas de doublons. Chaque User ne peut apparaître
