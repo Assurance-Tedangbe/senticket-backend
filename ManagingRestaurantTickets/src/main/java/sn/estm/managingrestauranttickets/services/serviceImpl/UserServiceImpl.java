@@ -56,7 +56,8 @@ public class UserServiceImpl implements UserService {
         log.info("Updating user details: {}", userDto);
 
         User existingUser = userRepository.findById(userDto.getUserId())
-                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format("User not found with ID: {0}", userDto.getUserId())));
+                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
+                    "User not found with ID: {0}", userDto.getUserId())));
         existingUser.setUsername(userDto.getUsername());
         existingUser.setFirstName(userDto.getFirstName());
         existingUser.setLastName(userDto.getLastName());
@@ -75,7 +76,8 @@ public class UserServiceImpl implements UserService {
         log.info("Deleting user with userId: {}", userId);
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format("User not found with ID: {0}", userId)));
+                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
+                    "User not found with ID: {0}", userId)));
         userRepository.delete(user);
 
         log.info("deleteUser end ok - userId: {}", userId);
@@ -86,7 +88,9 @@ public class UserServiceImpl implements UserService {
         log.info("Updating password for user with userId: {}", userId);
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format("User not found with ID: {0}", userId)));
+                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
+                    "User not found with ID: {0}", userId)));
+                    
         user.setPassword(password); // In a real application, ensure to hash the password before saving
         
         log.debug("Password updated for userId: {}", userId);
@@ -99,7 +103,8 @@ public class UserServiceImpl implements UserService {
         log.info("Reading user by userId: {}", userId);
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format("User not found with ID: {0}", userId)));
+                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
+                    "User not found with ID: {0}", userId)));
         return userMapper.toDto(user);
     }
 
@@ -108,7 +113,8 @@ public class UserServiceImpl implements UserService {
         log.info("Reading user by username: {}", username);
 
         User user = userRepository.findByUsername(username)
-                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format("User not found with username: {0}", username)));
+                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
+                    "User not found with username: {0}", username)));
         return userMapper.toDto(user);
     }
 
@@ -117,10 +123,12 @@ public class UserServiceImpl implements UserService {
         log.info("Adding role {} to user with userId: {}", roleId, userId);
 
         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format("User not found with ID: {0}", userId)));        
+                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
+                    "User not found with ID: {0}", userId)));        
 
         Role role = roleRepository.findById(roleId)
-                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format("Role not found with ID: {0}", roleId)));
+                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
+                    "Role not found with ID: {0}", roleId)));
 
         user.setRole(role);
 

@@ -45,9 +45,9 @@ public class Account implements Serializable {
 	@Temporal(TemporalType.DATE) //pour stocker que la date
 	private LocalDate dateCreation;
 
+	//@JsonBackReference // to deal with bidirectional relationships in Jackson infinite recursion problem
 	@OneToOne
 	@JoinColumn(name = "user_Id", nullable = false)
-    //@JsonBackReference // to deal with bidirectional relationships in Jackson infinite recursion problem
 	private User user;
 
 	private boolean active;
