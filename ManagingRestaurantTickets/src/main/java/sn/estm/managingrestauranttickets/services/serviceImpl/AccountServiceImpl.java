@@ -1,129 +1,136 @@
-/* package sn.estm.managingrestauranttickets.services.serviceImpl;
+package sn.estm.managingrestauranttickets.services.serviceImpl;
+
+import org.springframework.stereotype.Service;
+import sn.estm.managingrestauranttickets.dto.AccountDTO;
+import sn.estm.managingrestauranttickets.entities.Account;
+import sn.estm.managingrestauranttickets.entities.User;
+import sn.estm.managingrestauranttickets.exceptions.ResourceNotFoundException;
+import sn.estm.managingrestauranttickets.mappers.AccountMapper;
+import sn.estm.managingrestauranttickets.repositories.AccountRepository;
+import sn.estm.managingrestauranttickets.repositories.UserRepository;
+import sn.estm.managingrestauranttickets.services.serviceInterfaces.AccountService;
+import java.text.MessageFormat;
 
 import java.util.List;
-import java.util.Optional;
+import java.util.stream.Collectors;
 
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.stereotype.Service;
-
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import sn.estm.managingrestauranttickets.entities.Account;
-import sn.estm.managingrestauranttickets.repositories.AccountRepository;
-import sn.estm.managingrestauranttickets.services.serviceInterfaces.AccountService;
 
-@Service
+
 @Slf4j
+@Service
+@RequiredArgsConstructor
 public class AccountServiceImpl implements AccountService {
 
-    @Autowired
-    AccountRepository compteRepository;
-    @Override
-    public List<Account> getAllComptes() {
-        return compteRepository.findAll();
+  private final AccountRepository accountRepository;
+  private final UserRepository userRepository;
+  private final AccountMapper accountMapper;
+
+  @Override
+  public AccountDTO createAccount(AccountDTO accountDto) {
+      Account account = accountMapper.toEntity(accountDto);
+        Account savedAccount = accountRepository.save(account);
+        return accountMapper.toDto(savedAccount);
     }
 
-    @Override
-    public void createCompte(Account cpt) {
-        compteRepository.save(cpt);
-    }
 
     @Override
-    public Account getCompteById(Long idCpt) {
-        
-        Optional<Account> optional = compteRepository.findById(idCpt);
-	    Account compte = null;
-		if(optional.isPresent())
-		{
-			compte = optional.get(); 
-		}
-		else
-		{
-			throw new RuntimeException("This object doesn't exist" +idCpt);
-		}
-		   return compte;
+    public List<AccountDTO> readAccounts() {
+        List<Account> accounts = accountRepository.findAll();
+        return accounts.stream()
+                .map(accountMapper::toDto)
+                .collect(Collectors.toList());
     }
 
+
     @Override
-    public void updateCompte(Long idCpt, Account newCpt) {
-      Account cpt = this.getCompteById(idCpt);
-        
-        if(cpt==null) 
-        throw new UnsupportedOperationException("update failed");        
-        else{
-          cpt.setAccountId(newCpt.getAccountId());
-          cpt.setAccountNumber(newCpt.getAccountNumber());
-          cpt.setBalance(newCpt.getBalance());
-          cpt.setDateCreation(newCpt.getDateCreation());
-          cpt.setUser(newCpt.getUser());
-          cpt.setListCredits(newCpt.getListCredits());
-          cpt.setListDebits(newCpt.getListDebits());
-          compteRepository.save(cpt);
-          log.info("returned to postaman the update object {}", cpt);
+    public AccountDTO updateAccount(AccountDTO accountDto) {
+        Account existingAccount = accountRepository.findById(accountDto.getAccountId())
+                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format("Account not found with ID: {0}", accountDto.getAccountId())));
+        existingAccount.setAccountNumber(accountDto.getAccountNumber());
+        existingAccount.setBalance(accountDto.getBalance());
+        existingAccount.setActive(accountDto.isActive());
+        Account updatedAccount = accountRepository.save(existingAccount);
+        return accountMapper.toDto(updatedAccount);
+    }
+
+
+    @Override
+    public void deleteAccount(Long accountId) {
+        if (!accountRepository.existsById(accountId)) {
+            throw new ResourceNotFoundException(MessageFormat.format("Account not found with ID: {0}", accountId));
         }
+        accountRepository.deleteById(accountId);
     }
 
-    @Override
-    public void deleteCompteById(Long idCompte) {
-       compteRepository.deleteById(idCompte);        
-    }
 
     @Override
-    public void activerCompte(Long idCompte, Account compte) {
+    public AccountDTO readAccountById(Long accountId) {
+        Account account = accountRepository.findById(accountId)
+                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format("Account not found with ID: {0}", accountId)));
+        return accountMapper.toDto(account);
     }
 
-    @Override
-    public void desactiverCompte(Long idCompte, Account compte) {
-    }
 
     @Override
-    public void crediterCompte(Account compte, Double addedAmount, Long idCpt) {
-        Account cpt = this.getCompteById(idCpt);
-        Double newAccount;
-        Double solde;
-        if(cpt==null)
-         throw new UnsupportedOperationException("operation failed");        
-        else{
-        solde = cpt.getBalance();
-        newAccount = solde+addedAmount;
-        compte.setBalance(newAccount);
+    public void linkAccountToUser(Long accountId, Long userId) {
+        Account account = accountRepository.findById(accountId)
+                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format("Account not found with ID: {0}", accountId)));
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format("User not found with ID: {0}", userId)));
+        account.setUser(user);
+        accountRepository.save(account);
+    }
+
+
+    @Override
+    public void unlinkAccountFromUser(Long accountId, Long userId) {
+        Account account = accountRepository.findById(accountId)
+                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format("Account not found with ID: {0}", accountId)));
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format("User not found with ID: {0}", userId)));
+        if (!account.getUser().equals(user)) {
+            throw new IllegalArgumentException("Account is not linked to the specified user.");
         }
-        /*  formulaire operation depot comportant
-         montant deposé,frais(OF),statut(effectué),nom de l'agent(facultatif),date et heure,
-          nouveau solde,ID transaction(lettres/digits) 
+        account.setUser(null);
+        accountRepository.save(account);
     }
 
-     @Override
-    public void annulerRecharge(Account compte, Double addedAmount, Long idCpt) {
+
+    @Override
+    public void updateBalance(Long accountId, Double newBalance) {
+        Account account = accountRepository.findById(accountId)
+                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format("Account not found with ID: {0}", accountId)));
+        account.setBalance(newBalance);
+        accountRepository.save(account);
+    }
     
-        Account cpt = this.getCompteById(idCpt);
-        Double oldAccount;
-        Double solde;
-        if(cpt==null)
-         throw new UnsupportedOperationException("operation failed");        
-        else{
-        solde = cpt.getBalance();
-        oldAccount = solde-addedAmount;
-        compte.setBalance(oldAccount);
-        }
-           formulaire operation annuler comportant
-         montant ,frais(OF),statut(annulé),date et heure, nouveau solde, ID transaction 
-    }
 
     @Override
-    public void debiterCompte(Long idCompte, Double amount, Account compte) {
-    
-        
-     formulaire operation retrait comportant
-       montant retiré,frais(OF),statut(effectué),nom de l'agent(facultatif),date et heure, 
-       nouveau solde, ID transaction 
+    public void updateAccountNumber(Long accountId, String newAccountNumber) {
+        Account account = accountRepository.findById(accountId)
+                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format("Account not found with ID: {0}", accountId)));
+        account.setAccountNumber(newAccountNumber);
+        accountRepository.save(account);
     }
 
-     formulaire operation paiement(achat)
-     montant,statut(effectué),date et heure,nouveau solde; ID transaction
 
-     formulaire operation transfert
-     montant reçu,frais(somme),statut(effectué),date et heure, nouveau solde, ID transaction 
+    @Override
+    public void activateAccount(Long accountId) {
+        Account account = accountRepository.findById(accountId)
+                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format("Account not found with ID: {0}", accountId)));
+        account.setActive(true);
+        accountRepository.save(account);
+    }
 
+
+    @Override
+    public void deactivateAccount(Long accountId) {
+        Account account = accountRepository.findById(accountId)
+                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format("Account not found with ID: {0}", accountId)));
+        account.setActive(false);
+        accountRepository.save(account);
+    }
 
 }
- */

@@ -1,32 +1,32 @@
-/* package sn.estm.managingrestauranttickets.services.serviceInterfaces;
+package sn.estm.managingrestauranttickets.services.serviceInterfaces;
 
 import java.util.List;
 
-import sn.estm.managingrestauranttickets.entities.Account;
+import sn.estm.managingrestauranttickets.dto.AccountDTO;
+
 
 public interface AccountService {
-
-    List<Account> getAllComptes();
-
-    void createCompte(Account cpt);
-
-    Account getCompteById(Long idCpt);
-
-    void updateCompte(Long idCpt, Account cpt);
     
-    void deleteCompteById(Long idCompte);
- 
-    //  custom methods
- 
-     void crediterCompte(Account compte, Double amount, Long idCpt);
+    AccountDTO createAccount(AccountDTO accountDto);
 
-     void annulerRecharge(Account compte, Double amount, Long idCpt);
-   
-     void debiterCompte(Long idCompte, Double amount, Account compte);
+    List<AccountDTO> readAccounts();
 
-     void  activerCompte(Long idCompte, Account compte);
+    AccountDTO updateAccount(AccountDTO accountDto);
 
-     void  desactiverCompte(Long idCompte, Account compte);
-     
+    void deleteAccount(Long accountId);
+
+    AccountDTO readAccountById(Long accountId);
+
+    void linkAccountToUser(Long accountId, Long userId);
+
+    void unlinkAccountFromUser(Long accountId, Long userId);
+
+    void updateBalance(Long accountId, Double newBalance);
+
+    void updateAccountNumber(Long accountId, String newAccountNumber);
+
+    void activateAccount(Long accountId);
+
+    void deactivateAccount(Long accountId);
+
 }
- */

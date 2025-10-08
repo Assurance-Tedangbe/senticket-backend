@@ -37,6 +37,8 @@ public class AccountDTO {
     @NotNull(message = "The user is required.")
     private UserDTO userDTO;
 
+    private boolean active;
+
 }
 
 

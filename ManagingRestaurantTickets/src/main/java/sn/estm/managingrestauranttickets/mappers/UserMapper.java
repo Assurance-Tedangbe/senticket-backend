@@ -36,12 +36,5 @@ public interface UserMapper {
      */
     Set<UserDTO> toDtoSet(Set<User> users);
 
-    /** Convert a set of UserDTOs to a set of User entities.
-     * This method is useful for mapping collections of user DTOs.
-     *
-     * @param userDTOs the set of UserDTOs to convert
-     * @return a set of User entities
-     */
-
-     Set<User> toEntitySet(Set<UserDTO> userDTOs);
+    Set<User> toEntitySet(Set<UserDTO> userDTOs);
 }
