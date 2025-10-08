@@ -49,6 +49,8 @@ public class Account implements Serializable {
 	@JoinColumn(name = "user_Id", nullable = false)
     //@JsonBackReference // to deal with bidirectional relationships in Jackson infinite recursion problem
 	private User user;
+
+	private boolean active;
 	
 }
 
