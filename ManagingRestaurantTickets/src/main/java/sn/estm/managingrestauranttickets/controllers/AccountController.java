@@ -20,7 +20,6 @@ import org.springframework.web.bind.annotation.RestController;
 //import org.springframework.security.access.prepost.PostAuthorize;
 
 import sn.estm.managingrestauranttickets.dto.AccountDTO;
-import sn.estm.managingrestauranttickets.dto.UserDTO;
 import sn.estm.managingrestauranttickets.services.serviceInterfaces.AccountService;
 
 import java.util.List;
@@ -126,54 +125,55 @@ public class AccountController {
     }
 
 
-  /*   //@PostAuthorize("hasAuthority('ADMIN')")
-    @PutMapping(value = "/{accountId}/balance", consumes = "application/json")
-    public ResponseEntity<AccountDTO> updateAccountBalance(@PathVariable Long accountId, @RequestBody BigDecimal newBalance) {
-        log.info("Updating balance for account with ID: {} to new balance: {}", accountId, newBalance);
+    //@PostAuthorize("hasAuthority('ADMIN')")
+    @PutMapping(value = "/balance/{accountId}", consumes = "application/json")
+    @ResponseStatus(HttpStatus.OK)
+    public void updateAccountBalance(@PathVariable Long accountId, @RequestBody Double newBalance) {
 
-        AccountDTO updatedAccount = accountService.updateAccountBalance(accountId, newBalance);
+        log.info("Updating balance for account with ID: {}", accountId, newBalance);
+
+        accountService.updateBalance(accountId, newBalance);
 
         log.info("Account balance updated successfully for ID: {}", accountId);
-
-        return new ResponseEntity<>(updatedAccount, HttpStatus.OK);
     }
-     
+    
     
      //@PostAuthorize("hasAuthority('ADMIN')")
-    @PutMapping(value = "/{accountId}/accountNumber", consumes = "application/json")
-    public ResponseEntity<AccountDTO> updateAccountNumber(@PathVariable Long accountId, @RequestBody String newAccountNumber) {
-        log.info("Updating account number for account with ID: {} to new account number: {}", accountId, newAccountNumber);
+    @PutMapping(value = "/accountNumber/{accountId}", consumes = "application/json")
+    @ResponseStatus(HttpStatus.OK)
+    public void updateAccountNumber(
+        @PathVariable Long accountId, @RequestBody String newAccountNumber) {
 
-        AccountDTO updatedAccount = accountService.updateAccountNumber(accountId, newAccountNumber);
+        log.info("Updating account number for account with ID: {}", accountId, newAccountNumber);
+
+        accountService.updateAccountNumber(accountId, newAccountNumber);
 
         log.info("Account number updated successfully for ID: {}", accountId);
-
-        return new ResponseEntity<>(updatedAccount, HttpStatus.OK);
     }
     
-   /* 
+   
     //@PostAuthorize("hasAuthority('ADMIN')")
-    @PutMapping(value = "/{accountId}/activate")
-    public ResponseEntity<AccountDTO> activateAccount(@PathVariable Long accountId) {
+    @PutMapping(value = "/activate/{accountId}")
+    @ResponseStatus(HttpStatus.OK)
+    public void activateAccount(@PathVariable Long accountId) {
+
         log.info("Activating account with ID: {}", accountId);
 
-        AccountDTO activatedAccount = accountService.activateAccount(accountId);
+        accountService.activateAccount(accountId);
 
         log.info("Account activated successfully with ID: {}", accountId);
-
-        return new ResponseEntity<>(activatedAccount, HttpStatus.OK);
     }
     
-    
+
     //@PostAuthorize("hasAuthority('ADMIN')")
     @PutMapping(value = "/{accountId}/deactivate")
-    public ResponseEntity<AccountDTO> deactivateAccount(@PathVariable Long accountId) {
+    @ResponseStatus(HttpStatus.OK)
+    public void deactivateAccount(@PathVariable Long accountId) {
+
         log.info("Deactivating account with ID: {}", accountId);
 
-        AccountDTO deactivatedAccount = accountService.deactivateAccount(accountId);
+        accountService.deactivateAccount(accountId);
 
         log.info("Account deactivated successfully with ID: {}", accountId);
-
-        return new ResponseEntity<>(deactivatedAccount, HttpStatus.OK);
-    } */
+    } 
 }

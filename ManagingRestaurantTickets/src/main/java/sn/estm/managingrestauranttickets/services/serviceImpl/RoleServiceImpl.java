@@ -25,7 +25,6 @@ import lombok.extern.slf4j.Slf4j;
 public class RoleServiceImpl implements RoleService {
 
     private final UserRepository userRepository;
-
     private final RoleRepository roleRepository;
     private final RoleMapper roleMapper;
 
@@ -35,19 +34,27 @@ public class RoleServiceImpl implements RoleService {
 
     @Override
     public RoleDTO createRole(RoleDTO roleDTO) {
+
         /* Checking if resource already exists */
         if (roleRepository.existsByName(roleDTO.getName())) {
-            throw new ForbiddenActionException(HttpStatus.FORBIDDEN, "Role with name " + roleDTO.getName() + " already exists");
+            throw new ForbiddenActionException(HttpStatus.FORBIDDEN, 
+            "Role with name " + roleDTO.getName() + " already exists");
         }
 
         Role role = roleMapper.toEntity(roleDTO);
+
         Role savedRole = roleRepository.save(role);
+
+        log.info("Role created successfully with ID: {}", savedRole.getRoleId());
+
         return roleMapper.toDto(savedRole);
     }
 
     @Override
     public List<RoleDTO> readRoles() {
+
         List<Role> roles = roleRepository.findAll();
+
         return roles.stream()
                 .map(roleMapper::toDto)
                 .collect(Collectors.toList());
@@ -55,32 +62,48 @@ public class RoleServiceImpl implements RoleService {
 
     @Override
     public RoleDTO readRoleByRoleId(Long roleId) {
+
         Role role = roleRepository.findById(roleId)
-                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format("Role not found with ID: {0}", roleId)));
+                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
+                    "Role not found with ID: {0}", roleId)));
         return roleMapper.toDto(role);
     }
 
     @Override
     public RoleDTO readRoleByRoleName(String roleName) {
+        
         Role role = roleRepository.findByName(roleName)
-                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format("Role not found with name: {0}", roleName)));
+                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
+                    "Role not found with name: {0}", roleName)));
+
         return roleMapper.toDto(role);
     }
 
     @Override
     public RoleDTO updateRole(RoleDTO roleDTO) {
         Role existingRole = roleRepository.findById(roleDTO.getRoleId())
-                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format("Role not found with ID: {0}", roleDTO.getRoleId())));
+                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
+                    "Role not found with ID: {0}", roleDTO.getRoleId())));
+
         existingRole.setName(roleDTO.getName());
+
         Role updatedRole = roleRepository.save(existingRole);
+
+        log.info("Role updated successfully with ID: {}", updatedRole.getRoleId());
+
         return roleMapper.toDto(updatedRole);
     }
 
     @Override
     public void deleteRole(Long roleId) {
+        log.info("Deleting role with roleId: {}", roleId);
+        
+         /* Checking if resource exists */
         var role = readRoleByRoleId(roleId);
+
         if(userRepository.existsAllByRoleRoleId(roleId)){
-            throw new ForbiddenActionException(HttpStatus.FORBIDDEN, "Cannot delete role assigned to users");
+            throw new ForbiddenActionException(HttpStatus.FORBIDDEN,
+             "Cannot delete role assigned to users");
         }
         roleRepository.deleteById(roleId);
        

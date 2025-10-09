@@ -33,6 +33,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDTO createUser(UserDTO userDto) {
+
         log.info("Creating user with details: {}", userDto);
         
         User user = userMapper.toEntity(userDto);
@@ -46,6 +47,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public List<UserDTO> readUsers() {
         List<User> users = userRepository.findAll();
+        
         return users.stream()
                 .map(userMapper::toDto)
                 .collect(Collectors.toList());
@@ -53,11 +55,13 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDTO updateUser(UserDTO userDto) {
+
         log.info("Updating user details: {}", userDto);
 
         User existingUser = userRepository.findById(userDto.getUserId())
                 .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
                     "User not found with ID: {0}", userDto.getUserId())));
+                    
         existingUser.setUsername(userDto.getUsername());
         existingUser.setFirstName(userDto.getFirstName());
         existingUser.setLastName(userDto.getLastName());
@@ -73,6 +77,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void deleteUser(Long userId) {
+
         log.info("Deleting user with userId: {}", userId);
 
         User user = userRepository.findById(userId)
@@ -85,6 +90,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void updatePassword(Long userId, String password) {
+
         log.info("Updating password for user with userId: {}", userId);
 
         User user = userRepository.findById(userId)
@@ -100,6 +106,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDTO readUserByUserId(Long userId) {
+
         log.info("Reading user by userId: {}", userId);
 
         User user = userRepository.findById(userId)
@@ -110,6 +117,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDTO readUserByUsername(String username) {
+
         log.info("Reading user by username: {}", username);
 
         User user = userRepository.findByUsername(username)
@@ -120,6 +128,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void addRoleToUser(Long userId, Long roleId) {
+        
         log.info("Adding role {} to user with userId: {}", roleId, userId);
 
         User user = userRepository.findById(userId)
