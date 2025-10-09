@@ -3,6 +3,7 @@ package sn.estm.managingrestauranttickets.controllers;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import lombok.Data;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -16,12 +17,13 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+//import org.springframework.security.access.prepost.PostAuthorize;
+
 import sn.estm.managingrestauranttickets.dto.AccountDTO;
+import sn.estm.managingrestauranttickets.dto.UserDTO;
 import sn.estm.managingrestauranttickets.services.serviceInterfaces.AccountService;
 
 import java.util.List;
-
-import lombok.Data;
 
 
 @Slf4j
@@ -36,6 +38,7 @@ public class AccountController {
     //@PostAuthorize("hasAuthority('ADMIN')")
     @PostMapping(consumes = "application/json", produces = "application/json")
     public ResponseEntity<AccountDTO> createAccount(@RequestBody AccountDTO accountDTO) {
+
         log.info("Creating account with details: {}", accountDTO);
        
         AccountDTO createdAccount = accountService.createAccount(accountDTO);
@@ -49,6 +52,7 @@ public class AccountController {
     //@PostAuthorize("hasAnyAuthority('ADMIN', 'AGENT', 'ETUDIANT', 'PORTIER')")
     @GetMapping(produces = "application/json")
     public ResponseEntity<List<AccountDTO>> getAllAccounts() {
+
         List<AccountDTO> accounts = accountService.readAccounts();
 
         log.info("Fetched accounts: {}", accounts);
@@ -60,21 +64,22 @@ public class AccountController {
     //@PostAuthorize("hasAuthority('ADMIN')")
     @PutMapping(value = "/{accountId}", consumes = "application/json", produces = "application/json")
     public ResponseEntity<AccountDTO> updateAccount(@PathVariable Long accountId, @RequestBody AccountDTO accountDTO) {
+
         log.info("Updating account with ID: {} with details: {}", accountId, accountDTO);
-       
-        accountDTO.setAccountId(accountId);
+               
         AccountDTO updatedAccount = accountService.updateAccount(accountDTO);
        
         log.info("Account updated successfully with ID: {}", updatedAccount.getAccountId());
        
         return new ResponseEntity<>(updatedAccount, HttpStatus.OK);
     }
-
+ 
 
     //@PostAuthorize("hasAuthority('ADMIN')")
     @DeleteMapping(value = "/{accountId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteAccount(@PathVariable Long accountId) {
+
         log.info("Deleting account with ID: {}", accountId);
        
         accountService.deleteAccount(accountId);
@@ -86,30 +91,33 @@ public class AccountController {
     //@PostAuthorize("hasAnyAuthority('ADMIN', 'AGENT', 'ETUDIANT', 'PORTIER')")
     @GetMapping(value = "/{accountId}", produces = "application/json")
     public ResponseEntity<AccountDTO> getAccountById(@PathVariable Long accountId) {
+
         AccountDTO account = accountService.readAccountById(accountId);
        
         log.info("Fetched account with ID: {}", accountId);
 
        return new ResponseEntity<>(account, HttpStatus.OK);
     }
-
+   
 
     //@PostAuthorize("hasAuthority('ADMIN')")
     @PutMapping(value = "/link/{accountId}/user/{userId}")
     @ResponseStatus(HttpStatus.OK)
     public void linkAccountToUser(@PathVariable Long accountId, @PathVariable Long userId) {
+
         log.info("Linking account with ID: {} to user with ID: {}", accountId, userId);
        
         accountService.linkAccountToUser(accountId, userId);
        
         log.info("Account with ID: {} linked to user with ID: {}", accountId, userId);
     }
-
+   
 
     //@PostAuthorize("hasAuthority('ADMIN')")
     @PutMapping(value = "/unlink/{accountId}/user/{userId}")
     @ResponseStatus(HttpStatus.OK)
     public void unlinkAccountFromUser(@PathVariable Long accountId, @PathVariable Long userId) {
+
         log.info("Unlinking account with ID: {} from user with ID: {}", accountId, userId);
 
         accountService.unlinkAccountFromUser(accountId, userId);
@@ -129,9 +137,9 @@ public class AccountController {
 
         return new ResponseEntity<>(updatedAccount, HttpStatus.OK);
     }
-     */
+     
     
- /*    //@PostAuthorize("hasAuthority('ADMIN')")
+     //@PostAuthorize("hasAuthority('ADMIN')")
     @PutMapping(value = "/{accountId}/accountNumber", consumes = "application/json")
     public ResponseEntity<AccountDTO> updateAccountNumber(@PathVariable Long accountId, @RequestBody String newAccountNumber) {
         log.info("Updating account number for account with ID: {} to new account number: {}", accountId, newAccountNumber);
@@ -143,7 +151,7 @@ public class AccountController {
         return new ResponseEntity<>(updatedAccount, HttpStatus.OK);
     }
     
-    
+   /* 
     //@PostAuthorize("hasAuthority('ADMIN')")
     @PutMapping(value = "/{accountId}/activate")
     public ResponseEntity<AccountDTO> activateAccount(@PathVariable Long accountId) {

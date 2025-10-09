@@ -34,6 +34,7 @@ public class UserController {
     //@PostAuthorize("hasAuthority('ADMIN')")
     @PostMapping(consumes = "application/json", produces = "application/json")
     public ResponseEntity<UserDTO> createUser(@RequestBody UserDTO userDTO) {
+
         log.info("Creating user with details: {}", userDTO);
        
         UserDTO createdUser = userService.createUser(userDTO);
@@ -46,6 +47,7 @@ public class UserController {
     //@PostAuthorize("hasAnyAuthority('ADMIN', 'AGENT', 'ETUDIANT', 'PORTIER')")
     @GetMapping(produces = "application/json")
     public ResponseEntity<List<UserDTO>> getAllUsers() {
+
         List<UserDTO> users = userService.readUsers();
 
         log.info("Fetched users: {}", users);
@@ -56,6 +58,7 @@ public class UserController {
     //@PostAuthorize("hasAuthority('ADMIN')")
     @PutMapping(value = "/{userId}", consumes = "application/json", produces = "application/json")
     public ResponseEntity<UserDTO> updateUser(@PathVariable Long userId, @RequestBody UserDTO userDTO) {
+
         log.info("Updating user with ID: {} with details: {}", userId, userDTO);
 
         UserDTO updatedUser = userService.updateUser(userDTO);
@@ -69,6 +72,7 @@ public class UserController {
     @DeleteMapping(value = "/{userId}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     public void deleteUser(@PathVariable Long userId) {
+
         log.info("Deleting user with ID: {}", userId);
       
         userService.deleteUser(userId);
@@ -80,6 +84,7 @@ public class UserController {
     @PutMapping(value = "/password/{userId}", consumes = "application/json")
     @ResponseStatus(HttpStatus.OK)
     public void updatePassword(@PathVariable Long userId, @RequestBody String password) {
+
         log.info("Updating password for user with ID: {}", userId);
        
         userService.updatePassword(userId, password);
@@ -91,6 +96,7 @@ public class UserController {
       //@PostAuthorize("hasAnyAuthority('ADMIN', 'AGENT', 'ETUDIANT', 'PORTIER')")
     @GetMapping(value = "/{userId}", produces = "application/json")
     public ResponseEntity<UserDTO> getUserById(@PathVariable Long userId) {
+
         UserDTO user = userService.readUserByUserId(userId);
        
         log.info("Fetched user with ID: {}", userId);
@@ -101,6 +107,7 @@ public class UserController {
     //@PostAuthorize("hasAnyAuthority('ADMIN', 'AGENT', 'ETUDIANT', 'PORTIER')")
     @GetMapping(value = "/username/{username}", produces = "application/json")
     public ResponseEntity<UserDTO> getUserByUsername(@PathVariable String username) {
+
         UserDTO user = userService.readUserByUsername(username);
        
         log.info("Fetched user with username: {}", username);
@@ -108,9 +115,10 @@ public class UserController {
         return new ResponseEntity<>(user, HttpStatus.OK);
     }
     //@PostAuthorize("hasAuthority('ADMIN')")
-    @PostMapping(value = "/{userId}/roles/{roleId}")
+    @PutMapping(value = "/{userId}/roles/{roleId}")
     @ResponseStatus(HttpStatus.OK)
     public void addRoleToUser(@PathVariable Long userId, @PathVariable Long roleId) {
+        
         log.info("Adding role with ID: {} to user with ID: {}", roleId, userId);
        
         userService.addRoleToUser(userId, roleId);
