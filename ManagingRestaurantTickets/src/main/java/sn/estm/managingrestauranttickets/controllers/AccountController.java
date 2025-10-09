@@ -100,7 +100,7 @@ public class AccountController {
    
 
     //@PostAuthorize("hasAuthority('ADMIN')")
-    @PutMapping(value = "/link/{accountId}/user/{userId}")
+    @PutMapping(value = "/{accountId}/linktouser/{userId}")
     @ResponseStatus(HttpStatus.OK)
     public void linkAccountToUser(@PathVariable Long accountId, @PathVariable Long userId) {
 
@@ -166,7 +166,7 @@ public class AccountController {
     
 
     //@PostAuthorize("hasAuthority('ADMIN')")
-    @PutMapping(value = "/{accountId}/deactivate")
+    @PutMapping(value = "/deactivate/{accountId}")
     @ResponseStatus(HttpStatus.OK)
     public void deactivateAccount(@PathVariable Long accountId) {
 

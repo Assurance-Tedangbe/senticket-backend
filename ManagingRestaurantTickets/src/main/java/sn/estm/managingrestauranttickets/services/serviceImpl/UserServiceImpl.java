@@ -37,6 +37,7 @@ public class UserServiceImpl implements UserService {
         log.info("Creating user with details: {}", userDto);
         
         User user = userMapper.toEntity(userDto);
+        
         User savedUser = userRepository.save(user);
 
         log.info("User created successfully with ID: {}", savedUser.getUserId());
@@ -128,7 +129,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void addRoleToUser(Long userId, Long roleId) {
-        
+
         log.info("Adding role {} to user with userId: {}", roleId, userId);
 
         User user = userRepository.findById(userId)

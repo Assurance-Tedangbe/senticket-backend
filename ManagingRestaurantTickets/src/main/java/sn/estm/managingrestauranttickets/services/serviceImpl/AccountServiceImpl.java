@@ -32,6 +32,7 @@ public class AccountServiceImpl implements AccountService {
       log.info("Creating account with details: {}", accountDto);
 
       Account account = accountMapper.toEntity(accountDto);
+      
       Account savedAccount = accountRepository.save(account);
 
       log.info("Account created successfully with ID: {}", savedAccount.getAccountId());
