@@ -1,20 +1,24 @@
-/* package sn.estm.managingrestauranttickets.services.serviceInterfaces;
+package sn.estm.managingrestauranttickets.services.serviceInterfaces;
 
 import java.util.List;
 
-import sn.estm.managingrestauranttickets.entities.Credit;
+import sn.estm.managingrestauranttickets.dto.CreditDTO;
+
 
 public interface CreditService {
 
-        List<Credit> getAllCredits();
+        CreditDTO createCredit(CreditDTO creditDTO);
+        
+        List<CreditDTO> readCredits();
 
-        void createCredit(Credit credit);
+        CreditDTO readCreditById(Long idCredit);
 
-        Credit getCreditById(Long idCredit);
+        CreditDTO updateCredit(Long idCredit, CreditDTO creditDTO);
 
-        void updateCredit(Long idCredit, Credit credit);
+        void deleteCredit(Long idCredit);
+
+        void linkCreditToAccount(Long creditId, Long accountId);
+
+        void unlinkCreditFromAccount(Long creditId, Long accountId);
      
-        void deleteCreditById(Long idCredit);
-    
 }
- */

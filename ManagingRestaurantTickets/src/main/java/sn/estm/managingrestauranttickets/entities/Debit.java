@@ -5,7 +5,9 @@ import java.time.LocalDate;
 
 import com.fasterxml.jackson.annotation.JsonBackReference;
 
+import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
@@ -26,19 +28,22 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class Debit implements Serializable{
-    @Id
+    
+	@Column(unique = true, nullable = false)
+	@Id
 	@GeneratedValue(strategy =GenerationType.IDENTITY)
 	private Long debitId;
+
 	@Temporal(TemporalType.DATE)
 	private LocalDate debitDate;
 
-	@ManyToOne
-	@JoinColumn(name="accountId")
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name="account_id")
 	@JsonBackReference
 	private Account account;
 
-	@ManyToOne
-	@JoinColumn(name="userId")
+	@ManyToOne(fetch = FetchType.LAZY)
+	@JoinColumn(name="user_id")
 	@JsonBackReference
 	private User user;
 

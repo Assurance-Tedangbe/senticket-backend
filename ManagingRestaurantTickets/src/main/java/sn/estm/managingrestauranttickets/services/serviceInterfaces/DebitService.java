@@ -1,20 +1,22 @@
-/* package sn.estm.managingrestauranttickets.services.serviceInterfaces;
-
+/** Interface for managing debit transactions. */
+package sn.estm.managingrestauranttickets.services.serviceInterfaces;
 import java.util.List;
+import sn.estm.managingrestauranttickets.dto.DebitDTO;
 
-import sn.estm.managingrestauranttickets.entities.Debit;
 
 public interface DebitService {
+        
+    DebitDTO createDebit(DebitDTO debitDTO);
+
+    List<DebitDTO> readDebits();
+
+    DebitDTO readDebitById(Long idDebit);
+
+    DebitDTO updateDebit(Long idDebit, DebitDTO debitDTO);
+
+    void deleteDebit(Long idDebit);
     
-        List<Debit> getAllDebits();
+    void linkDebitToAccount(Long debitId, Long accountId);
 
-        void createDebit(Debit debit);
-
-        Debit getDebitById(Long idDebit);
-
-        void updateDebit(Long idDebit, Debit debit);
-     
-        void deleteDebitById(Long idDebit);
-    
+    void unlinkDebitFromAccount(Long debitId, Long accountId);    
 }
- */
