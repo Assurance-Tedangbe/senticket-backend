@@ -38,6 +38,9 @@ public class Credit implements Serializable {
 	@Temporal(TemporalType.DATE)
 	private LocalDate creditDate;
 
+	@Column(nullable = false)
+	private Double creditAmount;
+
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name="account_id")
 	@JsonBackReference 

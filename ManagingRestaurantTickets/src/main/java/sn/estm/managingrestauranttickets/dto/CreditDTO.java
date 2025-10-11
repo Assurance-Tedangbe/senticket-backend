@@ -27,6 +27,9 @@ public class CreditDTO {
     @NotNull(message = "Credit date is mandatory")
     private LocalDate creditDate;
 
+    @NotNull(message = "Credit amount is mandatory")
+    private Double creditAmount;
+
     @Valid
     @NotNull(message = "Account ID is mandatory")
     private AccountDTO accountDTO;
