@@ -1,4 +1,4 @@
-package sn.estm.managingrestauranttickets.controllers;
+/* package sn.estm.managingrestauranttickets.controllers;
 
 import java.util.List;
 
@@ -46,3 +46,4 @@ public class MenuController {
     }
     
 }
+ */

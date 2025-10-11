@@ -1,4 +1,4 @@
-package sn.estm.managingrestauranttickets.controllers;
+/* package sn.estm.managingrestauranttickets.controllers;
 
 import java.util.List;
 
@@ -21,6 +21,19 @@ public class TicketController {
      
     @Autowired
     TicketService ticketService;
+
+    
+        GET /users/{id}/orders        → Récupérer les commandes d’un utilisateur
+        POST /users/{id}/orders       → Ajouter une commande pour un utilisateur
+        GET /users/{id}/orders/{oid}  → Récupérer une commande spécifique
+
+        /api/tickets
+        Acheter ticket (par un Etudiant pour son compte) :        @PostMapping("/{idCpt}/ticket/")
+        Transférer ticket(de compte à compte):      @PostMapping("{idCptExp}/compte/{idCptDest}")
+        Annuler transfert ticket:  @PostMapping("/{ticketId}")
+        getAllTickets
+        updateTicket
+     
 
     @GetMapping()
     public List<Ticket> getAllTickets() {
@@ -45,3 +58,4 @@ public class TicketController {
     }
     
 }
+ */

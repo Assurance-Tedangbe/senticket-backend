@@ -1,4 +1,4 @@
-package sn.estm.managingrestauranttickets.services.serviceImpl;
+/* package sn.estm.managingrestauranttickets.services.serviceImpl;
 
 import java.util.List;
 import java.util.Optional;
@@ -53,10 +53,10 @@ public class MenuServiceImpl implements MenuService{
         throw new UnsupportedOperationException("update failed");
         
         else{
-          menu.setIdMenu(newMenu.getIdMenu());
-          menu.setTypeMenu(newMenu.getTypeMenu());
+          menu.setMenuId(newMenu.getMenuId());
+          menu.setMenuType(newMenu.getMenuType());
           menu.setTicket(newMenu.getTicket());
-          menu.setEtudiant(newMenu.getEtudiant());
+          menu.setUser(newMenu.getUser());
           menuRepository.save(menu);
           log.info("returned to postaman the update object {}", menu);
         }
@@ -68,3 +68,4 @@ public class MenuServiceImpl implements MenuService{
     }
     
 }
+ */

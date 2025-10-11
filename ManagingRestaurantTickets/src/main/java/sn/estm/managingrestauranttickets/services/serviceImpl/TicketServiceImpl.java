@@ -1,4 +1,4 @@
-package sn.estm.managingrestauranttickets.services.serviceImpl;
+/* package sn.estm.managingrestauranttickets.services.serviceImpl;
 
 import java.util.List;
 import java.util.Optional;
@@ -53,12 +53,12 @@ public class TicketServiceImpl implements TicketService{
         throw new UnsupportedOperationException("Unimplemented method 'updateTicket'");
         
         else{
-          ticket.setIdTicket(newTicket.getIdTicket());
-          ticket.setCodePayement(newTicket.getCodePayement());
-          ticket.setPrix(newTicket.getPrix());
-          ticket.setReserve(newTicket.isReserve());
+          ticket.setTicketId(newTicket.getTicketId());
+          ticket.setPayementCode(newTicket.getPayementCode());
+          ticket.setPrice(newTicket.getPrice());
+          ticket.setBooked(newTicket.isBooked());
           ticket.setMenu(newTicket.getMenu());
-          ticket.setEtudiant(newTicket.getEtudiant());
+          ticket.setUser(newTicket.getUser());
           ticketRepository.save(ticket);
           log.info("returned to postaman the update object {}", ticket);
         }
@@ -70,3 +70,4 @@ public class TicketServiceImpl implements TicketService{
     }
     
 }
+ */

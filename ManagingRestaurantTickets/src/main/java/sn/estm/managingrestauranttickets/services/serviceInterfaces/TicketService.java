@@ -1,4 +1,4 @@
-package sn.estm.managingrestauranttickets.services.serviceInterfaces;
+/* package sn.estm.managingrestauranttickets.services.serviceInterfaces;
 
 import java.util.List;
 
@@ -17,3 +17,4 @@ public interface TicketService {
         void deleteTicketById(Long idTicket);
     
 }
+ */
