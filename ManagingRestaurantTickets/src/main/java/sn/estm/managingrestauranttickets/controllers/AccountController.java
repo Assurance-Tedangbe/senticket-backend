@@ -100,7 +100,7 @@ public class AccountController {
    
 
     //@PostAuthorize("hasAuthority('ADMIN')")
-    @PutMapping(value = "/{accountId}/linktouser/{userId}")
+    @PutMapping(value = "/{accountId}/link/{userId}")
     @ResponseStatus(HttpStatus.OK)
     public void linkAccountToUser(@PathVariable Long accountId, @PathVariable Long userId) {
 
@@ -113,7 +113,7 @@ public class AccountController {
    
 
     //@PostAuthorize("hasAuthority('ADMIN')")
-    @PutMapping(value = "/unlink/{accountId}/user/{userId}")
+    @PutMapping(value = "/{accountId}/unlink/{userId}")
     @ResponseStatus(HttpStatus.OK)
     public void unlinkAccountFromUser(@PathVariable Long accountId, @PathVariable Long userId) {
 

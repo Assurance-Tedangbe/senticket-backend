@@ -51,16 +51,17 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public AccountDTO updateAccount(AccountDTO accountDto) {
+
         log.info("Updating account details: {}", accountDto);
 
         Account existingAccount = accountRepository.findById(accountDto.getAccountId())
                 .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
                   "Account not found with ID: {0}", accountDto.getAccountId())));
+
         existingAccount.setAccountNumber(accountDto.getAccountNumber());
         existingAccount.setBalance(accountDto.getBalance());
         existingAccount.setDateCreation(accountDto.getDateCreation());
         existingAccount.setActive(accountDto.isActive());
-        existingAccount.setUser(accountMapper.toEntity(accountDto).getUser());
 
         Account updatedAccount = accountRepository.save(existingAccount);
 
@@ -108,9 +109,9 @@ public class AccountServiceImpl implements AccountService {
                 .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
                   "User not found with ID: {0}", userId)));
 
-        if (account.getUser() != null) {
+       /* if (account.getUser() != null) {
             throw new IllegalArgumentException("Account is already linked to a user.");
-        }
+        }*/
 
         /* check if user is already linked to another account */
         /* if (user.getAccount() != null) {
