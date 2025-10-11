@@ -29,4 +29,7 @@ public interface AccountService {
 
     void deactivateAccount(Long accountId);
 
+    /* generate a method to make a transfer between two accounts */
+    void transferFunds(Long fromAccountId, Long toAccountId, Double amount);
+
 }
