@@ -128,6 +128,7 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public void unlinkAccountFromUser(Long accountId, Long userId) {
+
       log.info("Unlinking account {} from user with userId: {}", accountId, userId);
 
         Account account = accountRepository.findById(accountId)
@@ -139,11 +140,14 @@ public class AccountServiceImpl implements AccountService {
                   "User not found with ID: {0}", userId)));
 
         if (!account.getUser().equals(user)) {
-            throw new IllegalArgumentException("Account is not longer linked to the specified user.");
+            throw new IllegalArgumentException(
+              "Account is not longer linked to the specified user.");
         }
         account.setUser(null);
 
         accountRepository.save(account);
+        
+        log.info("Account {} unlinked from user with userId: {}", accountId, userId);
     }
 
 

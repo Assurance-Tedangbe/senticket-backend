@@ -26,6 +26,9 @@ public class DebitDTO {
     @NotNull(message = "Debit date is mandatory")
     private LocalDate debitDate;
 
+    @NotNull(message = "Debit amount is mandatory")
+    private Double debitAmount;
+
     @Valid
     @NotNull(message = "Account ID is mandatory")
     private AccountDTO accountDTO;

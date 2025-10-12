@@ -37,6 +37,9 @@ public class Debit implements Serializable{
 	@Temporal(TemporalType.DATE)
 	private LocalDate debitDate;
 
+	@Column(nullable = false)
+	private Double debitAmount;
+
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name="account_id")
 	@JsonBackReference

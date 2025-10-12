@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 import sn.estm.managingrestauranttickets.dto.CreditDTO;
 import sn.estm.managingrestauranttickets.entities.Account;
 import sn.estm.managingrestauranttickets.entities.Credit;
-import sn.estm.managingrestauranttickets.entities.Role;
 import sn.estm.managingrestauranttickets.entities.User;
 import sn.estm.managingrestauranttickets.exceptions.ResourceNotFoundException;
 import sn.estm.managingrestauranttickets.mappers.CreditMapper;
@@ -31,7 +30,6 @@ public class CreditServiceImpl implements CreditService {
     private final CreditRepository creditRepository;
     private final CreditMapper creditMapper;
     private final AccountRepository accountRepository;
-
 
     @Override
     public CreditDTO createCredit(CreditDTO creditDTO) {
@@ -142,7 +140,8 @@ public class CreditServiceImpl implements CreditService {
                     "Account not found with ID: {0}", accountId)));
 
         if (!credit.getAccount().equals(account)) {
-            throw new IllegalArgumentException("Credit is not longer linked to the specified account.");
+            throw new IllegalArgumentException(
+                "Credit is not longer linked to the specified account.");
         }
         credit.setAccount(null);
 
@@ -150,6 +149,5 @@ public class CreditServiceImpl implements CreditService {
 
         log.info("Credit with ID: {} unlinked from account with ID: {}", creditId, accountId);
     }
-
 }
 
