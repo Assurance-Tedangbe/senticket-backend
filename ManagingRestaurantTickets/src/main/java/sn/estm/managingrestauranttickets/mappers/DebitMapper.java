@@ -17,8 +17,8 @@ public interface DebitMapper {
     @Mapping(source = "user", target = "userDTO")
     DebitDTO toDto(Debit debit);
 
-    @Mapping(target = "account", ignore = true) // Ignorer le mapping du compte pour éviter les problèmes de récursion infinie
-    @Mapping(target = "user", ignore = true) // Ignorer le mapping de l'utilisateur pour éviter les problèmes de récursion infinie
+    @Mapping(target = "account", ignore = true)
+    @Mapping(target = "user", ignore = true)
     Debit toEntity(DebitDTO debitDTO);
 
     Set<DebitDTO> toDtoSet(Set<Debit> debits);

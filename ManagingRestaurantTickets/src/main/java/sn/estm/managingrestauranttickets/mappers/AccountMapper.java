@@ -14,7 +14,7 @@ public interface AccountMapper {
     @Mapping(source = "user", target = "userDTO")
     AccountDTO toDto(Account account);
 
-   // @Mapping(target = "user", ignore = true) // Ignorer le mapping de l'utilisateur pour éviter les problèmes de récursion infinie
+    @Mapping(target = "user", ignore = true) // Ignorer le mapping de l'utilisateur pour éviter les problèmes de récursion infinie
     Account toEntity(AccountDTO accountDTO);
 
     Set<AccountDTO> toDtoSet(Set<Account> accounts);

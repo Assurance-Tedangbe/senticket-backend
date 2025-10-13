@@ -1,9 +1,3 @@
-/**
- * Génères la classe UserDTO correspondant à la classe User en prenant
- * en compte tous les attributs, y compris les validations, les
- * annotations Lombok et les l'attribut role.
- **/
- 
 package sn.estm.managingrestauranttickets.dto;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Email;

@@ -17,8 +17,8 @@ public interface CreditMapper {
     @Mapping(source = "user", target = "userDTO")
     CreditDTO toDto(Credit credit);
 
-    @Mapping(target = "account", ignore = true) // Ignorer le mapping du compte pour éviter les problèmes de récursion infinie
-    @Mapping(target = "user", ignore = true) // Ignorer le mapping de l'utilisateur pour éviter les problèmes de récursion infinie
+    @Mapping(target = "account", ignore = true)
+    @Mapping(target = "user", ignore = true) 
     Credit toEntity(CreditDTO creditDTO);
 
     Set<CreditDTO> toDtoSet(Set<Credit> credits);
