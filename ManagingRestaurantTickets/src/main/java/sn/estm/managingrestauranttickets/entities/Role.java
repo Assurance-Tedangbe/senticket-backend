@@ -5,17 +5,13 @@ import jakarta.persistence.Table;
 import jakarta.persistence.Id;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
-import jakarta.persistence.OneToMany;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.HashSet;
-import java.util.Set;
 
 @Entity
 @Table(name = "roles")
@@ -24,9 +20,10 @@ import java.util.Set;
 @AllArgsConstructor
 @Builder
 public class Role {
+  
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-     @Column(name = "RoleId", unique = true, nullable = false)
+    @Column(name = "RoleId", unique = true, nullable = false)
     private Long roleId;
 
     @Size(min = 3, max = 50)

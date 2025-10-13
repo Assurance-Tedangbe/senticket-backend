@@ -1,15 +1,20 @@
 package sn.estm.managingrestauranttickets.entities;
 
 import java.io.Serializable;
-import java.util.List;
 
-import com.fasterxml.jackson.annotation.JsonManagedReference;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+import jakarta.validation.constraints.Size;
 
-import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
 
 @Entity
 @Table(name = "menus")
@@ -18,21 +23,21 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class Menu implements Serializable{
+
     @Id
+	@Column(unique = true, nullable = false)
 	@GeneratedValue(strategy =GenerationType.IDENTITY)
 	private Long menuId;
-	@Column(length=30)
-	private String menuType;
 	
-	@OneToMany(mappedBy="menu",cascade=CascadeType.ALL)
-	@JsonManagedReference
-	List<Ticket> ticket;
+	@Column(length=70, nullable = false, unique = true)
+	@Size(min = 3, max = 70)
+	private String menuName;
 
-	@OneToOne
-	@JoinColumn(name="userId")
-	private User user;
-	
-	/*@OneToOne
-	@JoinColumn(name="idEtudiant")
-	private Etudiant etudiant;*/
+	@Column(length=30)
+	@Size(min = 3, max = 30)
+	private String menuType;
+
+	@Column(length=100)
+	@Size(min = 3, max = 100)
+	private String menuDescription;
 }

@@ -1,9 +1,3 @@
-/**
- * Génères la classe RoleDTO correspondant à la classe Role en prenant
- * en compte tous les attributs, y compris les validations, les
- * annotations Lombok et les l'attribut user.
- **/
-
 package sn.estm.managingrestauranttickets.dto;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -11,14 +5,14 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import java.util.Set;
-import java.util.HashSet;
+
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
 public class RoleDTO {
+    
     private Long roleId;
 
     @NotBlank(message = "Le nom du rôle est obligatoire")

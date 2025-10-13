@@ -1,8 +1,3 @@
-/**
- * Génères la classe DebitDTO correspondant à la classe Debit en prenant
- * en compte tous les attributs, y compris les validations, les
- * annotations Lombok et les l'attributs accountId et userId.
- **/
 package sn.estm.managingrestauranttickets.dto;
 
 import java.time.LocalDate;
