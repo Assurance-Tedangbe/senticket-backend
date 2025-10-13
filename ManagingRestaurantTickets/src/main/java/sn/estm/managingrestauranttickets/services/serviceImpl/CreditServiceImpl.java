@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 import sn.estm.managingrestauranttickets.dto.CreditDTO;
 import sn.estm.managingrestauranttickets.entities.Account;
 import sn.estm.managingrestauranttickets.entities.Credit;
-import sn.estm.managingrestauranttickets.entities.User;
 import sn.estm.managingrestauranttickets.exceptions.ResourceNotFoundException;
 import sn.estm.managingrestauranttickets.mappers.CreditMapper;
 import sn.estm.managingrestauranttickets.repositories.AccountRepository;

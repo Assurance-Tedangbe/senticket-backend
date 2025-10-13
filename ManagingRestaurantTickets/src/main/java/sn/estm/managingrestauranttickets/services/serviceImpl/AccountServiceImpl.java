@@ -139,9 +139,9 @@ public class AccountServiceImpl implements AccountService {
                 .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
                   "User not found with ID: {0}", userId)));
 
-        if (!account.getUser().equals(user)) {
+        if (account.getUser() == null || !account.getUser().equals(user)) {
             throw new IllegalArgumentException(
-              "Account is not longer linked to the specified user.");
+              "Account does not have the specified user.");
         }
         account.setUser(null);
 
