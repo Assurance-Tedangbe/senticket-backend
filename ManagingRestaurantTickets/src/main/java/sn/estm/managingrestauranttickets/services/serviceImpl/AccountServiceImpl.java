@@ -128,6 +128,7 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public void unlinkAccountFromUser(Long accountId, Long userId) {
+
       log.info("Unlinking account {} from user with userId: {}", accountId, userId);
 
         Account account = accountRepository.findById(accountId)
@@ -138,12 +139,15 @@ public class AccountServiceImpl implements AccountService {
                 .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
                   "User not found with ID: {0}", userId)));
 
-        if (!account.getUser().equals(user)) {
-            throw new IllegalArgumentException("Account is not longer linked to the specified user.");
+        if (account.getUser() == null || !account.getUser().equals(user)) {
+            throw new IllegalArgumentException(
+              "Account does not have the specified user.");
         }
         account.setUser(null);
 
         accountRepository.save(account);
+        
+        log.info("Account {} unlinked from user with userId: {}", accountId, userId);
     }
 
 
@@ -208,6 +212,38 @@ public class AccountServiceImpl implements AccountService {
         accountRepository.save(account);
         
         log.info("Account deactivated successfully for account ID: {}", accountId);
+    }
+
+    @Override
+    public void transferFunds(Long fromAccountId, Long toAccountId, Double amount) {
+        log.info("Transferring {} from account ID {} to account ID {}",
+         amount, fromAccountId, toAccountId);
+
+        if (amount <= 0) {
+            throw new IllegalArgumentException("Transfer amount must be positive.");
+        }
+
+        Account fromAccount = accountRepository.findById(fromAccountId)
+                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
+                  "Source account not found with ID: {0}", fromAccountId)));
+
+        Account toAccount = accountRepository.findById(toAccountId)
+                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
+                  "Destination account not found with ID: {0}", toAccountId)));
+
+        if (fromAccount.getBalance() < amount) {
+            throw new IllegalArgumentException("Insufficient funds in the source account.");
+        }
+
+        fromAccount.setBalance(fromAccount.getBalance() - amount);
+
+        toAccount.setBalance(toAccount.getBalance() + amount);
+
+        accountRepository.save(fromAccount);
+        
+        accountRepository.save(toAccount);
+
+        log.info("Transfer of {} from account ID {} to account ID {} completed successfully", amount, fromAccountId, toAccountId);
     }
 
 }

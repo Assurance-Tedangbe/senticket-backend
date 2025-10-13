@@ -176,4 +176,21 @@ public class AccountController {
 
         log.info("Account deactivated successfully with ID: {}", accountId);
     } 
+
+    //@PostAuthorize("hasAuthority('ADMIN', 'ETUDIANT')")
+    @PutMapping(value = "/transfer/{fromAccountId}/to/{toAccountId}/amount/{amount}")
+    @ResponseStatus(HttpStatus.OK)
+    public void transferFunds(@PathVariable Long fromAccountId, 
+                              @PathVariable Long toAccountId, 
+                              @PathVariable Double amount) {
+
+        log.info("Transferring {} from account ID: {} to account ID: {}",
+         amount, fromAccountId, toAccountId);
+
+        accountService.transferFunds(fromAccountId, toAccountId, amount);
+
+        log.info("Transfer of {} from account ID: {} to account ID: {} completed successfully",
+         amount, fromAccountId, toAccountId);
+    }
 }
+

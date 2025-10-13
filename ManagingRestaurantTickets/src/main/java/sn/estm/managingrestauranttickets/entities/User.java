@@ -55,7 +55,6 @@ public class User {
      * Représente la relation OneToMany entre l'utilisateur et les rôles.
      * Cette propriété permet d'associer un ou un seul rôle à chaque
      *  utilisateur.
-     * Le chargement des rôles est effectué de manière immédiate (EAGER). 
      * Un utilisateur peut avoir un et un seul rôle.
      * Et chaque rôle peut être attribué à plusieurs utilisateurs
      */

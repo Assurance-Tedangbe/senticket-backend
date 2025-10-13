@@ -21,6 +21,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class UserDTO {
+    
     private Long userId;
 
     @NotBlank(message = "Le nom d'utilisateur est obligatoire")
