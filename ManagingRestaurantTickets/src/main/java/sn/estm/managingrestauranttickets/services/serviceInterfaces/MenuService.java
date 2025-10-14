@@ -1,20 +1,19 @@
-/* package sn.estm.managingrestauranttickets.services.serviceInterfaces;
+ package sn.estm.managingrestauranttickets.services.serviceInterfaces;
 
 import java.util.List;
 
-import sn.estm.managingrestauranttickets.entities.Menu;
+import sn.estm.managingrestauranttickets.dto.MenuDTO;
 
 public interface MenuService {
 
-        List<Menu> getAllMenus();
+    MenuDTO createMenu(MenuDTO menuDTO);
 
-        void createMenu(Menu menu);
+    List<MenuDTO> readMenus();
 
-        Menu getMenuById(Long idMenu);
+    MenuDTO readMenuById(Long menuId);
 
-        void updateMenu(Long idMenu, Menu menu);
-     
-        void deleteMenuById(Long idMenu);
+    MenuDTO updateMenu(MenuDTO menuDTO);
+
+    void deleteMenu(Long menuId);
     
 }
- */
