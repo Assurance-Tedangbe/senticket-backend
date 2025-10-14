@@ -1,8 +1,7 @@
-/* package sn.estm.managingrestauranttickets.controllers;
+package sn.estm.managingrestauranttickets.controllers;
 
-import java.util.List;
-
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -10,40 +9,91 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import sn.estm.managingrestauranttickets.entities.Menu;
+//import org.springframework.security.access.prepost.PostAuthorize;
+
+import lombok.Data;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import sn.estm.managingrestauranttickets.dto.MenuDTO;
 import sn.estm.managingrestauranttickets.services.serviceInterfaces.MenuService;
 
+import java.util.List;
+
+
+@Slf4j
+@Data
 @RestController
 @RequestMapping("/api/menus")
+@RequiredArgsConstructor
 public class MenuController {
 
-    @Autowired
-    MenuService menuService;
+    private final MenuService menuService;
 
-    
-     @GetMapping()
-    public List<Menu> getAllMenus() {
-        return menuService.getAllMenus();
-    }
-    @PostMapping()
-    public void createMenu(@RequestBody Menu newMenu) {
-        menuService.createMenu(newMenu);
+    //@PostAuthorize("hasAuthority('ADMIN')")
+    @PostMapping(consumes = "application/json", produces = "application/json")
+    public ResponseEntity<MenuDTO> createMenu(@RequestBody MenuDTO menuDTO) {
+
+        log.info("Creating menu with details: {}", menuDTO);
+       
+        MenuDTO createdMenu = menuService.createMenu(menuDTO);
+       
+        log.info("Menu created successfully with ID: {}", createdMenu.getMenuId());
+       
+        return new ResponseEntity<>(createdMenu, HttpStatus.CREATED);
     }
 
-    @GetMapping("/{idMenu}")
-    public Menu getMenu(@PathVariable("idMenu") Long idMenu) {
-        return menuService.getMenuById(idMenu);
+    //@PostAuthorize("hasAnyAuthority('ADMIN', 'AGENT', 'ETUDIANT', 'PORTIER')")
+    @GetMapping(produces = "application/json")
+    public ResponseEntity<List<MenuDTO>> getAllMenus() {
+
+        List<MenuDTO> menus = menuService.readMenus();
+
+        log.info("Fetched menus: {}", menus);
+
+        return new ResponseEntity<>(menus, HttpStatus.OK);
     }
-    @PutMapping("/{id}")
-    public void updateEleve(@PathVariable("id") Long idMenu,@RequestBody  Menu menu){
-        menuService.updateMenu(idMenu, menu);
+
+
+    //@PostAuthorize("hasAnyAuthority('ADMIN', 'AGENT', 'ETUDIANT', 'PORTIER')")
+    @GetMapping(value = "/{menuId}", produces = "application/json")
+    public ResponseEntity<MenuDTO> getMenuById(@PathVariable Long menuId) {
+
+        log.info("Fetched menu with ID: {}", menuId);
+
+        MenuDTO menu = menuService.readMenuById(menuId);
+       
+
+        return new ResponseEntity<>(menu, HttpStatus.OK);
     }
-    @DeleteMapping("/{id}")
-    public void deleteEleve(@PathVariable("id") Long idMenu) {
-       menuService.deleteMenuById(idMenu);
+
+
+    //@PostAuthorize("hasAuthority('ADMIN')")
+    @PutMapping(value = "/{menuId}", consumes = "application/json", produces = "application/json")
+    public ResponseEntity<MenuDTO> updateUser(@PathVariable Long menuId, 
+                                              @RequestBody MenuDTO menuDTO) {
+
+        log.info("Updating menu with ID: {} with details: {}", menuId, menuDTO);
+
+        MenuDTO updatedMenu = menuService.updateMenu(menuDTO);
+
+        log.info("Menu updated successfully with ID: {}", updatedMenu.getMenuId());
+       
+        return new ResponseEntity<>(updatedMenu, HttpStatus.OK);
     }
-    
+
+
+    //@PostAuthorize("hasAuthority('ADMIN')")
+    @DeleteMapping(value = "/{menuId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteUser(@PathVariable Long menuId) {
+
+        log.info("Deleting menu with ID: {}", menuId);
+      
+        menuService.deleteMenu(menuId);
+      
+        log.info("Menu deleted successfully with ID: {}", menuId);
+    }
 }
- */
