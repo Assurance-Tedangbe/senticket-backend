@@ -5,6 +5,8 @@
  **/
 package sn.estm.managingrestauranttickets.dto;
 
+import java.time.LocalDate;
+
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -24,7 +26,7 @@ public class ConsulterMenuDTO {
     private Long consulterMenuId;
 
     @NotBlank(message = "The consultation date is required.")
-    private String consultationDate;
+    private LocalDate consultationDate;
 
     @Valid
     @NotNull(message = "The menu is required.")

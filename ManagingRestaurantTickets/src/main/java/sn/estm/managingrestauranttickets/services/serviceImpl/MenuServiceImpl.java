@@ -1,71 +1,104 @@
-/* package sn.estm.managingrestauranttickets.services.serviceImpl;
+package sn.estm.managingrestauranttickets.services.serviceImpl;
 
-import java.util.List;
-import java.util.Optional;
-
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import lombok.extern.slf4j.Slf4j;
+import sn.estm.managingrestauranttickets.dto.MenuDTO;
+import sn.estm.managingrestauranttickets.dto.UserDTO;
 import sn.estm.managingrestauranttickets.entities.Menu;
+import sn.estm.managingrestauranttickets.entities.User;
+import sn.estm.managingrestauranttickets.exceptions.ResourceNotFoundException;
+import sn.estm.managingrestauranttickets.mappers.MenuMapper;
 import sn.estm.managingrestauranttickets.repositories.MenuRepository;
 import sn.estm.managingrestauranttickets.services.serviceInterfaces.MenuService;
 
-@Service
+import java.util.List;
+
+import java.text.MessageFormat;
+import java.util.stream.Collectors;
+
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+
 @Slf4j
-public class MenuServiceImpl implements MenuService{
+@Service
+@RequiredArgsConstructor
+public class MenuServiceImpl implements MenuService {
 
-    @Autowired
-    MenuRepository menuRepository;
+    private final MenuRepository menuRepository;
+    private final MenuMapper menuMapper;
 
-    @Override
-    public List<Menu> getAllMenus() {
-        return menuRepository.findAll();
-    }
 
     @Override
-    public void createMenu(Menu menu) {
-        menuRepository.save(menu);
-        log.info("added object {}", menu);
-    }
+    public MenuDTO createMenu(MenuDTO menuDTO) {
 
-    @Override
-    public Menu getMenuById(Long idMenu) {
+        log.info("Creating menu with details: {}", menuDTO);
         
-        Optional<Menu> optional = menuRepository.findById(idMenu);
-	    Menu menu = null;
-		if(optional.isPresent())
-		{
-			menu = optional.get(); 
-		}
-		else
-		{
-			throw new RuntimeException("This object doesn't exist" +idMenu);
-		}
-		   return menu;
+        Menu menu = menuMapper.toEntity(menuDTO);
+
+        Menu savedMenu = menuRepository.save(menu);
+        
+        log.info("Menu created successfully with ID: {}", savedMenu.getMenuId());
+       
+        return menuMapper.toDto(savedMenu);
     }
 
-    @Override
-    public void updateMenu(Long idMenu, Menu newMenu) {
-        Menu menu = this.getMenuById(idMenu);
-        
-        if(menu==null) 
-        throw new UnsupportedOperationException("update failed");
-        
-        else{
-          menu.setMenuId(newMenu.getMenuId());
-          menu.setMenuType(newMenu.getMenuType());
-          menu.setTicket(newMenu.getTicket());
-          menu.setUser(newMenu.getUser());
-          menuRepository.save(menu);
-          log.info("returned to postaman the update object {}", menu);
-        }
-    }
 
     @Override
-    public void deleteMenuById(Long idMenu) {
-        menuRepository.deleteById(idMenu);
+    public List<MenuDTO> readMenus() {
+
+        List<Menu> menus = menuRepository.findAll();
+        
+        return menus.stream()
+                .map(menuMapper::toDto)
+                .collect(Collectors.toList());
+    }
+
+
+    @Override
+    public MenuDTO readMenuById(Long menuId) {
+        
+        log.info("Reading menu by menuId: {}", menuId);
+
+        Menu menu = menuRepository.findById(menuId)
+                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
+                    "Menu not found with ID: {0}", menuId)));
+
+        return menuMapper.toDto(menu);
     }
     
+
+    @Override
+    public MenuDTO updateMenu(MenuDTO menuDTO) {
+       
+        log.info("Updating menu details: {}", menuDTO);
+
+        Menu existingMenu = menuRepository.findById(menuDTO.getMenuId())
+                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
+                    "Menu not found with ID: {0}", menuDTO.getMenuId())));
+                    
+        existingMenu.setMenuName(menuDTO.getMenuName());
+        existingMenu.setMenuType(menuDTO.getMenuType());
+        existingMenu.setMenuDescription(menuDTO.getMenuDescription());
+        
+        Menu updatedMenu = menuRepository.save(existingMenu);
+
+        log.info("Menu updated successfully with name: {}", updatedMenu.getMenuName());
+        
+        return menuMapper.toDto(updatedMenu);
+    }
+
+
+    @Override
+    public void deleteMenu(Long menuId) {
+       
+        log.info("Deleting menu with menuId: {}", menuId);
+
+        Menu menu = menuRepository.findById(menuId)
+                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
+                    "Menu not found with ID: {0}", menuId)));
+                    
+        menuRepository.delete(menu);
+
+        log.info("deleteMenu end ok - menuId: {}", menuId);
+    }
 }
- */

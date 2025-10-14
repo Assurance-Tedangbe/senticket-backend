@@ -21,7 +21,6 @@ import org.springframework.web.bind.annotation.RestController;
 //import org.springframework.security.access.prepost.PostAuthorize;
 
 import sn.estm.managingrestauranttickets.dto.DebitDTO;
-import sn.estm.managingrestauranttickets.dto.UserDTO;
 import sn.estm.managingrestauranttickets.services.serviceInterfaces.DebitService;
 
 import java.util.List;

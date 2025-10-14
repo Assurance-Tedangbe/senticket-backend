@@ -19,11 +19,12 @@ public class MenuDTO {
     private Long menuId;
 
     @NotBlank(message = "The menu needs a name.")
-    @Size(min = 3, max = 50)
+    @Size(min = 3, max = 70)
     private String menuName;
 
-    @NotNull(message = "The menu price is required.")
-    private Double menuPrice;
+    @NotNull(message = "The menu type is required.")
+    @Size(min = 3, max = 30)
+    private String menuType;
 
     @NotBlank(message = "The menu needs a description.")
     @Size(min = 3, max = 100)
