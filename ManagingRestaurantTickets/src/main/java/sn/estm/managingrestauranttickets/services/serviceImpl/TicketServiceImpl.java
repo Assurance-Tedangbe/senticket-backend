@@ -72,14 +72,13 @@ public class TicketServiceImpl implements TicketService {
 
 
     @Override
-    public TicketDTO updateTicket(Long ticketId, TicketDTO ticketDTO) {
+    public TicketDTO updateTicket(TicketDTO ticketDTO) {
 
         log.info("Updating ticket details: {}", ticketDTO);
 
-        Ticket existingTicket = ticketRepository.findById(ticketId)
+        Ticket existingTicket = ticketRepository.findById(ticketDTO.getTicketId())
                 .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
-                    "Ticket not found with ID: {0}", ticketId)));
-
+                    "Ticket not found with ID: {0}", ticketDTO.getTicketId())));          
         
         existingTicket.setTicketType(ticketDTO.getTicketType());
         existingTicket.setTicketPrice(ticketDTO.getTicketPrice());

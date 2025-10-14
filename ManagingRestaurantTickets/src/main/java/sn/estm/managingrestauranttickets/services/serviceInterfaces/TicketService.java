@@ -13,7 +13,7 @@ public interface TicketService {
 
     TicketDTO readTicketById(Long idTicket);
 
-    TicketDTO updateTicket(Long idTicket, TicketDTO ticketDTO);
+    TicketDTO updateTicket(TicketDTO ticketDTO);
 
     void deleteTicket(Long idTicket);
 
