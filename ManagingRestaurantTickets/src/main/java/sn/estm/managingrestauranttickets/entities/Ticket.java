@@ -5,6 +5,8 @@ import java.time.LocalDate;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -21,6 +23,8 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+
+import sn.estm.managingrestauranttickets.enumerations.TicketStatus;
 
 
 @Entity
@@ -48,6 +52,11 @@ public class Ticket implements Serializable {
 
    @Column(nullable = false)
    private boolean booked;
+
+   /* private String ticketStatus; */
+   @Column(nullable = false)
+   @Enumerated(EnumType.STRING)
+   TicketStatus ticketStatus;
 
    @Temporal(TemporalType.DATE)
    private LocalDate ticketIssueDate;

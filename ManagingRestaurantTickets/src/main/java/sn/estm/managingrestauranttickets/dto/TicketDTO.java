@@ -12,6 +12,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import sn.estm.managingrestauranttickets.enumerations.TicketStatus;
 
 
 @Data
@@ -37,6 +38,9 @@ public class TicketDTO {
     @NotNull(message = "The booked status is required.")
     private boolean booked;
 
+    @NotBlank(message = "The ticket status is required.")
+    private TicketStatus ticketStatus; 
+    
     @NotNull(message = "The ticket issue date is required.")
     private LocalDate ticketIssueDate;
 
