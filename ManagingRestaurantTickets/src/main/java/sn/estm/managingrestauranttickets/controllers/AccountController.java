@@ -192,5 +192,21 @@ public class AccountController {
         log.info("Transfer of {} from account ID: {} to account ID: {} completed successfully",
          amount, fromAccountId, toAccountId);
     }
+
+    //@PostAuthorize("hasAuthority('ADMIN', 'ETUDIANT')")
+    @PutMapping(value = "/cancelTransfer/{fromAccountId}/to/{toAccountId}/amount/{amount}")
+    @ResponseStatus(HttpStatus.OK)
+    public void cancelTransferFunds(@PathVariable Long fromAccountId,
+                                   @PathVariable Long toAccountId,
+                                   @PathVariable Double amount) {
+
+        log.info("Cancelling transfer of {} from account ID: {} to account ID: {}", 
+            amount, fromAccountId, toAccountId);
+
+        accountService.cancelTransferFunds(fromAccountId, toAccountId, amount);
+
+        log.info("Cancelled transfer of {} from account ID: {} to account ID: {} successfully",
+            amount, fromAccountId, toAccountId);
+    }
 }
 

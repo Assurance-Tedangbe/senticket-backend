@@ -216,34 +216,70 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public void transferFunds(Long fromAccountId, Long toAccountId, Double amount) {
-        log.info("Transferring {} from account ID {} to account ID {}",
-         amount, fromAccountId, toAccountId);
+      
+      log.info("Transferring {} from account ID {} to account ID {}",
+       amount, fromAccountId, toAccountId);
 
-        if (amount <= 0) {
-            throw new IllegalArgumentException("Transfer amount must be positive.");
-        }
+      if (amount <= 0) {
+        throw new IllegalArgumentException("Transfer amount must be positive.");
+      }
 
-        Account fromAccount = accountRepository.findById(fromAccountId)
-                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
-                  "Source account not found with ID: {0}", fromAccountId)));
+      Account fromAccount = accountRepository.findById(fromAccountId)
+          .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
+            "Source account not found with ID: {0}", fromAccountId)));
 
-        Account toAccount = accountRepository.findById(toAccountId)
-                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
-                  "Destination account not found with ID: {0}", toAccountId)));
+      Account toAccount = accountRepository.findById(toAccountId)
+          .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
+            "Destination account not found with ID: {0}", toAccountId)));
 
-        if (fromAccount.getBalance() < amount) {
-            throw new IllegalArgumentException("Insufficient funds in the source account.");
-        }
+      if (fromAccount.getBalance() < amount) {
+        throw new IllegalArgumentException("Insufficient funds in the source account.");
+      }
 
-        fromAccount.setBalance(fromAccount.getBalance() - amount);
+      fromAccount.setBalance(fromAccount.getBalance() - amount);
 
-        toAccount.setBalance(toAccount.getBalance() + amount);
+      toAccount.setBalance(toAccount.getBalance() + amount);
 
-        accountRepository.save(fromAccount);
-        
-        accountRepository.save(toAccount);
+      accountRepository.save(fromAccount);
+      
+      accountRepository.save(toAccount);
 
-        log.info("Transfer of {} from account ID {} to account ID {} completed successfully", amount, fromAccountId, toAccountId);
+      log.info("Transfer of {} from account ID {} to account ID {} completed successfully",
+       amount, fromAccountId, toAccountId);
+    }
+
+    @Override
+    public void cancelTransferFunds(Long fromAccountId, Long toAccountId, Double amount) {
+      
+      log.info("Cancelling transfer of {} from account ID {} to account ID {}",
+       amount, fromAccountId, toAccountId);
+
+      if (amount <= 0) {
+        throw new IllegalArgumentException("Cancel amount must be positive.");
+      }
+
+      Account fromAccount = accountRepository.findById(fromAccountId)
+          .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
+            "Source account not found with ID: {0}", fromAccountId)));
+
+      Account toAccount = accountRepository.findById(toAccountId)
+          .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
+            "Destination account not found with ID: {0}", toAccountId)));
+
+      if (toAccount.getBalance() < amount) {
+        throw new IllegalArgumentException(
+          "Insufficient funds in the destination account to cancel the transfer.");
+      }
+
+      // Reverse the transfer
+      toAccount.setBalance(toAccount.getBalance() - amount);
+      fromAccount.setBalance(fromAccount.getBalance() + amount);
+
+      accountRepository.save(toAccount);
+      accountRepository.save(fromAccount);
+
+      log.info("Cancelled transfer of {} from account ID {} to account ID {} successfully",
+       amount, fromAccountId, toAccountId);
     }
 
 }
