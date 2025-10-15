@@ -34,6 +34,8 @@ public interface AccountService {
 
     void cancelTransferFunds(Long fromAccountId, Long toAccountId, Double amount);
 
+    void creditAccount(Long accountId, Double amount);
 
+    void cancelCreditAccount(Long accountId, Double amount);
 
 }

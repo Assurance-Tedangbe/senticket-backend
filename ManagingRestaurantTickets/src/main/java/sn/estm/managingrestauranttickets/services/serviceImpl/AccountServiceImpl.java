@@ -282,4 +282,16 @@ public class AccountServiceImpl implements AccountService {
        amount, fromAccountId, toAccountId);
     }
 
+
+    @Override
+    public void creditAccount(Long accountId, Double amount) {
+      
+    }
+
+
+    @Override
+    public void cancelCreditAccount(Long accountId, Double amount) {
+     
+    }
+
 }

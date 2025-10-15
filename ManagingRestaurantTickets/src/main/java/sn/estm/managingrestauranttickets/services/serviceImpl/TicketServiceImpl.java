@@ -241,5 +241,29 @@ public class TicketServiceImpl implements TicketService {
         return tickets.stream()
                 .map(ticketMapper::toDto)
                 .collect(Collectors.toList());
-    }  
+    }
+
+
+   @Override
+   public void purchaseTicket(Long accountId, TicketDTO ticketDTO) {
+   
+   }
+
+
+   @Override
+   public void transferTicket(Long fromAccountId, Long toAccountId, Long ticketId) {
+  
+   }
+
+
+   @Override
+   public void cancelTransferTicket(Long fromAccountId, Long toAccountId, Long ticketId) {
+   
+   }
+
+
+   @Override
+   public void debitAccount(Long accountId, Long ticketId, Long debiterUserId) {
+  
+   }  
 }
