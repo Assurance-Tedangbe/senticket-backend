@@ -32,4 +32,8 @@ public interface AccountService {
     /* generate a method to make a transfer between two accounts */
     void transferFunds(Long fromAccountId, Long toAccountId, Double amount);
 
+    void cancelTransferFunds(Long fromAccountId, Long toAccountId, Double amount);
+
+
+
 }
