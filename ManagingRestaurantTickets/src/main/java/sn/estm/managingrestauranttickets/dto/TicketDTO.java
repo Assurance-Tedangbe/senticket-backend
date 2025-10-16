@@ -1,6 +1,5 @@
 package sn.estm.managingrestauranttickets.dto;
 
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
@@ -35,19 +34,18 @@ public class TicketDTO {
     @NotNull(message = "The payment code is required.")
     private String paymentCode;
 
-    /* private Integer paymentCode; */
-
     @Column(nullable = false)
     @NotNull(message = "The booked status is required.")
     private boolean booked;
 
     @NotBlank(message = "The ticket status is required.")
-    private TicketStatus ticketStatus; 
-    
-    @NotNull(message = "The ticket issue date is required.")
-    private LocalDateTime ticketIssueDate;
+    private TicketStatus ticketStatus;
 
-    /* private LocalDate ticketIssueDate; */
+    @NotNull(message = "The ticket creation date is required.")
+    private LocalDateTime ticketCreationDate;
+
+    @NotNull(message = "The ticket purchase date is required.")
+    private LocalDateTime ticketPurchaseDate;
 
     @Size(min = 3, max = 100)
     @NotBlank(message = "The ticket needs a description.")

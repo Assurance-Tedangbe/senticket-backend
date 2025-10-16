@@ -42,7 +42,7 @@ public class Account implements Serializable {
 	@Column(nullable = false)
 	private Double balance;
 
-	@Temporal(TemporalType.DATE) //pour stocker que la date
+	@Temporal(TemporalType.DATE)
 	private LocalDate dateCreation;
 
 	//the relationship between Account and User(Etudiant) is one-to-one

@@ -42,6 +42,11 @@ public class TicketServiceImpl implements TicketService {
         log.info("Creating ticket with details: {}", ticketDTO);
         
         Ticket ticket = ticketMapper.toEntity(ticketDTO);
+
+        ticket.setTicketStatus(TicketStatus.AVAILABLE);
+        ticket.setBooked(false);
+        ticket.setTicketType("A");
+        ticket.setTicketCreationDate(LocalDateTime.now());
         
         Ticket savedTicket = ticketRepository.save(ticket);
 
@@ -85,10 +90,8 @@ public class TicketServiceImpl implements TicketService {
         
         existingTicket.setTicketType(ticketDTO.getTicketType());
         existingTicket.setTicketPrice(ticketDTO.getTicketPrice());
-        existingTicket.setPayementCode(ticketDTO.getPaymentCode());
         existingTicket.setBooked(ticketDTO.isBooked());
         existingTicket.setTicketStatus(ticketDTO.getTicketStatus());
-        existingTicket.setTicketIssueDate(ticketDTO.getTicketIssueDate());
         existingTicket.setTicketDescription(ticketDTO.getTicketDescription());
         existingTicket.setAccount(ticketMapper.toEntity(ticketDTO).getAccount());
         existingTicket.setUser(ticketMapper.toEntity(ticketDTO).getUser());
@@ -276,7 +279,7 @@ public void purchaseTicket(Long accountId, TicketDTO ticketDTO) {
     Double price = ticket.getTicketPrice();
     String typeStr = ticket.getTicketType() == null ? "" : ticket.getTicketType().toString();
     if (price == null) {
-        if (typeStr.equalsIgnoreCase("blue")) {
+        if (typeStr.equalsIgnoreCase("A")) {
             price = 100.0;
             ticket.setTicketPrice(price);
         } else { // default to green price if not blue
@@ -298,14 +301,15 @@ public void purchaseTicket(Long accountId, TicketDTO ticketDTO) {
     // Update ticket: mark as booked, set status, issue date and generate payment code, attach account
     ticket.setBooked(true);
     ticket.setTicketStatus(TicketStatus.BOOKED);
-    ticket.setTicketIssueDate(LocalDateTime.now());
+    ticket.setTicketPurchaseDate(LocalDateTime.now());
     ticket.setPayementCode(UUID.randomUUID().toString());
     ticket.setAccount(account);
 
     ticketRepository.save(ticket);
 
-    log.info("Ticket purchased successfully. ticketId={}, accountId={}, amount={}, paymentCode={}",
-            ticket.getTicketId(), accountId, price, ticket.getPayementCode());
+    log.info("Ticket purchased successfully. ticketId={}, ticketType={}, " +
+                    "ticketPrice={}, paymentCode={}, accountId={}",
+            ticket.getTicketId(), ticket.getTicketType(), price, ticket.getPayementCode(), accountId);
 }
 
 
