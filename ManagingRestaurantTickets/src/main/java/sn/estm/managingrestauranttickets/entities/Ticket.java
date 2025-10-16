@@ -1,7 +1,7 @@
 package sn.estm.managingrestauranttickets.entities;
 
 import java.io.Serializable;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -48,7 +48,7 @@ public class Ticket implements Serializable {
    private double ticketPrice;
 
    @Column(unique = true, nullable = false)
-   private Integer payementCode;
+   private String payementCode;
 
    @Column(nullable = false)
    private boolean booked;
@@ -58,8 +58,9 @@ public class Ticket implements Serializable {
    @Enumerated(EnumType.STRING)
    TicketStatus ticketStatus;
 
-   @Temporal(TemporalType.DATE)
-   private LocalDate ticketIssueDate;
+   //@Temporal(TemporalType.DATE)
+   @Temporal(TemporalType.TIMESTAMP) 
+   private LocalDateTime ticketIssueDate;
 
    @Size(min = 3, max = 100)
    @NotBlank(message = "The ticket needs a description.")

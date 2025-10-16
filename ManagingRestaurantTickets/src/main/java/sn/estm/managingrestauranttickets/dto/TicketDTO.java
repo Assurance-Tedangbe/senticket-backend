@@ -1,6 +1,7 @@
 package sn.estm.managingrestauranttickets.dto;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 import jakarta.persistence.Column;
 import jakarta.validation.Valid;
@@ -32,7 +33,9 @@ public class TicketDTO {
 
     @Column(unique = true, nullable = false)
     @NotNull(message = "The payment code is required.")
-    private Integer paymentCode;
+    private String paymentCode;
+
+    /* private Integer paymentCode; */
 
     @Column(nullable = false)
     @NotNull(message = "The booked status is required.")
@@ -42,7 +45,9 @@ public class TicketDTO {
     private TicketStatus ticketStatus; 
     
     @NotNull(message = "The ticket issue date is required.")
-    private LocalDate ticketIssueDate;
+    private LocalDateTime ticketIssueDate;
+
+    /* private LocalDate ticketIssueDate; */
 
     @Size(min = 3, max = 100)
     @NotBlank(message = "The ticket needs a description.")
