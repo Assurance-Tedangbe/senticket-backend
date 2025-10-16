@@ -10,7 +10,6 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import sn.estm.managingrestauranttickets.dto.ConsulterMenuDTO;
 import sn.estm.managingrestauranttickets.entities.ConsulterMenu;
-import sn.estm.managingrestauranttickets.entities.User;
 import sn.estm.managingrestauranttickets.exceptions.ResourceNotFoundException;
 import sn.estm.managingrestauranttickets.mappers.ConsulterMenuMapper;
 import sn.estm.managingrestauranttickets.repositories.ConsulterMenuRepository;

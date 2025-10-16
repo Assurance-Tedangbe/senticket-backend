@@ -208,5 +208,32 @@ public class AccountController {
         log.info("Cancelled transfer of {} from account ID: {} to account ID: {} successfully",
             amount, fromAccountId, toAccountId);
     }
+
+    //@PostAuthorize("hasAuthority('ADMIN')")
+    @PutMapping(value = "/{accountId}/credit/{amount}")
+    @ResponseStatus(HttpStatus.OK)
+    public void creditAccount(@PathVariable Long accountId, 
+                              @PathVariable Double amount) {
+
+        log.info("Crediting account with ID: {} by amount: {}", accountId, amount);
+
+        accountService.creditAccount(accountId, amount);
+
+        log.info("Account with ID: {} credited by amount: {}", accountId, amount);
+    }
+
+
+    //@PostAuthorize("hasAuthority('ADMIN')")
+    @PutMapping(value = "/{accountId}/cancelCredit/{amount}")
+    @ResponseStatus(HttpStatus.OK)
+    public void cancelCreditAccount(@PathVariable Long accountId, 
+                                    @PathVariable Double amount) {
+
+        log.info("Cancelling credit account with ID: {} by amount: {}", accountId, amount);
+
+        accountService.cancelCreditAccount(accountId, amount);
+
+        log.info("Cancelled credit account with ID: {} credited by amount: {}", accountId, amount);
+    }
 }
 

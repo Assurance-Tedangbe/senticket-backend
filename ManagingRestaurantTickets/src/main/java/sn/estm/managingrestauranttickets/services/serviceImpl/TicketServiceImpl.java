@@ -2,7 +2,10 @@
 package sn.estm.managingrestauranttickets.services.serviceImpl;
 
 import java.text.MessageFormat;
+import java.time.LocalDateTime;
+
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
@@ -244,10 +247,66 @@ public class TicketServiceImpl implements TicketService {
     }
 
 
-   @Override
-   public void purchaseTicket(Long accountId, TicketDTO ticketDTO) {
-   
-   }
+@Override
+public void purchaseTicket(Long accountId, TicketDTO ticketDTO) {
+
+    log.info("Purchasing ticket {} for account {}", ticketDTO, accountId);
+
+    Account account = accountRepository.findById(accountId)
+            .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
+                    "Account not found with ID: {0}", accountId)));
+
+    if (ticketDTO == null || ticketDTO.getTicketId() == null) {
+        throw new IllegalArgumentException("Ticket ID must be provided to purchase a ticket.");
+    }
+
+    Ticket ticket = ticketRepository.findById(ticketDTO.getTicketId())
+            .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
+                    "Ticket not found with ID: {0}", ticketDTO.getTicketId())));
+
+    // Ensure ticket is available
+    if (Boolean.TRUE.equals(ticket.isBooked())
+            || (ticket.getTicketStatus() != null && ticket.getTicketStatus().name()
+            .equalsIgnoreCase("BOOKED"))) {
+        throw new IllegalStateException(MessageFormat.format("Ticket with ID: {0} is already booked.",
+         ticket.getTicketId()));
+    }
+
+    // Determine price: use existing ticket price if set, otherwise default by type
+    Double price = ticket.getTicketPrice();
+    String typeStr = ticket.getTicketType() == null ? "" : ticket.getTicketType().toString();
+    if (price == null) {
+        if (typeStr.equalsIgnoreCase("blue")) {
+            price = 100.0;
+            ticket.setTicketPrice(price);
+        } else { // default to green price if not blue
+            price = 150.0;
+            ticket.setTicketPrice(price);
+        }
+    }
+
+    // Validate account balance (assumes Account has getBalance()/setBalance() returning Double)
+    Double balance = account.getBalance();
+    if (balance == null || balance < price) {
+        throw new IllegalStateException("Insufficient funds on account to purchase the ticket.");
+    }
+
+    // Deduct price from account and save
+    account.setBalance(balance - price);
+    accountRepository.save(account);
+
+    // Update ticket: mark as booked, set status, issue date and generate payment code, attach account
+    ticket.setBooked(true);
+    ticket.setTicketStatus(TicketStatus.BOOKED);
+    ticket.setTicketIssueDate(LocalDateTime.now());
+    ticket.setPayementCode(UUID.randomUUID().toString());
+    ticket.setAccount(account);
+
+    ticketRepository.save(ticket);
+
+    log.info("Ticket purchased successfully. ticketId={}, accountId={}, amount={}, paymentCode={}",
+            ticket.getTicketId(), accountId, price, ticket.getPayementCode());
+}
 
 
    @Override

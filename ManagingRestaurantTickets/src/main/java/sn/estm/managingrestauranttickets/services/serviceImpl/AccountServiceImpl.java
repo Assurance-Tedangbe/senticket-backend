@@ -283,15 +283,66 @@ public class AccountServiceImpl implements AccountService {
     }
 
 
+    /**
+     * generates a method that allows you to credit an account, in this context,
+     * to top up the account. We have two input parameters: Long accountId and Double amount.
+     * The method signature is what I highlighted
+     */
     @Override
     public void creditAccount(Long accountId, Double amount) {
-      
+      log.info("Crediting account with accountId: {} amount: {}", accountId, amount);
+
+      if (amount == null || amount <= 0) {
+        throw new IllegalArgumentException("Credit amount must be positive.");
+      }
+
+      Account account = accountRepository.findById(accountId)
+          .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
+              "Account not found with ID: {0}", accountId)));
+
+      if (!account.isActive()) {
+        throw new IllegalArgumentException("Cannot credit an inactive account.");
+      }
+
+      Double currentBalance = account.getBalance() == null ? 0.0 : account.getBalance();
+      account.setBalance(currentBalance + amount);
+
+      accountRepository.save(account);
+
+      log.info("Account {} credited with {}. New balance: {}", 
+      accountId, amount, account.getBalance());
     }
 
 
+    /**
+     * Generates a method that allows you to cancel the top-up made to an account.
+     * We have two input parameters: Long accountId and Double amount.
+     * The method signature is what I highlighted
+     */
     @Override
     public void cancelCreditAccount(Long accountId, Double amount) {
-     
+      log.info("Cancelling credit for accountId: {} amount: {}", accountId, amount);
+
+      if (amount == null || amount <= 0) {
+        throw new IllegalArgumentException("Cancel amount must be positive.");
+      }
+
+      Account account = accountRepository.findById(accountId)
+          .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
+              "Account not found with ID: {0}", accountId)));
+
+      Double currentBalance = account.getBalance() == null ? 0.0 : account.getBalance();
+
+      if (currentBalance < amount) {
+        throw new IllegalArgumentException("Insufficient funds to cancel the credit.");
+      }
+
+      account.setBalance(currentBalance - amount);
+
+      accountRepository.save(account);
+
+      log.info("Cancelled credit of {} for accountId: {}. New balance: {}",
+       amount, accountId, account.getBalance());
     }
 
 }
