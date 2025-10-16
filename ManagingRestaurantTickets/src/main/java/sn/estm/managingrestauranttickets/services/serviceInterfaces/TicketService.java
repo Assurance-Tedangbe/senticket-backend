@@ -47,4 +47,13 @@ public interface TicketService {
  * @return a list of {@link TicketDTO} objects matching the given criteria
  */
     List<TicketDTO> readTicketsByMenuIdAndUserIdAndStatus(Long menuId, Long userId, TicketStatus status);
+
+    void purchaseTicket(Long accountId, TicketDTO ticketDTO);
+
+    void transferTicket(Long fromAccountId, Long toAccountId, Long ticketId);
+
+    void cancelTransferTicket(Long fromAccountId, Long toAccountId, Long ticketId);
+
+    void debitAccount(Long accountId, Long ticketId, Long debiterUserId);
+
 }
