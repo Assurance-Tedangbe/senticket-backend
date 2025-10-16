@@ -53,14 +53,15 @@ public class Ticket implements Serializable {
    @Column(nullable = false)
    private boolean booked;
 
-   /* private String ticketStatus; */
    @Column(nullable = false)
    @Enumerated(EnumType.STRING)
    TicketStatus ticketStatus;
 
-   //@Temporal(TemporalType.DATE)
+   @Temporal(TemporalType.TIMESTAMP)
+   private LocalDateTime ticketCreationDate;
+
    @Temporal(TemporalType.TIMESTAMP) 
-   private LocalDateTime ticketIssueDate;
+   private LocalDateTime ticketPurchaseDate;
 
    @Size(min = 3, max = 100)
    @NotBlank(message = "The ticket needs a description.")
