@@ -2,6 +2,7 @@
 package sn.estm.managingrestauranttickets.services.serviceInterfaces;
 import java.util.List;
 import sn.estm.managingrestauranttickets.dto.TicketDTO;
+import sn.estm.managingrestauranttickets.dto.TicketFromDTO;
 import sn.estm.managingrestauranttickets.enumerations.TicketStatus;
 
 
@@ -48,7 +49,7 @@ public interface TicketService {
  */
     List<TicketDTO> readTicketsByMenuIdAndUserIdAndStatus(Long menuId, Long userId, TicketStatus status);
 
-    void purchaseTicket(Long accountId, TicketDTO ticketDTO);
+    void purchaseTicket(TicketFromDTO ticketFromDTO);
 
     void transferTicket(Long fromAccountId, Long toAccountId, Long ticketId);
 

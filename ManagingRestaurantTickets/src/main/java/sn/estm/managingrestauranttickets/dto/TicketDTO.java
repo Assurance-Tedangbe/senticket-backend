@@ -13,6 +13,7 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import sn.estm.managingrestauranttickets.enumerations.TicketStatus;
+import sn.estm.managingrestauranttickets.enumerations.TicketType;
 
 
 @Data
@@ -23,9 +24,8 @@ public class TicketDTO {
     
     private Long ticketId;
 
-    @Size(min = 3, max = 50)
     @NotBlank(message = "The ticket needs a type.")
-    private String ticketType;
+    private TicketType ticketType;
 
     @NotNull(message = "The ticket price is required.")
     private Double ticketPrice;

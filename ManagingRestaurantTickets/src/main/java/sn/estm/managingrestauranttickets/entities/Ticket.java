@@ -3,6 +3,9 @@ package sn.estm.managingrestauranttickets.entities;
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
+import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.UpdateTimestamp;
+
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
 import jakarta.persistence.EnumType;
@@ -25,6 +28,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import sn.estm.managingrestauranttickets.enumerations.TicketStatus;
+import sn.estm.managingrestauranttickets.enumerations.TicketType;
 
 
 @Entity
@@ -40,26 +44,52 @@ public class Ticket implements Serializable {
    @GeneratedValue(strategy =GenerationType.IDENTITY)
    private Long ticketId;
    
-   @Size(min = 3, max = 50)
-   @NotBlank(message = "The ticket needs a type.")
-   private String ticketType;
-   
-   @Column(nullable = false)
-   private double ticketPrice;
-
-   @Column(unique = true, nullable = false)
-   private String payementCode;
-
-   @Column(nullable = false)
-   private boolean booked;
-
    @Column(nullable = false)
    @Enumerated(EnumType.STRING)
-   TicketStatus ticketStatus;
+   private TicketType ticketType;
 
+   /* TicketPrice is derived from the ticketType, so no default needed here
+    * The price must be calculated and set in the business logic (Service layer)
+    */
+   @Column(nullable = false)
+   private Double ticketPrice;
+
+   /* Payment Code (Unique, generated on purchase, null initially)
+    * The unique constraint should be applied *only* when the code is set. 
+    * It's safer to handle the uniqueness and generation in the service layer
+    */
+   @Column(unique = true)
+   private String payementCode;
+
+   /* Booked, Default value false
+    * Use the @Builder.Default annotation for Lombok's @Builder to respect the default
+    */
+   @Column(nullable = false)
+   @Builder.Default
+   private boolean booked = false;
+
+   /* TicketStatus (Default value AVAILABLE)
+    */
+   @Column(nullable = false)
+   @Enumerated(EnumType.STRING)
+   @Builder.Default
+   TicketStatus ticketStatus = TicketStatus.AVAILABLE;
+
+   /* Ticket Creation Date (Automatic value on creation)
+    * updatable=false ensures it's only set once
+    * @CreationTimestamp to set the value on insertion
+    */
+   @CreationTimestamp 
    @Temporal(TemporalType.TIMESTAMP)
+   @Column(nullable = false, updatable = false) 
    private LocalDateTime ticketCreationDate;
 
+   /* Ticket Purchase Date (Automatic value on purchase/update)
+    * This value is only updated when the ticket is purchased, so @UpdateTimestamp is appropriate.
+    * However, since it only updates on purchase,it's better to manage 
+    * this manually in the service layer, but @UpdateTimestamp works for now.
+    *  @UpdateTimestamp to set the value on update
+    */
    @Temporal(TemporalType.TIMESTAMP) 
    private LocalDateTime ticketPurchaseDate;
 
