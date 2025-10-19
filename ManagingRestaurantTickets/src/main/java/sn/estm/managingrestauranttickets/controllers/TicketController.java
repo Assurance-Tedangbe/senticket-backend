@@ -12,6 +12,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
+import jakarta.validation.Valid;
+
 //import org.springframework.security.access.prepost.PostAuthorize;
 
 import lombok.Data;
@@ -19,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import sn.estm.managingrestauranttickets.dto.TicketDTO;
+import sn.estm.managingrestauranttickets.dto.TicketFromDTO;
 import sn.estm.managingrestauranttickets.enumerations.TicketStatus;
 import sn.estm.managingrestauranttickets.services.serviceInterfaces.TicketService;
 
@@ -202,4 +205,20 @@ public class TicketController {
 
         return new ResponseEntity<>(ticketsByMenuIdandUserIdAndStatus, HttpStatus.OK);
     } 
+
+    //@PostAuthorize("hasAnyAuthority('ADMIN', 'ETUDIANT')")
+    @PostMapping(value = "/{purchase}", consumes = "application/json", produces = "application/json")
+    public ResponseEntity<List<TicketDTO>> purchaseTickets(@Valid @RequestBody TicketFromDTO ticketFromDTO) {
+        
+        log.info("Purchasing ticket(s) with accountID with details: {}", 
+        ticketFromDTO.getAccountDTO().getAccountId(),
+        ticketFromDTO);
+        
+        // Call the service layer to execute the business logic
+        List<TicketDTO> purchasedTickets = ticketService.purchaseTicket(ticketFromDTO);
+
+        log.info("Tickets purchased successfully: {}", purchasedTickets);
+
+        return new ResponseEntity<>(purchasedTickets, HttpStatus.CREATED);
+    }
 }
