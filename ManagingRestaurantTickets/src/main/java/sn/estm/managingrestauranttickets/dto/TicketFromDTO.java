@@ -24,6 +24,6 @@ public class TicketFromDTO {
     private AccountDTO accountDTO;
 
     @NotNull(message = "List of tickets is required.")
-    private List<Long> allTicketIds;
+    private List<Long> selectedTicketIds;
 
 }

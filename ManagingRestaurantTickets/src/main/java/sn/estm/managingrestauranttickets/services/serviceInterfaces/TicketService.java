@@ -49,7 +49,7 @@ public interface TicketService {
  */
     List<TicketDTO> readTicketsByMenuIdAndUserIdAndStatus(Long menuId, Long userId, TicketStatus status);
 
-    void purchaseTicket(TicketFromDTO ticketFromDTO);
+    List<TicketDTO> purchaseTicket(TicketFromDTO ticketFromDTO);
 
     void transferTicket(Long fromAccountId, Long toAccountId, Long ticketId);
 

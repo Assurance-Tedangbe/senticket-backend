@@ -3,21 +3,24 @@ package sn.estm.managingrestauranttickets.services.serviceImpl;
 
 import java.text.MessageFormat;
 import java.time.LocalDateTime;
-
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import sn.estm.managingrestauranttickets.dto.TicketDTO;
+import sn.estm.managingrestauranttickets.dto.TicketFromDTO;
 import sn.estm.managingrestauranttickets.entities.Account;
 import sn.estm.managingrestauranttickets.entities.Ticket;
 import sn.estm.managingrestauranttickets.entities.User;
 import sn.estm.managingrestauranttickets.enumerations.TicketStatus;
+import sn.estm.managingrestauranttickets.enumerations.TicketType;
 import sn.estm.managingrestauranttickets.exceptions.ResourceNotFoundException;
 import sn.estm.managingrestauranttickets.mappers.TicketMapper;
 import sn.estm.managingrestauranttickets.repositories.AccountRepository;
@@ -45,8 +48,14 @@ public class TicketServiceImpl implements TicketService {
 
         ticket.setTicketStatus(TicketStatus.AVAILABLE);
         ticket.setBooked(false);
-        ticket.setTicketType("A");
+        ticket.setTicketType(TicketType.A);
         ticket.setTicketCreationDate(LocalDateTime.now());
+
+        if (ticket.getTicketType() == TicketType.A) {
+           ticket.setTicketPrice(100.0);
+       } else if (ticket.getTicketType() == TicketType.B) {
+           ticket.setTicketPrice(150.0);
+       }
         
         Ticket savedTicket = ticketRepository.save(ticket);
 
@@ -250,67 +259,114 @@ public class TicketServiceImpl implements TicketService {
     }
 
 
+@Transactional
 @Override
-public void purchaseTicket(Long accountId, TicketDTO ticketDTO) {
+public List<TicketDTO> purchaseTicket(TicketFromDTO ticketFromDTO) {
 
-    log.info("Purchasing ticket {} for account {}", ticketDTO, accountId);
+    log.info("Purchasing tickets request: {}", ticketFromDTO);
 
-    Account account = accountRepository.findById(accountId)
-            .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
-                    "Account not found with ID: {0}", accountId)));
-
-    if (ticketDTO == null || ticketDTO.getTicketId() == null) {
-        throw new IllegalArgumentException("Ticket ID must be provided to purchase a ticket.");
+    // Validate input
+    if (ticketFromDTO == null || ticketFromDTO.getSelectedTicketIds() == null) {
+        throw new IllegalArgumentException("Ticket purchase data must be provided");
     }
 
-    Ticket ticket = ticketRepository.findById(ticketDTO.getTicketId())
-            .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
-                    "Ticket not found with ID: {0}", ticketDTO.getTicketId())));
+    Long accountId = ticketFromDTO.getAccountDTO().getAccountId();
+    if (accountId == null) {
+        throw new IllegalArgumentException("Account ID must be provided in TicketFromDTO.");
+    } 
 
-    // Ensure ticket is available
-    if (Boolean.TRUE.equals(ticket.isBooked())
-            || (ticket.getTicketStatus() != null && ticket.getTicketStatus().name()
-            .equalsIgnoreCase("BOOKED"))) {
-        throw new IllegalStateException(MessageFormat.format("Ticket with ID: {0} is already booked.",
-         ticket.getTicketId()));
+    List<Long> ticketIds = ticketFromDTO.getSelectedTicketIds();
+    
+    if (ticketIds.isEmpty()) {
+        throw new IllegalArgumentException("No tickets provided for purchase");
     }
 
-    // Determine price: use existing ticket price if set, otherwise default by type
-    Double price = ticket.getTicketPrice();
-    String typeStr = ticket.getTicketType() == null ? "" : ticket.getTicketType().toString();
-    if (price == null) {
-        if (typeStr.equalsIgnoreCase("A")) {
-            price = 100.0;
-            ticket.setTicketPrice(price);
-        } else { // default to green price if not blue
-            price = 150.0;
-            ticket.setTicketPrice(price);
+    // Get account and user
+    Account account = accountRepository.findById(ticketFromDTO.getAccountDTO().getAccountId())
+            .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
+                    "Account not found with ID: {0}", 
+                    ticketFromDTO.getAccountDTO().getAccountId())));
+
+    User user = userRepository.findById(ticketFromDTO.getUserDTO().getUserId())
+            .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
+                    "User not found with ID: {0}",
+                     ticketFromDTO.getUserDTO().getUserId())));
+
+    // Fetch all tickets
+    List<Ticket> tickets = ticketRepository.findAllById(ticketIds);
+    
+    // Check if all tickets were found
+    if (tickets.size() != ticketIds.size()) {
+        throw new ResourceNotFoundException("One or more tickets not found");
+    }
+
+    // Validate tickets and calculate total price
+    double totalPrice = 0.0;
+    List<Ticket> availableTickets = new ArrayList<>();
+
+    for (Ticket ticket : tickets) {
+        // Check if ticket is available
+        if (ticket.isBooked() || ticket.getTicketStatus() != TicketStatus.AVAILABLE) {
+            throw new IllegalStateException(MessageFormat.format(
+                    "Ticket with ID: {0} is not available for purchase",
+                     ticket.getTicketId()));
         }
+
+        // Ensure ticket price is set based on type
+        if (ticket.getTicketPrice() == null) {
+            if (ticket.getTicketType() == TicketType.A) {
+                ticket.setTicketPrice(100.0);
+            } else if (ticket.getTicketType() == TicketType.B) {
+                ticket.setTicketPrice(150.0);
+            } else {
+                throw new IllegalStateException(MessageFormat.format(
+                        "Invalid ticket type for ticket ID: {0}", ticket.getTicketId()));
+            }
+        }
+
+        totalPrice += ticket.getTicketPrice();
+        availableTickets.add(ticket);
     }
 
-    // Validate account balance (assumes Account has getBalance()/setBalance() returning Double)
+    // Validate account balance
     Double balance = account.getBalance();
-    if (balance == null || balance < price) {
-        throw new IllegalStateException("Insufficient funds on account to purchase the ticket.");
+    if (balance == null || balance < totalPrice) {
+        throw new IllegalStateException(MessageFormat.format(
+                "Insufficient funds", totalPrice, balance));
     }
 
-    // Deduct price from account and save
-    account.setBalance(balance - price);
-    accountRepository.save(account);
+    // Deduct total price from account
+    account.setBalance(balance - totalPrice);
+    Account savedAccount = accountRepository.save(account);
 
-    // Update ticket: mark as booked, set status, issue date and generate payment code, attach account
-    ticket.setBooked(true);
-    ticket.setTicketStatus(TicketStatus.BOOKED);
-    ticket.setTicketPurchaseDate(LocalDateTime.now());
-    ticket.setPayementCode(UUID.randomUUID().toString());
-    ticket.setAccount(account);
+    // Update all tickets and collect purchased tickets
+    LocalDateTime purchaseDateTime = LocalDateTime.now();
+    List<Ticket> purchasedTickets = new ArrayList<>();
 
-    ticketRepository.save(ticket);
+    
+    for (Ticket ticket : availableTickets) {
+        ticket.setBooked(true);
+        ticket.setTicketStatus(TicketStatus.BOOKED);
+        ticket.setTicketPurchaseDate(purchaseDateTime);
+        ticket.setPayementCode(UUID.randomUUID().toString());
+        ticket.setAccount(savedAccount);
+        ticket.setUser(user);
+        
+        Ticket savedTicket = ticketRepository.save(ticket);
+        purchasedTickets.add(savedTicket);
+        
+        log.info("Ticket purchased successfully. ticketId={},+ ticketType={}, ticketPrice={}, paymentCode={}",
+                  savedTicket.getTicketId(), savedTicket.getTicketType(),
+                  savedTicket.getTicketPrice(), savedTicket.getPayementCode());
+    }
 
-    log.info("Ticket purchased successfully. ticketId={}, ticketType={}, " +
-                    "ticketPrice={}, paymentCode={}, accountId={}",
-            ticket.getTicketId(), ticket.getTicketType(), price, ticket.getPayementCode(), accountId);
-}
+    log.info("Successfully purchased {} tickets for account {}. Total amount: {}",
+            availableTickets.size(), savedAccount.getAccountId(), totalPrice);
+
+    return purchasedTickets.stream()
+            .map(ticketMapper::toDto)
+            .collect(Collectors.toList());
+   }
 
 
    @Override
