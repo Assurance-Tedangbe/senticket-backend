@@ -23,6 +23,7 @@ import lombok.extern.slf4j.Slf4j;
 import sn.estm.managingrestauranttickets.dto.TicketDTO;
 import sn.estm.managingrestauranttickets.dto.customisedto.TicketCreationRequestDTO;
 import sn.estm.managingrestauranttickets.dto.customisedto.TicketFromDTO;
+import sn.estm.managingrestauranttickets.dto.customisedto.TicketIdToTransferDTO;
 import sn.estm.managingrestauranttickets.enumerations.TicketStatus;
 import sn.estm.managingrestauranttickets.services.serviceInterfaces.TicketService;
 
@@ -106,7 +107,8 @@ public class TicketController {
      //@PostAuthorize("hasAnyAuthority('ADMIN', 'AGENT', 'ETUDIANT', 'PORTIER')")
     @PutMapping(value = "/ticketStatus/{ticketId}", consumes = "application/json")
     @ResponseStatus(HttpStatus.OK)
-    public void updateTicketStatus(@PathVariable Long ticketId, @RequestBody TicketStatus ticketStatus) {
+    public void updateTicketStatus(@PathVariable Long ticketId,
+                                   @RequestBody TicketStatus ticketStatus) {
 
         log.info("Updating ticket status for ticket with ID: {}", ticketId);
        
@@ -186,7 +188,7 @@ public class TicketController {
         List<TicketDTO> ticketsByMenuIdandUserId = ticketService.
                                                    readTicketsByMenuIdAndUserId(menuId, userId);
          
-        log.info("Fetched tickets by a given menuId and userId: {}", menuId, userId);
+        log.info("Fetched tickets by a given menuId and userId: {}, {}", menuId, userId);
 
         return new ResponseEntity<>(ticketsByMenuIdandUserId, HttpStatus.OK);
     }
@@ -202,7 +204,7 @@ public class TicketController {
                                                  readTicketsByMenuIdAndUserIdAndStatus(
                                                     menuId, userId, ticketStatus);
          
-        log.info("Fetched tickets by a given menuId, userId and status: {}", menuId, userId, ticketStatus);
+        log.info("Fetched tickets by a given menuId, userId and status: {},{},{}", menuId, userId, ticketStatus);
 
         return new ResponseEntity<>(ticketsByMenuIdandUserIdAndStatus, HttpStatus.OK);
     } 
@@ -211,7 +213,7 @@ public class TicketController {
     @PostMapping(value = "/{purchase}", consumes = "application/json", produces = "application/json")
     public ResponseEntity<List<TicketDTO>> purchaseTickets(@Valid @RequestBody TicketFromDTO ticketFromDTO) {
         
-        log.info("Purchasing ticket(s) with accountID with details: {}", 
+        log.info("Purchasing ticket(s) with accountID with details: {}, {}",
         ticketFromDTO.getAccountDTO().getAccountId(),
         ticketFromDTO);
         
@@ -222,4 +224,17 @@ public class TicketController {
 
         return new ResponseEntity<>(purchasedTickets, HttpStatus.CREATED);
     }
+
+    //@PostAuthorize("hasAuthority('ADMIN', 'ETUDIANT')")
+    @PutMapping(value = "/transferTickets")
+    @ResponseStatus(HttpStatus.OK)
+    public void transferTickets( @RequestBody TicketIdToTransferDTO ticketIdToTransferDTO) {
+
+        log.info("Transferring ticket(s) with details {}:", ticketIdToTransferDTO);
+
+        ticketService.transferTickets(ticketIdToTransferDTO);
+
+        log.info("Transfer of tickets completed successfully {}", ticketIdToTransferDTO);
+    }
+
 }
