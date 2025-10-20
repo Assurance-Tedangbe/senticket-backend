@@ -2,6 +2,7 @@ package sn.estm.managingrestauranttickets.services.serviceImpl;
 
 import org.springframework.stereotype.Service;
 import sn.estm.managingrestauranttickets.dto.AccountDTO;
+import sn.estm.managingrestauranttickets.dto.customisedto.TicketCreationRequestDTO;
 import sn.estm.managingrestauranttickets.entities.Account;
 import sn.estm.managingrestauranttickets.entities.User;
 import sn.estm.managingrestauranttickets.exceptions.ResourceNotFoundException;
@@ -9,6 +10,8 @@ import sn.estm.managingrestauranttickets.mappers.AccountMapper;
 import sn.estm.managingrestauranttickets.repositories.AccountRepository;
 import sn.estm.managingrestauranttickets.repositories.UserRepository;
 import sn.estm.managingrestauranttickets.services.serviceInterfaces.AccountService;
+import sn.estm.managingrestauranttickets.services.serviceInterfaces.TicketService;
+
 import java.text.MessageFormat;
 
 import java.util.List;
@@ -26,6 +29,7 @@ public class AccountServiceImpl implements AccountService {
   private final AccountRepository accountRepository;
   private final UserRepository userRepository;
   private final AccountMapper accountMapper;
+  private final TicketService ticketService;
 
   @Override
   public AccountDTO createAccount(AccountDTO accountDto) {
@@ -36,6 +40,14 @@ public class AccountServiceImpl implements AccountService {
       Account savedAccount = accountRepository.save(account);
 
       log.info("Account created successfully with ID: {}", savedAccount.getAccountId());
+
+      TicketCreationRequestDTO ticketCreationRequestDTO = TicketCreationRequestDTO.builder()
+              .countA(5)
+              .countB(5)
+              .build();
+
+      ticketService.createTickets(ticketCreationRequestDTO);
+
       return accountMapper.toDto(savedAccount);
     }
 

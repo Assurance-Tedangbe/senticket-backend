@@ -1,14 +1,17 @@
 /* interface for Ticket Service */
 package sn.estm.managingrestauranttickets.services.serviceInterfaces;
+
 import java.util.List;
+
 import sn.estm.managingrestauranttickets.dto.TicketDTO;
-import sn.estm.managingrestauranttickets.dto.TicketFromDTO;
+import sn.estm.managingrestauranttickets.dto.customisedto.TicketCreationRequestDTO;
+import sn.estm.managingrestauranttickets.dto.customisedto.TicketFromDTO;
 import sn.estm.managingrestauranttickets.enumerations.TicketStatus;
 
 
 public interface TicketService {
-        
-    TicketDTO createTicket(TicketDTO ticketDTO);
+
+    List<TicketDTO> createTickets(TicketCreationRequestDTO ticketCreationRequestDTO);
 
     List<TicketDTO> readTickets();
 
@@ -49,11 +52,11 @@ public interface TicketService {
  */
     List<TicketDTO> readTicketsByMenuIdAndUserIdAndStatus(Long menuId, Long userId, TicketStatus status);
 
-    List<TicketDTO> purchaseTicket(TicketFromDTO ticketFromDTO);
+    List<TicketDTO> purchaseTickets(TicketFromDTO ticketFromDTO);
 
-    void transferTicket(Long fromAccountId, Long toAccountId, Long ticketId);
+    void transferTickets(Long fromAccountId, Long toAccountId, List<Long> selectedTicketIdsToTransfer);
 
-    void cancelTransferTicket(Long fromAccountId, Long toAccountId, Long ticketId);
+    void cancelTransferTickets(Long fromAccountId, Long toAccountId, Long ticketId);
 
     void debitAccount(Long accountId, Long ticketId, Long debiterUserId);
 
