@@ -4,13 +4,14 @@ package sn.estm.managingrestauranttickets.services.serviceInterfaces;
 import java.util.List;
 
 import sn.estm.managingrestauranttickets.dto.TicketDTO;
+import sn.estm.managingrestauranttickets.dto.customisedto.TicketCreationRequestDTO;
 import sn.estm.managingrestauranttickets.dto.customisedto.TicketFromDTO;
 import sn.estm.managingrestauranttickets.enumerations.TicketStatus;
 
 
 public interface TicketService {
 
-    List<TicketDTO> createTickets(int countA, int countB);
+    List<TicketDTO> createTickets(TicketCreationRequestDTO ticketCreationRequestDTO);
 
     List<TicketDTO> readTickets();
 
@@ -53,7 +54,7 @@ public interface TicketService {
 
     List<TicketDTO> purchaseTickets(TicketFromDTO ticketFromDTO);
 
-    void transferTickets(Long fromAccountId, Long toAccountId, Long ticketId);
+    void transferTickets(Long fromAccountId, Long toAccountId, List<Long> selectedTicketIdsToTransfer);
 
     void cancelTransferTickets(Long fromAccountId, Long toAccountId, Long ticketId);
 

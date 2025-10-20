@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import sn.estm.managingrestauranttickets.dto.TicketDTO;
+import sn.estm.managingrestauranttickets.dto.customisedto.TicketCreationRequestDTO;
 import sn.estm.managingrestauranttickets.dto.customisedto.TicketFromDTO;
 import sn.estm.managingrestauranttickets.entities.Account;
 import sn.estm.managingrestauranttickets.entities.Ticket;
@@ -40,11 +41,11 @@ public class TicketServiceImpl implements TicketService {
     private final UserRepository userRepository;
 
     @Override
-    public List<TicketDTO> createTickets(int countA, int countB) {
+    public List<TicketDTO> createTickets(TicketCreationRequestDTO ticketCreationRequestDTO) {
 
-        log.info("Creating {} type A tickets and {} type B tickets", countA, countB);
+        log.info("Creating tickets with requests {}", ticketCreationRequestDTO);
 
-        if (countA < 0 || countB < 0) {
+        if (ticketCreationRequestDTO.getCountA() < 0 || ticketCreationRequestDTO.getCountB() < 0) {
             throw new IllegalArgumentException("Ticket counts cannot be negative");
         }
 
@@ -52,7 +53,7 @@ public class TicketServiceImpl implements TicketService {
         LocalDateTime creationTime = LocalDateTime.now();
 
         // Create Type A tickets
-        for (int i = 0; i < countA; i++) {
+        for (int i = 0; i < ticketCreationRequestDTO.getCountA(); i++) {
             Ticket ticketA = Ticket.builder()
                     .ticketType(TicketType.A)
                     .ticketPrice(100.0)
@@ -65,7 +66,7 @@ public class TicketServiceImpl implements TicketService {
         }
 
         // Create Type B tickets
-        for (int i = 0; i < countB; i++) {
+        for (int i = 0; i < ticketCreationRequestDTO.getCountB(); i++) {
             Ticket ticketB = Ticket.builder()
                     .ticketType(TicketType.B)
                     .ticketPrice(150.0)
@@ -80,8 +81,8 @@ public class TicketServiceImpl implements TicketService {
         // Use saveAll for efficient batch insertion
         List<Ticket> savedTickets = ticketRepository.saveAll(ticketsToSave);
 
-        log.info("Successfully created {} tickets ({} type A, {} type B)",
-                savedTickets.size(), countA, countB);
+        log.info("Successfully created tickets {} with requests {}",
+                savedTickets.size(), ticketCreationRequestDTO);
 
         return savedTickets.stream()
                 .map(ticketMapper::toDto)
@@ -323,9 +324,11 @@ public List<TicketDTO> purchaseTickets(TicketFromDTO ticketFromDTO) {
         throw new ResourceNotFoundException("One or more tickets not found");
     }
 
-    // Validate tickets and calculate total price
+    // Validate tickets and calculate total price + count ticket types
     double totalPrice = 0.0;
     List<Ticket> availableTickets = new ArrayList<>();
+    int countAPurchased = 0;
+    int countBPurchased = 0;
 
     for (Ticket ticket : tickets) {
         // Check if ticket is available
@@ -342,6 +345,13 @@ public List<TicketDTO> purchaseTickets(TicketFromDTO ticketFromDTO) {
 
         totalPrice += ticket.getTicketPrice();
         availableTickets.add(ticket);
+
+        //Count ticket types
+        if(ticket.getTicketType() == TicketType.A){
+            countAPurchased++;
+        }else if(ticket.getTicketType() == TicketType.B){
+            countBPurchased++;
+        }
     }
 
     // Validate account balance
@@ -376,10 +386,21 @@ public List<TicketDTO> purchaseTickets(TicketFromDTO ticketFromDTO) {
                   savedTicket.getTicketPrice(), savedTicket.getPayementCode());
     }
 
-    log.info("Successfully purchased {} tickets for account {}. Total amount: {}",
-            availableTickets.size(), savedAccount.getAccountId(), totalPrice);
+    log.info("Successfully purchased {} tickets for account {}. Total amount: {}. Type A: {}, Type B: {}",
+            purchasedTickets.size(), savedAccount.getAccountId(), totalPrice, countAPurchased, countBPurchased);
 
-    createTickets(5, 5);
+    // Automatically recreate the purchased tickets to maintain inventory
+    if (countAPurchased > 0 || countBPurchased > 0) {
+        TicketCreationRequestDTO ticketCreationRequestDTO = TicketCreationRequestDTO.builder()
+                .countA(countAPurchased)  // Recreate same number of Type A tickets
+                .countB(countBPurchased)  // Recreate same number of Type B tickets
+                .build();
+
+        createTickets(ticketCreationRequestDTO);
+
+        log.info("Automatically recreated {} Type A tickets and {} Type B tickets to maintain inventory",
+                countAPurchased, countBPurchased);
+    }
 
     return purchasedTickets.stream()
             .map(ticketMapper::toDto)
@@ -388,7 +409,8 @@ public List<TicketDTO> purchaseTickets(TicketFromDTO ticketFromDTO) {
 
 
    @Override
-   public void transferTickets(Long fromAccountId, Long toAccountId, Long ticketId) {
+   public void transferTickets(Long fromAccountId, Long toAccountId,
+                               List<Long> selectedTicketIdsToTransfer) {
   
    }
 

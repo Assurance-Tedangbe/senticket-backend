@@ -21,6 +21,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import sn.estm.managingrestauranttickets.dto.TicketDTO;
+import sn.estm.managingrestauranttickets.dto.customisedto.TicketCreationRequestDTO;
 import sn.estm.managingrestauranttickets.dto.customisedto.TicketFromDTO;
 import sn.estm.managingrestauranttickets.enumerations.TicketStatus;
 import sn.estm.managingrestauranttickets.services.serviceInterfaces.TicketService;
@@ -39,11 +40,11 @@ public class TicketController {
 
      //@PostAuthorize("hasAuthority('ADMIN')")
     @PostMapping(consumes = "application/json", produces = "application/json")
-    public ResponseEntity<List<TicketDTO>> createTicket(@RequestBody int countA, int countB) {
+    public ResponseEntity<List<TicketDTO>> createTicket(@RequestBody TicketCreationRequestDTO ticketCreationRequestDTO) {
 
-        log.info("Creating tickets with details: {}, {}", countA, countB);
+        log.info("Creating tickets with requests: {}", ticketCreationRequestDTO );
 
-        List<TicketDTO> createdTickets = ticketService.createTickets(countA, countB);
+        List<TicketDTO> createdTickets = ticketService.createTickets(ticketCreationRequestDTO);
 
         log.info("Tickets created successfully with IDs: {}", createdTickets);
 
