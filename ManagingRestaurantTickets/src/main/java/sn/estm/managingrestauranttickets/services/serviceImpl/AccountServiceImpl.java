@@ -9,6 +9,8 @@ import sn.estm.managingrestauranttickets.mappers.AccountMapper;
 import sn.estm.managingrestauranttickets.repositories.AccountRepository;
 import sn.estm.managingrestauranttickets.repositories.UserRepository;
 import sn.estm.managingrestauranttickets.services.serviceInterfaces.AccountService;
+import sn.estm.managingrestauranttickets.services.serviceInterfaces.TicketService;
+
 import java.text.MessageFormat;
 
 import java.util.List;
@@ -26,6 +28,7 @@ public class AccountServiceImpl implements AccountService {
   private final AccountRepository accountRepository;
   private final UserRepository userRepository;
   private final AccountMapper accountMapper;
+  private final TicketService ticketService;
 
   @Override
   public AccountDTO createAccount(AccountDTO accountDto) {
@@ -36,6 +39,9 @@ public class AccountServiceImpl implements AccountService {
       Account savedAccount = accountRepository.save(account);
 
       log.info("Account created successfully with ID: {}", savedAccount.getAccountId());
+
+      ticketService.createTickets(5, 5);
+
       return accountMapper.toDto(savedAccount);
     }
 

@@ -21,7 +21,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import sn.estm.managingrestauranttickets.dto.TicketDTO;
-import sn.estm.managingrestauranttickets.dto.TicketFromDTO;
+import sn.estm.managingrestauranttickets.dto.customisedto.TicketFromDTO;
 import sn.estm.managingrestauranttickets.enumerations.TicketStatus;
 import sn.estm.managingrestauranttickets.services.serviceInterfaces.TicketService;
 
@@ -39,15 +39,15 @@ public class TicketController {
 
      //@PostAuthorize("hasAuthority('ADMIN')")
     @PostMapping(consumes = "application/json", produces = "application/json")
-    public ResponseEntity<TicketDTO> createTicket(@RequestBody TicketDTO ticketDTO) {
+    public ResponseEntity<List<TicketDTO>> createTicket(@RequestBody int countA, int countB) {
 
-        log.info("Creating ticket with details: {}", ticketDTO);
+        log.info("Creating tickets with details: {}, {}", countA, countB);
 
-        TicketDTO createdTicket = ticketService.createTicket(ticketDTO);
+        List<TicketDTO> createdTickets = ticketService.createTickets(countA, countB);
 
-        log.info("Ticket created successfully with ID: {}", createdTicket.getTicketId());
+        log.info("Tickets created successfully with IDs: {}", createdTickets);
 
-        return new ResponseEntity<>(createdTicket, HttpStatus.CREATED);
+        return new ResponseEntity<>(createdTickets, HttpStatus.CREATED);
     }
       
     
@@ -215,7 +215,7 @@ public class TicketController {
         ticketFromDTO);
         
         // Call the service layer to execute the business logic
-        List<TicketDTO> purchasedTickets = ticketService.purchaseTicket(ticketFromDTO);
+        List<TicketDTO> purchasedTickets = ticketService.purchaseTickets(ticketFromDTO);
 
         log.info("Tickets purchased successfully: {}", purchasedTickets);
 
