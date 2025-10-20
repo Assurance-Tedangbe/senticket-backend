@@ -12,5 +12,6 @@ import lombok.NoArgsConstructor;
 public class TicketCreationRequestDTO {
 
     private Integer countA;
+
     private Integer countB;
 }

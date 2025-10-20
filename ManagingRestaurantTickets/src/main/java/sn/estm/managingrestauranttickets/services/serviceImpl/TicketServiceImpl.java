@@ -17,6 +17,7 @@ import lombok.extern.slf4j.Slf4j;
 import sn.estm.managingrestauranttickets.dto.TicketDTO;
 import sn.estm.managingrestauranttickets.dto.customisedto.TicketCreationRequestDTO;
 import sn.estm.managingrestauranttickets.dto.customisedto.TicketFromDTO;
+import sn.estm.managingrestauranttickets.dto.customisedto.TicketIdToTransferDTO;
 import sn.estm.managingrestauranttickets.entities.Account;
 import sn.estm.managingrestauranttickets.entities.Ticket;
 import sn.estm.managingrestauranttickets.entities.User;
@@ -40,6 +41,7 @@ public class TicketServiceImpl implements TicketService {
     private final AccountRepository accountRepository;
     private final UserRepository userRepository;
 
+    @Transactional
     @Override
     public List<TicketDTO> createTickets(TicketCreationRequestDTO ticketCreationRequestDTO) {
 
@@ -407,16 +409,98 @@ public List<TicketDTO> purchaseTickets(TicketFromDTO ticketFromDTO) {
             .collect(Collectors.toList());
    }
 
+   @Transactional
+   @Override
+   public void transferTickets(TicketIdToTransferDTO ticketIdToTransferDTO) {
+
+        log.info("Attempting to transfer tickets {} from Account {} to Account {}",
+                ticketIdToTransferDTO.getSelectedTicketIdsToTransfer(),
+                ticketIdToTransferDTO.getFromAccountId(),
+                ticketIdToTransferDTO.getToAccountId());
+
+        // --- 1. Input Validation ---
+        if (ticketIdToTransferDTO.getSelectedTicketIdsToTransfer() == null ||
+                ticketIdToTransferDTO.getSelectedTicketIdsToTransfer().isEmpty()) {
+            throw new IllegalArgumentException("The list of ticket IDs to transfer cannot be empty.");
+        }
+        if (ticketIdToTransferDTO.getFromAccountId() == null ||
+                ticketIdToTransferDTO.getToAccountId() == null) {
+            throw new IllegalArgumentException("Both sender (from) and recipient (to) account IDs must be provided.");
+        }
+        if (ticketIdToTransferDTO.getFromAccountId().
+                equals(ticketIdToTransferDTO.getToAccountId())) {
+            throw new IllegalArgumentException("Cannot transfer tickets to the same account.");
+        }
+
+        // --- 2. Retrieve Accounts and Recipient User ---
+
+        // Sender Account
+        Account fromAccount = accountRepository.findById(ticketIdToTransferDTO.getFromAccountId())
+                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
+                        "Sender account not found with ID: {0}",
+                        ticketIdToTransferDTO.getFromAccountId())));
+
+        // Recipient Account
+        Account toAccount = accountRepository.findById(ticketIdToTransferDTO.getToAccountId())
+                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
+                        "Recipient account not found with ID: {0}",
+                        ticketIdToTransferDTO.getToAccountId())));
+
+        // Recipient User (assuming Account has a User association we can retrieve)
+        // NOTE: This assumes Account.getUser() or a direct User lookup based on toAccount data
+        User toUser = userRepository.findById(ticketIdToTransferDTO.getToAccountId()) // Example lookup, adjust based on your repository method
+                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
+                        "User associated with recipient account {0} not found.",
+                        ticketIdToTransferDTO.getToAccountId())));
+
+
+        // --- 3. Fetch Tickets ---
+        List<Ticket> ticketsToTransfer = ticketRepository.
+                findAllById(ticketIdToTransferDTO.getSelectedTicketIdsToTransfer());
+
+        if (ticketsToTransfer.size() != ticketIdToTransferDTO.getSelectedTicketIdsToTransfer().size()) {
+            // Detailed error handling for missing tickets recommended in production
+            throw new ResourceNotFoundException("One or more tickets to transfer could not be found.");
+        }
+
+        // Prepare list for batch saving
+        List<Ticket> ticketsToSave = ticketsToTransfer.stream()
+                // --- 4. Validation and Update ---
+                .peek(ticket -> {
+                    // Check transfer eligibility
+                    if (!ticket.isBooked() || ticket.getTicketStatus() != TicketStatus.BOOKED) {
+                        throw new IllegalStateException(MessageFormat.format(
+                                "Ticket ID {0} is not eligible for transfer (must be BOOKED). Current Status: {1}, Booked: {2}",
+                                ticket.getTicketId(), ticket.getTicketStatus(), ticket.isBooked()));
+                    }
+
+                    // Security Check: Ensure the ticket belongs to the sender
+                    if (ticket.getAccount() == null || !ticket.getAccount().getAccountId().
+                            equals(ticketIdToTransferDTO.getFromAccountId())) {
+                        throw new IllegalStateException(MessageFormat.format(
+                                "Ticket ID  does not belong to the sender's account ID.",
+                                ticket.getTicketId(), ticketIdToTransferDTO.getFromAccountId()));
+                    }
+
+                    // Update the ticket ownership (Reassignment)
+                    // 1. Delete attachment from sender (by updating foreign key)
+                    ticket.setAccount(toAccount);
+                    // 2. Attach to the new user/owner
+                    ticket.setUser(toUser);
+                    // Note: Other attributes like TicketPrice, Booked status remain the same.
+                })
+                .collect(Collectors.toList());
+
+        // --- 5. Batch Save ---
+        ticketRepository.saveAll(ticketsToSave);
+
+        log.info("Successfully transferred {} tickets from account {} to account {}. New owner: User {}",
+                ticketsToSave.size(), ticketIdToTransferDTO.getFromAccountId(),
+                ticketIdToTransferDTO.getToAccountId(), toUser.getUserId());
+    }
 
    @Override
-   public void transferTickets(Long fromAccountId, Long toAccountId,
-                               List<Long> selectedTicketIdsToTransfer) {
-  
-   }
-
-
-   @Override
-   public void cancelTransferTickets(Long fromAccountId, Long toAccountId, Long ticketId) {
+   public void cancelTransferTickets(Long fromAccountId, Long toAccountId, List<Long> cancelTransferTicketIds) {
    
    }
 

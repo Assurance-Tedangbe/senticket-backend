@@ -62,7 +62,8 @@ public class AccountController {
 
     //@PostAuthorize("hasAuthority('ADMIN')")
     @PutMapping(value = "/{accountId}", consumes = "application/json", produces = "application/json")
-    public ResponseEntity<AccountDTO> updateAccount(@PathVariable Long accountId, @RequestBody AccountDTO accountDTO) {
+    public ResponseEntity<AccountDTO> updateAccount(@PathVariable Long accountId,
+                                                    @RequestBody AccountDTO accountDTO) {
 
         log.info("Updating account with ID: {} with details: {}", accountId, accountDTO);
                
@@ -144,7 +145,7 @@ public class AccountController {
     public void updateAccountNumber(
         @PathVariable Long accountId, @RequestBody String newAccountNumber) {
 
-        log.info("Updating account number for account with ID: {}", accountId, newAccountNumber);
+        log.info("Updating account number {} for account with ID: {}", accountId, newAccountNumber);
 
         accountService.updateAccountNumber(accountId, newAccountNumber);
 
@@ -197,8 +198,8 @@ public class AccountController {
     @PutMapping(value = "/cancelTransfer/{fromAccountId}/to/{toAccountId}/amount/{amount}")
     @ResponseStatus(HttpStatus.OK)
     public void cancelTransferFunds(@PathVariable Long fromAccountId,
-                                   @PathVariable Long toAccountId,
-                                   @PathVariable Double amount) {
+                                    @PathVariable Long toAccountId,
+                                    @PathVariable Double amount) {
 
         log.info("Cancelling transfer of {} from account ID: {} to account ID: {}", 
             amount, fromAccountId, toAccountId);
