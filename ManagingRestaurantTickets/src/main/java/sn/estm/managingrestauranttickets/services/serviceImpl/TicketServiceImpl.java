@@ -17,7 +17,8 @@ import lombok.extern.slf4j.Slf4j;
 import sn.estm.managingrestauranttickets.dto.TicketDTO;
 import sn.estm.managingrestauranttickets.dto.customisedto.TicketCreationRequestDTO;
 import sn.estm.managingrestauranttickets.dto.customisedto.TicketFromDTO;
-import sn.estm.managingrestauranttickets.dto.customisedto.TicketIdToTransferDTO;
+import sn.estm.managingrestauranttickets.dto.customisedto.TicketIdsToTransferDTO;
+import sn.estm.managingrestauranttickets.dto.customisedto.TransferedTicketIdsToCancelDTO;
 import sn.estm.managingrestauranttickets.entities.Account;
 import sn.estm.managingrestauranttickets.entities.Ticket;
 import sn.estm.managingrestauranttickets.entities.User;
@@ -411,7 +412,7 @@ public List<TicketDTO> purchaseTickets(TicketFromDTO ticketFromDTO) {
 
    @Transactional
    @Override
-   public void transferTickets(TicketIdToTransferDTO ticketIdToTransferDTO) {
+   public void transferTickets(TicketIdsToTransferDTO ticketIdToTransferDTO) {
 
         log.info("Attempting to transfer tickets {} from Account {} to Account {}",
                 ticketIdToTransferDTO.getSelectedTicketIdsToTransfer(),
@@ -432,45 +433,32 @@ public List<TicketDTO> purchaseTickets(TicketFromDTO ticketFromDTO) {
             throw new IllegalArgumentException("Cannot transfer tickets to the same account.");
         }
 
-        // --- 2. Retrieve Accounts and Recipient User ---
-
-        // Sender Account
+        // --- 2. Retrieve Accounts ---
         Account fromAccount = accountRepository.findById(ticketIdToTransferDTO.getFromAccountId())
                 .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
                         "Sender account not found with ID: {0}",
                         ticketIdToTransferDTO.getFromAccountId())));
 
-        // Recipient Account
         Account toAccount = accountRepository.findById(ticketIdToTransferDTO.getToAccountId())
                 .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
                         "Recipient account not found with ID: {0}",
                         ticketIdToTransferDTO.getToAccountId())));
-
-        // Recipient User (assuming Account has a User association we can retrieve)
-        // NOTE: This assumes Account.getUser() or a direct User lookup based on toAccount data
-        User toUser = userRepository.findById(ticketIdToTransferDTO.getToAccountId()) // Example lookup, adjust based on your repository method
-                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
-                        "User associated with recipient account {0} not found.",
-                        ticketIdToTransferDTO.getToAccountId())));
-
 
         // --- 3. Fetch Tickets ---
         List<Ticket> ticketsToTransfer = ticketRepository.
                 findAllById(ticketIdToTransferDTO.getSelectedTicketIdsToTransfer());
 
         if (ticketsToTransfer.size() != ticketIdToTransferDTO.getSelectedTicketIdsToTransfer().size()) {
-            // Detailed error handling for missing tickets recommended in production
             throw new ResourceNotFoundException("One or more tickets to transfer could not be found.");
         }
 
-        // Prepare list for batch saving
+       // --- 4. Validation and Update ---
         List<Ticket> ticketsToSave = ticketsToTransfer.stream()
-                // --- 4. Validation and Update ---
                 .peek(ticket -> {
                     // Check transfer eligibility
                     if (!ticket.isBooked() || ticket.getTicketStatus() != TicketStatus.BOOKED) {
                         throw new IllegalStateException(MessageFormat.format(
-                                "Ticket ID {0} is not eligible for transfer (must be BOOKED). Current Status: {1}, Booked: {2}",
+                                "Ticket ID {0} is not eligible for transfer.Current Status: {1}, Booked: {2}",
                                 ticket.getTicketId(), ticket.getTicketStatus(), ticket.isBooked()));
                     }
 
@@ -478,7 +466,7 @@ public List<TicketDTO> purchaseTickets(TicketFromDTO ticketFromDTO) {
                     if (ticket.getAccount() == null || !ticket.getAccount().getAccountId().
                             equals(ticketIdToTransferDTO.getFromAccountId())) {
                         throw new IllegalStateException(MessageFormat.format(
-                                "Ticket ID  does not belong to the sender's account ID.",
+                                "Ticket ID {} does not belong to the sender's account ID {}.",
                                 ticket.getTicketId(), ticketIdToTransferDTO.getFromAccountId()));
                     }
 
@@ -486,22 +474,85 @@ public List<TicketDTO> purchaseTickets(TicketFromDTO ticketFromDTO) {
                     // 1. Delete attachment from sender (by updating foreign key)
                     ticket.setAccount(toAccount);
                     // 2. Attach to the new user/owner
-                    ticket.setUser(toUser);
-                    // Note: Other attributes like TicketPrice, Booked status remain the same.
+                    ticket.setUser(toAccount.getUser());
                 })
                 .collect(Collectors.toList());
 
-        // --- 5. Batch Save ---
+        // --- 5. Batch Saving ---
         ticketRepository.saveAll(ticketsToSave);
 
-        log.info("Successfully transferred {} tickets from account {} to account {}. New owner: User {}",
+        log.info("Successfully transferred {} tickets from account {} to account {}",
                 ticketsToSave.size(), ticketIdToTransferDTO.getFromAccountId(),
-                ticketIdToTransferDTO.getToAccountId(), toUser.getUserId());
+                ticketIdToTransferDTO.getToAccountId());
     }
 
    @Override
-   public void cancelTransferTickets(Long fromAccountId, Long toAccountId, List<Long> cancelTransferTicketIds) {
-   
+   public void cancelTransferTickets(TransferedTicketIdsToCancelDTO transferedTicketIdsToCancelDTO) {
+       List<Long> ticketIdsToCancel = transferedTicketIdsToCancelDTO.getTicketIdsToCancel();
+       Long originalSenderAccountId = transferedTicketIdsToCancelDTO.getFromAccountId();
+       Long currentOwnerAccountId = transferedTicketIdsToCancelDTO.getToAccountId();
+
+       log.info("Attempting to cancel transfer of tickets {} from current owner {} back to original sender {}",
+               ticketIdsToCancel, currentOwnerAccountId, originalSenderAccountId);
+
+       // --- 1. Input Validation ---
+       if (ticketIdsToCancel == null || ticketIdsToCancel.isEmpty()) {
+           throw new IllegalArgumentException("The list of ticket IDs to cancel cannot be empty.");
+       }
+       if (originalSenderAccountId == null || currentOwnerAccountId == null) {
+           throw new IllegalArgumentException("Both original sender (from) and current owner (to) account IDs must be provided.");
+       }
+       if (originalSenderAccountId.equals(currentOwnerAccountId)) {
+           throw new IllegalArgumentException("Invalid operation: Target and source accounts are the same.");
+       }
+
+       // --- 2. Retrieve Target Accounts and Target User ---
+
+       // Target Account (Original Sender, where the tickets will return)
+       Account targetAccount = accountRepository.findById(originalSenderAccountId)
+               .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
+                       "Target account (original sender) not found with ID: {0}", originalSenderAccountId)));
+
+       // Current Owner Account (The account currently holding the tickets)
+       Account currentOwnerAccount = accountRepository.findById(currentOwnerAccountId)
+               .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
+                       "Current owner account not found with ID: {0}", currentOwnerAccountId)));
+
+       // --- 3. Fetch Tickets ---
+       List<Ticket> ticketsToReassign = ticketRepository.findAllById(ticketIdsToCancel);
+
+       if (ticketsToReassign.size() != ticketIdsToCancel.size()) {
+           throw new ResourceNotFoundException("One or more tickets to cancel could not be found.");
+       }
+
+       // --- 4. Validation and Update (Reassignment) ---
+       List<Ticket> ticketsToSave = ticketsToReassign.stream()
+               .peek(ticket -> {
+                   // Check transfer eligibility
+                   if (!ticket.isBooked() || ticket.getTicketStatus() != TicketStatus.BOOKED) {
+                       throw new IllegalStateException(MessageFormat.format(
+                               "Ticket ID {0} is not in BOOKED status and cannot be re-transferred.",
+                               ticket.getTicketId()));
+                   }
+
+                   // Security Check: Ensure the ticket is currently owned by the expected account (currentOwnerAccountId)
+                   if (ticket.getAccount() == null || !ticket.getAccount().getAccountId().equals(currentOwnerAccountId)) {
+                       throw new IllegalStateException(MessageFormat.format(
+                               "Ticket ID {0} is currently owned by account ID {1}, not the expected current owner {2}.",
+                               ticket.getTicketId(), ticket.getAccount() != null ? ticket.getAccount().getAccountId() : "N/A", currentOwnerAccountId));
+                   }
+
+                   // Update the ticket ownership to the original sender (cancellation/reassignment)
+                   ticket.setAccount(targetAccount);
+                   ticket.setUser(targetAccount.getUser());
+               })
+               .collect(Collectors.toList());
+
+       // --- 5. Batch Save ---
+       ticketRepository.saveAll(ticketsToSave);
+
+       log.info("Successfully cancelled transfer for {} tickets. Reassigned from account {} back to account {}",
+               ticketsToSave.size(), currentOwnerAccountId, originalSenderAccountId);
    }
 
 

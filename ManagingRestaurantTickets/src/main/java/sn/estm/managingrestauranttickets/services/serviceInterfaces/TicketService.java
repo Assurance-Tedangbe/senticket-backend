@@ -6,7 +6,8 @@ import java.util.List;
 import sn.estm.managingrestauranttickets.dto.TicketDTO;
 import sn.estm.managingrestauranttickets.dto.customisedto.TicketCreationRequestDTO;
 import sn.estm.managingrestauranttickets.dto.customisedto.TicketFromDTO;
-import sn.estm.managingrestauranttickets.dto.customisedto.TicketIdToTransferDTO;
+import sn.estm.managingrestauranttickets.dto.customisedto.TicketIdsToTransferDTO;
+import sn.estm.managingrestauranttickets.dto.customisedto.TransferedTicketIdsToCancelDTO;
 import sn.estm.managingrestauranttickets.enumerations.TicketStatus;
 
 
@@ -55,9 +56,9 @@ public interface TicketService {
 
     List<TicketDTO> purchaseTickets(TicketFromDTO ticketFromDTO);
 
-    void transferTickets(TicketIdToTransferDTO ticketIdToTransferDTO);
+    void transferTickets(TicketIdsToTransferDTO ticketIdToTransferDTO);
 
-    void cancelTransferTickets(Long fromAccountId, Long toAccountId, List<Long> cancelTransferTicketIds);
+    void cancelTransferTickets(TransferedTicketIdsToCancelDTO transferedTicketIdsToCancelDTO);
 
     void debitAccount(Long accountId, Long ticketId, Long debiterUserId);
 
