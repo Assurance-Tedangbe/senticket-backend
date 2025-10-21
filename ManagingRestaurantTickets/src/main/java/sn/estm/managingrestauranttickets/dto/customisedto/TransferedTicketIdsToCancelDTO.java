@@ -17,10 +17,10 @@ import java.util.List;
 public class TransferedTicketIdsToCancelDTO {
 
     @NotNull
-    Long fromAccountId;
+    Long originalSenderAccountId;
 
     @NotNull
-    Long toAccountId;
+    Long currentOwnerAccountId;
 
     @NotEmpty(message = "List of idTickets can not be null")
     private List<Long> ticketIdsToCancel  = new ArrayList<>();

@@ -60,6 +60,6 @@ public interface TicketService {
 
     void cancelTransferTickets(TransferedTicketIdsToCancelDTO transferedTicketIdsToCancelDTO);
 
-    void debitAccount(Long accountId, Long ticketId, Long debiterUserId);
+    void debitAccount(Long portierAccountId, Long studentAccountId, Long ticketId);
 
 }
