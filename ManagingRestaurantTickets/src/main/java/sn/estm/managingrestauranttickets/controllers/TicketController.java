@@ -23,7 +23,8 @@ import lombok.extern.slf4j.Slf4j;
 import sn.estm.managingrestauranttickets.dto.TicketDTO;
 import sn.estm.managingrestauranttickets.dto.customisedto.TicketCreationRequestDTO;
 import sn.estm.managingrestauranttickets.dto.customisedto.TicketFromDTO;
-import sn.estm.managingrestauranttickets.dto.customisedto.TicketIdToTransferDTO;
+import sn.estm.managingrestauranttickets.dto.customisedto.TicketIdsToTransferDTO;
+import sn.estm.managingrestauranttickets.dto.customisedto.TransferedTicketIdsToCancelDTO;
 import sn.estm.managingrestauranttickets.enumerations.TicketStatus;
 import sn.estm.managingrestauranttickets.services.serviceInterfaces.TicketService;
 
@@ -228,13 +229,28 @@ public class TicketController {
     //@PostAuthorize("hasAuthority('ADMIN', 'ETUDIANT')")
     @PutMapping(value = "/transferTickets")
     @ResponseStatus(HttpStatus.OK)
-    public void transferTickets( @RequestBody TicketIdToTransferDTO ticketIdToTransferDTO) {
+    public void transferTickets( @RequestBody TicketIdsToTransferDTO ticketIdToTransferDTO) {
 
         log.info("Transferring ticket(s) with details {}:", ticketIdToTransferDTO);
 
         ticketService.transferTickets(ticketIdToTransferDTO);
 
         log.info("Transfer of tickets completed successfully {}", ticketIdToTransferDTO);
+    }
+
+    //@PostAuthorize("hasAuthority('ADMIN', 'ETUDIANT')")
+    @PutMapping(value = "/cancelTransferTickets")
+    @ResponseStatus(HttpStatus.OK)
+    public void  cancelTransferTickets(@RequestBody TransferedTicketIdsToCancelDTO
+                                                   transferedTicketIdsToCancelDTO) {
+
+        log.info("Cancelling transfer ticket(s) with details {}:",
+                transferedTicketIdsToCancelDTO);
+
+        ticketService.cancelTransferTickets(transferedTicketIdsToCancelDTO);
+
+        log.info("Cancelled transfer tickets completed successfully {}",
+                transferedTicketIdsToCancelDTO);
     }
 
 }
