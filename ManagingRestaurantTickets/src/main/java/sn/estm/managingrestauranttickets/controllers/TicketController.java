@@ -253,4 +253,20 @@ public class TicketController {
                 transferedTicketIdsToCancelDTO);
     }
 
+    //@PostAuthorize("hasAuthority('ADMIN, PORTIER')")
+    @PutMapping(value = "/debitAccount/{stutentAccountId}/by/{portierAccountId}")
+    @ResponseStatus(HttpStatus.OK)
+    public void debitAccount(@PathVariable Long portierAccountId,
+                              @PathVariable Long studentAccountId,
+                              @RequestBody Long ticketId) {
+
+        log.info("Debiting account with ID {} for ticket with ID: {} by portierAccount {}",
+                studentAccountId, ticketId, portierAccountId);
+
+        ticketService.debitAccount(portierAccountId, studentAccountId, ticketId);
+
+        log.info("Debited account {} by portier {} for the ticket with ID: {}",
+                studentAccountId, portierAccountId, ticketId);
+    }
+
 }

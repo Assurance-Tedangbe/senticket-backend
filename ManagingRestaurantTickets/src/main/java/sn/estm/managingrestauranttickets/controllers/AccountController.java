@@ -211,7 +211,7 @@ public class AccountController {
     }
 
     //@PostAuthorize("hasAuthority('ADMIN')")
-    @PutMapping(value = "/{accountId}/credit/{amount}")
+    @PutMapping(value = "/{accountId}/creditAccount/{amount}")
     @ResponseStatus(HttpStatus.OK)
     public void creditAccount(@PathVariable Long accountId, 
                               @PathVariable Double amount) {
@@ -225,7 +225,7 @@ public class AccountController {
 
 
     //@PostAuthorize("hasAuthority('ADMIN')")
-    @PutMapping(value = "/{accountId}/cancelCredit/{amount}")
+    @PutMapping(value = "/{accountId}/cancelCreditAccount/{amount}")
     @ResponseStatus(HttpStatus.OK)
     public void cancelCreditAccount(@PathVariable Long accountId, 
                                     @PathVariable Double amount) {

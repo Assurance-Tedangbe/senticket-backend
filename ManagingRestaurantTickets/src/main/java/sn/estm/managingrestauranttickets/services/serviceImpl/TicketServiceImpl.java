@@ -334,7 +334,7 @@ public List<TicketDTO> purchaseTickets(TicketFromDTO ticketFromDTO) {
     int countBPurchased = 0;
 
     for (Ticket ticket : tickets) {
-        // Check if ticket is available
+        // Check eligibility por purchase: NOT booked AND TicketStatus.AVAILABLE
         if (ticket.isBooked() || ticket.getTicketStatus() != TicketStatus.AVAILABLE) {
             throw new IllegalStateException(MessageFormat.format(
                     "Ticket with ID: {0} is not available for purchase",
@@ -455,7 +455,7 @@ public List<TicketDTO> purchaseTickets(TicketFromDTO ticketFromDTO) {
        // --- 4. Validation and Update ---
         List<Ticket> ticketsToSave = ticketsToTransfer.stream()
                 .peek(ticket -> {
-                    // Check transfer eligibility
+                    // Check transfer eligibility: booked=true AND status=BOOKED
                     if (!ticket.isBooked() || ticket.getTicketStatus() != TicketStatus.BOOKED) {
                         throw new IllegalStateException(MessageFormat.format(
                                 "Ticket ID {0} is not eligible for transfer.Current Status: {1}, Booked: {2}",
@@ -489,8 +489,8 @@ public List<TicketDTO> purchaseTickets(TicketFromDTO ticketFromDTO) {
    @Override
    public void cancelTransferTickets(TransferedTicketIdsToCancelDTO transferedTicketIdsToCancelDTO) {
        List<Long> ticketIdsToCancel = transferedTicketIdsToCancelDTO.getTicketIdsToCancel();
-       Long originalSenderAccountId = transferedTicketIdsToCancelDTO.getFromAccountId();
-       Long currentOwnerAccountId = transferedTicketIdsToCancelDTO.getToAccountId();
+       Long originalSenderAccountId = transferedTicketIdsToCancelDTO.getOriginalSenderAccountId();
+       Long currentOwnerAccountId = transferedTicketIdsToCancelDTO.getCurrentOwnerAccountId();
 
        log.info("Attempting to cancel transfer of tickets {} from current owner {} back to original sender {}",
                ticketIdsToCancel, currentOwnerAccountId, originalSenderAccountId);
@@ -557,7 +557,62 @@ public List<TicketDTO> purchaseTickets(TicketFromDTO ticketFromDTO) {
 
 
    @Override
-   public void debitAccount(Long accountId, Long ticketId, Long debiterUserId) {
-  
+   public void debitAccount(Long portierAccountId, Long studentAccountId, Long ticketId) {
+       log.info("Portier {} attempting to debit account {} for ticket {}",
+               portierAccountId, studentAccountId, ticketId);
+
+       // --- 1. Validate Input ---
+       if (portierAccountId == null || studentAccountId == null || ticketId == null) {
+           throw new IllegalArgumentException("Portier account ID, student account ID,+" +
+                   " and ticket ID must be provided");
+       }
+
+       // --- 2. Retrieve Accounts and Verify Roles ---
+       Account portierAccount = accountRepository.findById(portierAccountId)
+               .orElseThrow(() -> new ResourceNotFoundException(
+                       "Portier account not found with ID: " + portierAccountId));
+
+       Account studentAccount = accountRepository.findById(studentAccountId)
+               .orElseThrow(() -> new ResourceNotFoundException(
+                       "Student account not found with ID: " + studentAccountId));
+
+       // Verify portier has PORTIER role and student has ETUDIANT role
+       User portierUser = portierAccount.getUser();
+       User studentUser = studentAccount.getUser();
+
+       if (portierUser == null || !portierUser.getRole().getName().equals("PORTIER")) {
+           throw new IllegalStateException("User must have PORTIER role to perform debit operations");
+       }
+
+       if (studentUser == null || !studentUser.getRole().getName().equals("ETUDIANT")) {
+           throw new IllegalStateException("Target account must belong to a ETUDIANT");
+       }
+
+       // --- 3. Retrieve and Validate Ticket ---
+       Ticket ticket = ticketRepository.findById(ticketId)
+               .orElseThrow(() -> new ResourceNotFoundException(
+                       "Ticket not found with ID: " + ticketId));
+
+       // Verify ticket belongs to the student account
+       if (ticket.getAccount() == null || !ticket.getAccount().getAccountId().equals(studentAccountId)) {
+           throw new IllegalStateException(
+                   "Ticket " + ticketId + " does not belong to student account " + studentAccountId);
+       }
+
+       // Verify ticket is eligible for debit (booked and BOOKED status)
+       if (!ticket.isBooked() || ticket.getTicketStatus() != TicketStatus.BOOKED) {
+           throw new IllegalStateException(MessageFormat.format(
+                   "Ticket ID {0} is not eligible for debit. Current Status: {1}, Booked: {2}",
+                   ticket.getTicketId(), ticket.getTicketStatus(), ticket.isBooked()));
+       }
+
+       // --- 4. Update Ticket Status ---
+       ticket.setTicketStatus(TicketStatus.USED);
+       ticket.setTicketPurchaseDate(LocalDateTime.now()); // Update to current usage date
+
+       Ticket updatedTicket = ticketRepository.save(ticket);
+
+       log.info("Successfully debited account {} by portier {}. Ticket {} marked as USED. Usage date: {}",
+               studentAccountId, portierAccountId, ticketId, updatedTicket.getTicketPurchaseDate());
    }  
 }
