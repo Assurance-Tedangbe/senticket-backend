@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 import sn.estm.managingrestauranttickets.dto.AccountDTO;
 import sn.estm.managingrestauranttickets.dto.UserDTO;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -28,6 +29,6 @@ public class TicketFromDTO {
     private AccountDTO accountDTO;
 
     @NotNull(message = "List of tickets is required.")
-    private List<Long> selectedTicketIds;
+    private List<Long> selectedTicketIds = new ArrayList<>();;
 
 }

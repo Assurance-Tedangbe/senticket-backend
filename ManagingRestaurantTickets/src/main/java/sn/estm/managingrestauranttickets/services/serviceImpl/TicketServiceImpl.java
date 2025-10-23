@@ -290,7 +290,7 @@ public class TicketServiceImpl implements TicketService {
 @Override
 public List<TicketDTO> purchaseTickets(TicketFromDTO ticketFromDTO) {
 
-    log.info("Purchasing tickets request: {}", ticketFromDTO);
+    log.info("Deep: Purchasing tickets request: {}", ticketFromDTO);
 
     // Validate input
     if (ticketFromDTO == null || ticketFromDTO.getSelectedTicketIds() == null) {
@@ -343,8 +343,19 @@ public List<TicketDTO> purchaseTickets(TicketFromDTO ticketFromDTO) {
 
         // Ensure ticket price is set based on type
         if (ticket.getTicketPrice() == null) {
+            if (ticket.getTicketType() == TicketType.A) {
+                ticket.setTicketPrice(100.0);
+            } else if (ticket.getTicketType() == TicketType.B) {
+                ticket.setTicketPrice(150.0);
+            } else {
+                throw new IllegalStateException(MessageFormat.format(
+                        "Invalid ticket type for ticket ID: {0}", ticket.getTicketId()));
+            }
+        }
+        /* if (ticket.getTicketPrice() == null) {
             ticket.setTicketPrice(ticket.getTicketType() == TicketType.A ? 100.0 : 150.0);
         }
+       */
 
         totalPrice += ticket.getTicketPrice();
         availableTickets.add(ticket);
@@ -361,18 +372,17 @@ public List<TicketDTO> purchaseTickets(TicketFromDTO ticketFromDTO) {
     Double balance = account.getBalance();
     if (balance == null || balance < totalPrice) {
         throw new IllegalStateException(MessageFormat.format(
-                "Insufficient funds", totalPrice, balance));
+                "Insufficient funds for totalPrice{} and balance {}", totalPrice, balance));
     }
 
     // Deduct total price from account
     account.setBalance(balance - totalPrice);
     Account savedAccount = accountRepository.save(account);
 
-    // Update all tickets and collect purchased tickets
+    // Update each purchase ticket
     LocalDateTime purchaseDateTime = LocalDateTime.now();
     List<Ticket> purchasedTickets = new ArrayList<>();
 
-    
     for (Ticket ticket : availableTickets) {
         ticket.setBooked(true);
         ticket.setTicketStatus(TicketStatus.BOOKED);
@@ -381,13 +391,17 @@ public List<TicketDTO> purchaseTickets(TicketFromDTO ticketFromDTO) {
         ticket.setAccount(savedAccount);
         ticket.setUser(user);
         
-        Ticket savedTicket = ticketRepository.save(ticket);
-        purchasedTickets.add(savedTicket);
+      //  Ticket savedTicket = ticketRepository.save(ticket);
 
-        log.info("Ticket purchased successfully. ticketId={},+ ticketType={}, ticketPrice={}, paymentCode={}",
+        //collect purchased tickets
+      //  purchasedTickets.add(savedTicket);
+
+     /*   log.info("Ticket purchased successfully. ticketId={},+ ticketType={}, ticketPrice={}, paymentCode={}",
                   savedTicket.getTicketId(), savedTicket.getTicketType(),
-                  savedTicket.getTicketPrice(), savedTicket.getPayementCode());
+                  savedTicket.getTicketPrice(), savedTicket.getPayementCode());*/
     }
+    // Lines commented from 394 to 401 is to summarize to this one line
+    purchasedTickets = ticketRepository.saveAll(availableTickets);
 
     log.info("Successfully purchased {} tickets for account {}. Total amount: {}. Type A: {}, Type B: {}",
             purchasedTickets.size(), savedAccount.getAccountId(), totalPrice, countAPurchased, countBPurchased);
@@ -405,6 +419,7 @@ public List<TicketDTO> purchaseTickets(TicketFromDTO ticketFromDTO) {
                 countAPurchased, countBPurchased);
     }
 
+    // return purchased tickets as DTOs
     return purchasedTickets.stream()
             .map(ticketMapper::toDto)
             .collect(Collectors.toList());
@@ -414,7 +429,7 @@ public List<TicketDTO> purchaseTickets(TicketFromDTO ticketFromDTO) {
    @Override
    public void transferTickets(TicketIdsToTransferDTO ticketIdToTransferDTO) {
 
-        log.info("Attempting to transfer tickets {} from Account {} to Account {}",
+        log.info("Gemi: Attempting to transfer tickets {} from Account {} to Account {}",
                 ticketIdToTransferDTO.getSelectedTicketIdsToTransfer(),
                 ticketIdToTransferDTO.getFromAccountId(),
                 ticketIdToTransferDTO.getToAccountId());
@@ -486,6 +501,7 @@ public List<TicketDTO> purchaseTickets(TicketFromDTO ticketFromDTO) {
                 ticketIdToTransferDTO.getToAccountId());
     }
 
+   @Transactional
    @Override
    public void cancelTransferTickets(TransferedTicketIdsToCancelDTO transferedTicketIdsToCancelDTO) {
        List<Long> ticketIdsToCancel = transferedTicketIdsToCancelDTO.getTicketIdsToCancel();
@@ -556,9 +572,10 @@ public List<TicketDTO> purchaseTickets(TicketFromDTO ticketFromDTO) {
    }
 
 
+   @Transactional
    @Override
    public void debitAccount(Long portierAccountId, Long studentAccountId, Long ticketId) {
-       log.info("Portier {} attempting to debit account {} for ticket {}",
+       log.info("Deep: Portier {} attempting to debit account {} for ticket {}",
                portierAccountId, studentAccountId, ticketId);
 
        // --- 1. Validate Input ---
