@@ -11,7 +11,9 @@ import lombok.NoArgsConstructor;
 @Builder
 public class CreationTicketsRequestDTO {
 
+    // Represents the total number of A tickets to create
     private Integer countA;
 
+    // Represents the total number of B tickets to create
     private Integer countB;
 }
