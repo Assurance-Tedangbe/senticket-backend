@@ -21,10 +21,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import sn.estm.managingrestauranttickets.dto.TicketDTO;
-import sn.estm.managingrestauranttickets.dto.customisedto.TicketCreationRequestDTO;
-import sn.estm.managingrestauranttickets.dto.customisedto.TicketFromDTO;
-import sn.estm.managingrestauranttickets.dto.customisedto.TicketIdsToTransferDTO;
-import sn.estm.managingrestauranttickets.dto.customisedto.TransferedTicketIdsToCancelDTO;
+import sn.estm.managingrestauranttickets.dto.customisedto.*;
 import sn.estm.managingrestauranttickets.enumerations.TicketStatus;
 import sn.estm.managingrestauranttickets.services.serviceInterfaces.TicketService;
 
@@ -254,19 +251,15 @@ public class TicketController {
     }
 
     //@PostAuthorize("hasAuthority('ADMIN, PORTIER')")
-    @PutMapping(value = "/debitAccount/{stutentAccountId}/by/{portierAccountId}")
+    @PutMapping(value = "/debitAccount")
     @ResponseStatus(HttpStatus.OK)
-    public void debitAccount(@PathVariable Long portierAccountId,
-                              @PathVariable Long studentAccountId,
-                              @RequestBody Long ticketId) {
+    public void debitAccount(@Valid @RequestBody DebitRequestDTO debitRequestDTO) {
 
-        log.info("Debiting account with ID {} for ticket with ID: {} by portierAccount {}",
-                studentAccountId, ticketId, portierAccountId);
+        log.info("Debiting account with request {}:", debitRequestDTO);
 
-        ticketService.debitAccount(portierAccountId, studentAccountId, ticketId);
+        ticketService.debitAccount(debitRequestDTO);
 
-        log.info("Debited account {} by portier {} for the ticket with ID: {}",
-                studentAccountId, portierAccountId, ticketId);
+        log.info("Debited account successfully {}", debitRequestDTO);
     }
 
 }

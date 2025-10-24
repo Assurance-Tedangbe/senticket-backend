@@ -22,6 +22,6 @@ public class TransferedTicketIdsToCancelDTO {
     @NotNull
     Long currentOwnerAccountId;
 
-    @NotEmpty(message = "List of idTickets can not be null")
+    @NotEmpty(message = "At least one ticket ID must be provided")
     private List<Long> ticketIdsToCancel  = new ArrayList<>();
 }

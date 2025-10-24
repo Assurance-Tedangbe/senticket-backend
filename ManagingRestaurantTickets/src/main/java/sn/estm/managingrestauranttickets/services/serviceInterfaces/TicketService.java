@@ -4,6 +4,7 @@ package sn.estm.managingrestauranttickets.services.serviceInterfaces;
 import java.util.List;
 
 import sn.estm.managingrestauranttickets.dto.TicketDTO;
+import sn.estm.managingrestauranttickets.dto.customisedto.DebitRequestDTO;
 import sn.estm.managingrestauranttickets.dto.customisedto.TicketCreationRequestDTO;
 import sn.estm.managingrestauranttickets.dto.customisedto.TicketFromDTO;
 import sn.estm.managingrestauranttickets.dto.customisedto.TicketIdsToTransferDTO;
@@ -60,6 +61,6 @@ public interface TicketService {
 
     void cancelTransferTickets(TransferedTicketIdsToCancelDTO transferedTicketIdsToCancelDTO);
 
-    void debitAccount(Long portierAccountId, Long studentAccountId, Long ticketId);
+    void debitAccount(DebitRequestDTO debitRequestDTO);
 
 }

@@ -15,6 +15,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import sn.estm.managingrestauranttickets.dto.TicketDTO;
+import sn.estm.managingrestauranttickets.dto.customisedto.DebitRequestDTO;
 import sn.estm.managingrestauranttickets.dto.customisedto.TicketCreationRequestDTO;
 import sn.estm.managingrestauranttickets.dto.customisedto.TicketFromDTO;
 import sn.estm.managingrestauranttickets.dto.customisedto.TicketIdsToTransferDTO;
@@ -381,7 +382,8 @@ public List<TicketDTO> purchaseTickets(TicketFromDTO ticketFromDTO) {
 
     // Update each purchase ticket
     LocalDateTime purchaseDateTime = LocalDateTime.now();
-    List<Ticket> purchasedTickets = new ArrayList<>();
+    List<Ticket> purchasedTickets;
+    List<Ticket> inPurchasingTickets = new ArrayList<>();
 
     for (Ticket ticket : availableTickets) {
         ticket.setBooked(true);
@@ -395,13 +397,14 @@ public List<TicketDTO> purchaseTickets(TicketFromDTO ticketFromDTO) {
 
         //collect purchased tickets
       //  purchasedTickets.add(savedTicket);
+          inPurchasingTickets.add(ticket);
 
      /*   log.info("Ticket purchased successfully. ticketId={},+ ticketType={}, ticketPrice={}, paymentCode={}",
                   savedTicket.getTicketId(), savedTicket.getTicketType(),
                   savedTicket.getTicketPrice(), savedTicket.getPayementCode());*/
     }
     // Lines commented from 394 to 401 is to summarize to this one line
-    purchasedTickets = ticketRepository.saveAll(availableTickets);
+    purchasedTickets = ticketRepository.saveAll(inPurchasingTickets);
 
     log.info("Successfully purchased {} tickets for account {}. Total amount: {}. Type A: {}, Type B: {}",
             purchasedTickets.size(), savedAccount.getAccountId(), totalPrice, countAPurchased, countBPurchased);
@@ -574,62 +577,113 @@ public List<TicketDTO> purchaseTickets(TicketFromDTO ticketFromDTO) {
 
    @Transactional
    @Override
-   public void debitAccount(Long portierAccountId, Long studentAccountId, Long ticketId) {
-       log.info("Deep: Portier {} attempting to debit account {} for ticket {}",
-               portierAccountId, studentAccountId, ticketId);
+   public void debitAccount(DebitRequestDTO debitRequestDTO) {
+       log.info("Processing debit request: Portier {} debiting Etudiant {} for tickets {}",
+               debitRequestDTO.getPortierAccountId(), debitRequestDTO.getEtudiantAccountId(),
+               debitRequestDTO.getTicketIds());
 
        // --- 1. Validate Input ---
-       if (portierAccountId == null || studentAccountId == null || ticketId == null) {
-           throw new IllegalArgumentException("Portier account ID, student account ID,+" +
-                   " and ticket ID must be provided");
-       }
+       validateDebitRequest(debitRequestDTO);
 
-       // --- 2. Retrieve Accounts and Verify Roles ---
-       Account portierAccount = accountRepository.findById(portierAccountId)
-               .orElseThrow(() -> new ResourceNotFoundException(
-                       "Portier account not found with ID: " + portierAccountId));
+       // --- 2. Retrieve and Validate Accounts ---
+       Account portierAccount = validatePortierAccount(debitRequestDTO.getPortierAccountId());
+       Account etudiantAccount = validateEtudiantAccount(debitRequestDTO.getEtudiantAccountId());
 
-       Account studentAccount = accountRepository.findById(studentAccountId)
-               .orElseThrow(() -> new ResourceNotFoundException(
-                       "Student account not found with ID: " + studentAccountId));
+       // --- 3. Retrieve and Validate Tickets ---
+       List<Ticket> tickets = ticketRepository.findAllById(debitRequestDTO.getTicketIds());
+       validateTickets(tickets, debitRequestDTO.getTicketIds().size(),
+               debitRequestDTO.getEtudiantAccountId());
 
-       // Verify portier has PORTIER role and student has ETUDIANT role
-       User portierUser = portierAccount.getUser();
-       User studentUser = studentAccount.getUser();
+       // --- 4. Process Debit for All Tickets ---
+       processTicketsDebit(tickets);
 
-       if (portierUser == null || !portierUser.getRole().getName().equals("PORTIER")) {
-           throw new IllegalStateException("User must have PORTIER role to perform debit operations");
-       }
+       log.info("Successfully debited {} tickets for Etudiant account {} by Portier {}",
+               tickets.size(), debitRequestDTO.getEtudiantAccountId(),
+               debitRequestDTO.getPortierAccountId());
+   }
 
-       if (studentUser == null || !studentUser.getRole().getName().equals("ETUDIANT")) {
-           throw new IllegalStateException("Target account must belong to a ETUDIANT");
-       }
+    private void validateDebitRequest(DebitRequestDTO debitRequest) {
+        if (debitRequest == null) {
+            throw new IllegalArgumentException("Debit request cannot be null");
+        }
+        if (debitRequest.getPortierAccountId() == null) {
+            throw new IllegalArgumentException("Portier account ID is required");
+        }
+        if (debitRequest.getEtudiantAccountId() == null) {
+            throw new IllegalArgumentException("Etudiant account ID is required");
+        }
+        if (debitRequest.getTicketIds() == null || debitRequest.getTicketIds().isEmpty()) {
+            throw new IllegalArgumentException("At least one ticket ID must be provided");
+        }
+        if (debitRequest.getPortierAccountId().equals(debitRequest.getEtudiantAccountId())) {
+            throw new IllegalArgumentException("Portier and Etudiant accounts cannot be the same");
+        }
+    }
 
-       // --- 3. Retrieve and Validate Ticket ---
-       Ticket ticket = ticketRepository.findById(ticketId)
-               .orElseThrow(() -> new ResourceNotFoundException(
-                       "Ticket not found with ID: " + ticketId));
+    private Account validatePortierAccount(Long portierAccountId) {
+        Account account = accountRepository.findById(portierAccountId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Portier account not found with ID: " + portierAccountId));
 
-       // Verify ticket belongs to the student account
-       if (ticket.getAccount() == null || !ticket.getAccount().getAccountId().equals(studentAccountId)) {
-           throw new IllegalStateException(
-                   "Ticket " + ticketId + " does not belong to student account " + studentAccountId);
-       }
+        User portierUser = account.getUser();
+        if (portierUser == null || !portierUser.getRole().getName()
+                .equalsIgnoreCase("PORTIER")) {
+            throw new IllegalStateException("User must have PORTIER role to perform debit operations");
+        }
 
-       // Verify ticket is eligible for debit (booked and BOOKED status)
-       if (!ticket.isBooked() || ticket.getTicketStatus() != TicketStatus.BOOKED) {
-           throw new IllegalStateException(MessageFormat.format(
-                   "Ticket ID {0} is not eligible for debit. Current Status: {1}, Booked: {2}",
-                   ticket.getTicketId(), ticket.getTicketStatus(), ticket.isBooked()));
-       }
+        return account;
+    }
 
-       // --- 4. Update Ticket Status ---
-       ticket.setTicketStatus(TicketStatus.USED);
-       ticket.setTicketPurchaseDate(LocalDateTime.now()); // Update to current usage date
+    private Account validateEtudiantAccount(Long etudiantAccountId) {
+        Account account = accountRepository.findById(etudiantAccountId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Etudiant account not found with ID: " + etudiantAccountId));
 
-       Ticket updatedTicket = ticketRepository.save(ticket);
+        User etudiantUser = account.getUser();
+        if (etudiantUser == null || etudiantUser.getRole().getName()
+                .equalsIgnoreCase("ETUDIANT")) {
+            throw new IllegalStateException("Target account must belong to an ETUDIANT");
+        }
 
-       log.info("Successfully debited account {} by portier {}. Ticket {} marked as USED. Usage date: {}",
-               studentAccountId, portierAccountId, ticketId, updatedTicket.getTicketPurchaseDate());
-   }  
+        return account;
+    }
+
+    private void validateTickets(List<Ticket> tickets, int expectedCount, Long etudiantAccountId) {
+        // Check if all tickets were found
+        if (tickets.size() != expectedCount) {
+            throw new ResourceNotFoundException("One or more specified tickets were not found");
+        }
+
+        // Validate each ticket
+        for (Ticket ticket : tickets) {
+            // Check ownership
+            if (ticket.getAccount() == null || !ticket.getAccount().getAccountId()
+                    .equals(etudiantAccountId)) {
+                throw new IllegalStateException(
+                        "Ticket " + ticket.getTicketId() + " does not belong to the specified Etudiant account");
+            }
+
+            // Check eligibility for debit (must be booked with BOOKED status)
+            if (!ticket.isBooked() || ticket.getTicketStatus() != TicketStatus.BOOKED) {
+                throw new IllegalStateException(MessageFormat.format(
+                        "Ticket ID {0} is not eligible for debit. Must be booked with BOOKED status. Current: {1}, Booked: {2}",
+                        ticket.getTicketId(), ticket.getTicketStatus(), ticket.isBooked()));
+            }
+        }
+    }
+
+    private void processTicketsDebit(List<Ticket> tickets) {
+        LocalDateTime usageTime = LocalDateTime.now();
+        List<Ticket> updatedTickets = new ArrayList<>();
+
+        for (Ticket ticket : tickets) {
+            ticket.setTicketStatus(TicketStatus.USED);
+            ticket.setTicketPurchaseDate(usageTime);
+            updatedTickets.add(ticket);
+        }
+        // Batch save all updated tickets
+        ticketRepository.saveAll(updatedTickets);
+
+        log.debug("Batch updated {} tickets to USED status", updatedTickets);
+    }
 }

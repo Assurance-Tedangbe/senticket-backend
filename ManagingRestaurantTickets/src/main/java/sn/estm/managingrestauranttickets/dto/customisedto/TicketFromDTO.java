@@ -28,7 +28,7 @@ public class TicketFromDTO {
     @NotNull(message = "The account is required.")
     private AccountDTO accountDTO;
 
-    @NotNull(message = "List of tickets is required.")
+    @NotNull(message = "At least one ticket must be selected")
     private List<Long> selectedTicketIds = new ArrayList<>();;
 
 }

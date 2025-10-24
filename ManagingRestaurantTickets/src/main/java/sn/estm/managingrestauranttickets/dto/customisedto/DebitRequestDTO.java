@@ -1,11 +1,15 @@
 package sn.estm.managingrestauranttickets.dto.customisedto;
 
+import jakarta.validation.constraints.NotEmpty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import jakarta.validation.constraints.NotNull;
+
+import java.util.ArrayList;
+import java.util.List;
 
 @Data
 @NoArgsConstructor
@@ -17,8 +21,8 @@ public class DebitRequestDTO {
     private Long portierAccountId;
 
     @NotNull(message = "Student account ID is required")
-    private Long studentAccountId;
+    private Long etudiantAccountId;
 
-    @NotNull(message = "Ticket ID is required")
-    private Long ticketId;
+    @NotEmpty(message = "At least one ticket ID must be provided")
+    private List<Long> ticketIds = new ArrayList<>();
 }

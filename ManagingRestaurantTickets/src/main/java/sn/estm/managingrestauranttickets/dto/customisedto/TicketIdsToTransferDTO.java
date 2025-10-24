@@ -22,6 +22,6 @@ public class TicketIdsToTransferDTO {
     @NotNull
     Long toAccountId;
 
-    @NotEmpty(message = "List of idTickets can not be null")
+    @NotEmpty(message = "At least one ticket ID must be provided")
     private List<Long> selectedTicketIdsToTransfer  = new ArrayList<>();
 }
