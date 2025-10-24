@@ -47,7 +47,9 @@ public class TicketServiceImpl implements TicketService {
     @Override
     public List<TicketDTO> createTickets(CreationTicketsRequestDTO creationTicketsRequestDTO) {
 
-        log.info("Creating tickets with requests {}", creationTicketsRequestDTO);
+        //private static final double price_a = 100.0;
+
+        log.info("Deep: Creating tickets with requests {}", creationTicketsRequestDTO);
 
         if (creationTicketsRequestDTO.getCountA() < 0 || creationTicketsRequestDTO.getCountB() < 0) {
             throw new IllegalArgumentException("Ticket counts cannot be negative");
@@ -511,7 +513,7 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
        Long originalSenderAccountId = cancelTransferTicketsRequestDTO.getOriginalSenderAccountId();
        Long currentOwnerAccountId = cancelTransferTicketsRequestDTO.getCurrentOwnerAccountId();
 
-       log.info("Attempting to cancel transfer of tickets {} from current owner {} back to original sender {}",
+       log.info("Deep: Attempting to cancel transfer of tickets {} from current owner {} back to original sender {}",
                ticketIdsToCancel, currentOwnerAccountId, originalSenderAccountId);
 
        // --- 1. Input Validation ---
@@ -525,19 +527,18 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
            throw new IllegalArgumentException("Invalid operation: Target and source accounts are the same.");
        }
 
-       // --- 2. Retrieve Target Accounts and Target User ---
-
+       // --- 2. Retrieve accounts ---
        // Target Account (Original Sender, where the tickets will return)
        Account targetAccount = accountRepository.findById(originalSenderAccountId)
                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
                        "Target account (original sender) not found with ID: {0}", originalSenderAccountId)));
 
        // Current Owner Account (The account currently holding the tickets)
-       Account currentOwnerAccount = accountRepository.findById(currentOwnerAccountId)
+    /*   Account currentOwnerAccount = accountRepository.findById(currentOwnerAccountId)
                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
-                       "Current owner account not found with ID: {0}", currentOwnerAccountId)));
+                       "Current owner account not found with ID: {0}", currentOwnerAccountId)));*/
 
-       // --- 3. Fetch Tickets ---
+       // --- 3. Fetch Tickets to cancel ---
        List<Ticket> ticketsToReassign = ticketRepository.findAllById(ticketIdsToCancel);
 
        if (ticketsToReassign.size() != ticketIdsToCancel.size()) {
@@ -550,7 +551,7 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
                    // Check transfer eligibility
                    if (!ticket.isBooked() || ticket.getTicketStatus() != TicketStatus.BOOKED) {
                        throw new IllegalStateException(MessageFormat.format(
-                               "Ticket ID {0} is not in BOOKED status and cannot be re-transferred.",
+                               "Ticket ID {0} is not eligible for transfer cancellation",
                                ticket.getTicketId()));
                    }
 
