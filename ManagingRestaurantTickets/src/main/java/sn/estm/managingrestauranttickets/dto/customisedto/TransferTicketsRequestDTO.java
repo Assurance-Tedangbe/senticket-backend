@@ -7,21 +7,21 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.ArrayList;
 import java.util.List;
+import java.util.ArrayList;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class TransferedTicketIdsToCancelDTO {
+public class TransferTicketsRequestDTO {
 
     @NotNull
-    Long originalSenderAccountId;
+    Long fromAccountId;
 
     @NotNull
-    Long currentOwnerAccountId;
+    Long toAccountId;
 
-    @NotEmpty(message = "List of idTickets can not be null")
-    private List<Long> ticketIdsToCancel  = new ArrayList<>();
+    @NotEmpty(message = "At least one ticket ID must be provided")
+    private List<Long> selectedTicketIdsToTransfer  = new ArrayList<>();
 }

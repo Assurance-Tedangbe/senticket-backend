@@ -21,10 +21,11 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import sn.estm.managingrestauranttickets.dto.TicketDTO;
-import sn.estm.managingrestauranttickets.dto.customisedto.TicketCreationRequestDTO;
-import sn.estm.managingrestauranttickets.dto.customisedto.TicketFromDTO;
-import sn.estm.managingrestauranttickets.dto.customisedto.TicketIdsToTransferDTO;
-import sn.estm.managingrestauranttickets.dto.customisedto.TransferedTicketIdsToCancelDTO;
+import sn.estm.managingrestauranttickets.dto.customisedto.DebitAccountRequestDTO;
+import sn.estm.managingrestauranttickets.dto.customisedto.CreationTicketsRequestDTO;
+import sn.estm.managingrestauranttickets.dto.customisedto.PurchaseTicketsRequestDTO;
+import sn.estm.managingrestauranttickets.dto.customisedto.TransferTicketsRequestDTO;
+import sn.estm.managingrestauranttickets.dto.customisedto.CancelTransferTicketsRequestDTO;
 import sn.estm.managingrestauranttickets.enumerations.TicketStatus;
 import sn.estm.managingrestauranttickets.services.serviceInterfaces.TicketService;
 
@@ -42,11 +43,11 @@ public class TicketController {
 
      //@PostAuthorize("hasAuthority('ADMIN')")
     @PostMapping(consumes = "application/json", produces = "application/json")
-    public ResponseEntity<List<TicketDTO>> createTicket(@RequestBody TicketCreationRequestDTO ticketCreationRequestDTO) {
+    public ResponseEntity<List<TicketDTO>> createTicket(@RequestBody CreationTicketsRequestDTO creationTicketsRequestDTO) {
 
-        log.info("Creating tickets with requests: {}", ticketCreationRequestDTO );
+        log.info("Creating tickets with requests: {}", creationTicketsRequestDTO);
 
-        List<TicketDTO> createdTickets = ticketService.createTickets(ticketCreationRequestDTO);
+        List<TicketDTO> createdTickets = ticketService.createTickets(creationTicketsRequestDTO);
 
         log.info("Tickets created successfully with IDs: {}", createdTickets);
 
@@ -212,14 +213,14 @@ public class TicketController {
 
     //@PostAuthorize("hasAnyAuthority('ADMIN', 'ETUDIANT')")
     @PostMapping(value = "/{purchase}", consumes = "application/json", produces = "application/json")
-    public ResponseEntity<List<TicketDTO>> purchaseTickets(@Valid @RequestBody TicketFromDTO ticketFromDTO) {
+    public ResponseEntity<List<TicketDTO>> purchaseTickets(@Valid @RequestBody PurchaseTicketsRequestDTO purchaseTicketsRequestDTO) {
         
         log.info("Purchasing ticket(s) with accountID with details: {}, {}",
-        ticketFromDTO.getAccountDTO().getAccountId(),
-        ticketFromDTO);
+        purchaseTicketsRequestDTO.getAccountDTO().getAccountId(),
+                purchaseTicketsRequestDTO);
         
         // Call the service layer to execute the business logic
-        List<TicketDTO> purchasedTickets = ticketService.purchaseTickets(ticketFromDTO);
+        List<TicketDTO> purchasedTickets = ticketService.purchaseTickets(purchaseTicketsRequestDTO);
 
         log.info("Tickets purchased successfully: {}", purchasedTickets);
 
@@ -229,44 +230,40 @@ public class TicketController {
     //@PostAuthorize("hasAuthority('ADMIN', 'ETUDIANT')")
     @PutMapping(value = "/transferTickets")
     @ResponseStatus(HttpStatus.OK)
-    public void transferTickets( @RequestBody TicketIdsToTransferDTO ticketIdToTransferDTO) {
+    public void transferTickets( @RequestBody TransferTicketsRequestDTO transferTicketsRequestDTO) {
 
-        log.info("Transferring ticket(s) with details {}:", ticketIdToTransferDTO);
+        log.info("Transferring ticket(s) with details {}:", transferTicketsRequestDTO);
 
-        ticketService.transferTickets(ticketIdToTransferDTO);
+        ticketService.transferTickets(transferTicketsRequestDTO);
 
-        log.info("Transfer of tickets completed successfully {}", ticketIdToTransferDTO);
+        log.info("Transfer of tickets completed successfully {}", transferTicketsRequestDTO);
     }
 
     //@PostAuthorize("hasAuthority('ADMIN', 'ETUDIANT')")
     @PutMapping(value = "/cancelTransferTickets")
     @ResponseStatus(HttpStatus.OK)
-    public void  cancelTransferTickets(@RequestBody TransferedTicketIdsToCancelDTO
-                                                   transferedTicketIdsToCancelDTO) {
+    public void  cancelTransferTickets(@RequestBody CancelTransferTicketsRequestDTO
+                                               cancelTransferTicketsRequestDTO) {
 
         log.info("Cancelling transfer ticket(s) with details {}:",
-                transferedTicketIdsToCancelDTO);
+                cancelTransferTicketsRequestDTO);
 
-        ticketService.cancelTransferTickets(transferedTicketIdsToCancelDTO);
+        ticketService.cancelTransferTickets(cancelTransferTicketsRequestDTO);
 
         log.info("Cancelled transfer tickets completed successfully {}",
-                transferedTicketIdsToCancelDTO);
+                cancelTransferTicketsRequestDTO);
     }
 
     //@PostAuthorize("hasAuthority('ADMIN, PORTIER')")
-    @PutMapping(value = "/debitAccount/{stutentAccountId}/by/{portierAccountId}")
+    @PutMapping(value = "/debitAccount")
     @ResponseStatus(HttpStatus.OK)
-    public void debitAccount(@PathVariable Long portierAccountId,
-                              @PathVariable Long studentAccountId,
-                              @RequestBody Long ticketId) {
+    public void debitAccount(@Valid @RequestBody DebitAccountRequestDTO debitAccountRequestDTO) {
 
-        log.info("Debiting account with ID {} for ticket with ID: {} by portierAccount {}",
-                studentAccountId, ticketId, portierAccountId);
+        log.info("Debiting account with request {}:", debitAccountRequestDTO);
 
-        ticketService.debitAccount(portierAccountId, studentAccountId, ticketId);
+        ticketService.debitAccount(debitAccountRequestDTO);
 
-        log.info("Debited account {} by portier {} for the ticket with ID: {}",
-                studentAccountId, portierAccountId, ticketId);
+        log.info("Debited account successfully {}", debitAccountRequestDTO);
     }
 
 }

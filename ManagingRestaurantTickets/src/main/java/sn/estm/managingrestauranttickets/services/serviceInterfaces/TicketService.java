@@ -4,16 +4,17 @@ package sn.estm.managingrestauranttickets.services.serviceInterfaces;
 import java.util.List;
 
 import sn.estm.managingrestauranttickets.dto.TicketDTO;
-import sn.estm.managingrestauranttickets.dto.customisedto.TicketCreationRequestDTO;
-import sn.estm.managingrestauranttickets.dto.customisedto.TicketFromDTO;
-import sn.estm.managingrestauranttickets.dto.customisedto.TicketIdsToTransferDTO;
-import sn.estm.managingrestauranttickets.dto.customisedto.TransferedTicketIdsToCancelDTO;
+import sn.estm.managingrestauranttickets.dto.customisedto.DebitAccountRequestDTO;
+import sn.estm.managingrestauranttickets.dto.customisedto.CreationTicketsRequestDTO;
+import sn.estm.managingrestauranttickets.dto.customisedto.PurchaseTicketsRequestDTO;
+import sn.estm.managingrestauranttickets.dto.customisedto.TransferTicketsRequestDTO;
+import sn.estm.managingrestauranttickets.dto.customisedto.CancelTransferTicketsRequestDTO;
 import sn.estm.managingrestauranttickets.enumerations.TicketStatus;
 
 
 public interface TicketService {
 
-    List<TicketDTO> createTickets(TicketCreationRequestDTO ticketCreationRequestDTO);
+    List<TicketDTO> createTickets(CreationTicketsRequestDTO creationTicketsRequestDTO);
 
     List<TicketDTO> readTickets();
 
@@ -54,12 +55,12 @@ public interface TicketService {
  */
     List<TicketDTO> readTicketsByMenuIdAndUserIdAndStatus(Long menuId, Long userId, TicketStatus status);
 
-    List<TicketDTO> purchaseTickets(TicketFromDTO ticketFromDTO);
+    List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTicketsRequestDTO);
 
-    void transferTickets(TicketIdsToTransferDTO ticketIdToTransferDTO);
+    void transferTickets(TransferTicketsRequestDTO transferTicketsRequestDTO);
 
-    void cancelTransferTickets(TransferedTicketIdsToCancelDTO transferedTicketIdsToCancelDTO);
+    void cancelTransferTickets(CancelTransferTicketsRequestDTO cancelTransferTicketsRequestDTO);
 
-    void debitAccount(Long portierAccountId, Long studentAccountId, Long ticketId);
+    void debitAccount(DebitAccountRequestDTO debitAccountRequestDTO);
 
 }

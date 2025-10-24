@@ -11,13 +11,14 @@ import lombok.NoArgsConstructor;
 import sn.estm.managingrestauranttickets.dto.AccountDTO;
 import sn.estm.managingrestauranttickets.dto.UserDTO;
 
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class TicketFromDTO {
+public class PurchaseTicketsRequestDTO {
 
     @Valid
     @NotNull(message = "The user is required.")
@@ -27,7 +28,7 @@ public class TicketFromDTO {
     @NotNull(message = "The account is required.")
     private AccountDTO accountDTO;
 
-    @NotNull(message = "List of tickets is required.")
-    private List<Long> selectedTicketIds;
+    @NotNull(message = "At least one ticket must be selected")
+    private List<Long> selectedTicketIds = new ArrayList<>();;
 
 }
