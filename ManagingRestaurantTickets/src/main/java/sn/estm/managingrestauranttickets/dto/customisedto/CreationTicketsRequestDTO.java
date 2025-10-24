@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class TicketCreationRequestDTO {
+public class CreationTicketsRequestDTO {
 
     private Integer countA;
 

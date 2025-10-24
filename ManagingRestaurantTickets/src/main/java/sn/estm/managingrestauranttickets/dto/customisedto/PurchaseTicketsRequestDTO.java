@@ -18,7 +18,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class TicketFromDTO {
+public class PurchaseTicketsRequestDTO {
 
     @Valid
     @NotNull(message = "The user is required.")

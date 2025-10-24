@@ -2,7 +2,7 @@ package sn.estm.managingrestauranttickets.services.serviceImpl;
 
 import org.springframework.stereotype.Service;
 import sn.estm.managingrestauranttickets.dto.AccountDTO;
-import sn.estm.managingrestauranttickets.dto.customisedto.TicketCreationRequestDTO;
+import sn.estm.managingrestauranttickets.dto.customisedto.CreationTicketsRequestDTO;
 import sn.estm.managingrestauranttickets.entities.Account;
 import sn.estm.managingrestauranttickets.entities.User;
 import sn.estm.managingrestauranttickets.exceptions.ResourceNotFoundException;
@@ -41,12 +41,12 @@ public class AccountServiceImpl implements AccountService {
 
       log.info("Account created successfully with ID: {}", savedAccount.getAccountId());
 
-      TicketCreationRequestDTO ticketCreationRequestDTO = TicketCreationRequestDTO.builder()
+      CreationTicketsRequestDTO creationTicketsRequestDTO = CreationTicketsRequestDTO.builder()
               .countA(5)
               .countB(5)
               .build();
 
-      ticketService.createTickets(ticketCreationRequestDTO);
+      ticketService.createTickets(creationTicketsRequestDTO);
 
       return accountMapper.toDto(savedAccount);
     }
