@@ -3,6 +3,7 @@ package sn.estm.managingrestauranttickets.services.serviceImpl;
 import org.springframework.stereotype.Service;
 import sn.estm.managingrestauranttickets.dto.AccountDTO;
 import sn.estm.managingrestauranttickets.dto.customisedto.CreationTicketsRequestDTO;
+import sn.estm.managingrestauranttickets.dto.customisedto.QrCodeDataDTO;
 import sn.estm.managingrestauranttickets.entities.Account;
 import sn.estm.managingrestauranttickets.entities.User;
 import sn.estm.managingrestauranttickets.exceptions.ResourceNotFoundException;
@@ -355,6 +356,11 @@ public class AccountServiceImpl implements AccountService {
 
       log.info("Cancelled credit of {} for accountId: {}. New balance: {}",
        amount, accountId, account.getBalance());
+    }
+
+    @Override
+    public void scanCodeQr(QrCodeDataDTO qrCodeDataDTO) {
+
     }
 
 }

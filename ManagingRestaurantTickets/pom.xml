@@ -18,26 +18,26 @@
     </properties>
     <dependencies>
 
-        <dependency>
+       <!-- <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-oauth2-resource-server</artifactId>
-        </dependency>
+        </dependency>-->
         <!-- Auth0 Java JWT Library -->
-        <dependency>
+        <!--<dependency>
             <groupId>com.auth0</groupId>
             <artifactId>java-jwt</artifactId>
             <version>4.4.0</version>
-        </dependency>
+        </dependency>-->
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jpa</artifactId>
         </dependency>
 
-        <dependency>
+       <!--<dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-security</artifactId>
-        </dependency>
+        </dependency>-->
 
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -102,13 +102,13 @@
 
         <!-- JWT (using io.jsonwebtoken library) -->
         <!-- JJWT API -->
-        <dependency>
+        <!--<dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-api</artifactId>
             <version>0.12.6</version>
         </dependency>
 
-        <!-- JJWT Implementation -->
+        &lt;!&ndash; JJWT Implementation &ndash;&gt;
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-impl</artifactId>
@@ -116,12 +116,26 @@
             <scope>runtime</scope>
         </dependency>
 
-        <!-- JJWT Jackson Serializer -->
+        &lt;!&ndash; JJWT Jackson Serializer &ndash;&gt;
         <dependency>
             <groupId>io.jsonwebtoken</groupId>
             <artifactId>jjwt-jackson</artifactId>
             <version>0.12.6</version>
             <scope>runtime</scope>
+        </dependency>-->
+
+        <!-- ZXing Core Library -->
+        <dependency>
+            <groupId>com.google.zxing</groupId>
+            <artifactId>core</artifactId>
+            <version>3.5.1</version>
+        </dependency>
+
+        <!-- ZXing JavaSE Extensions (for image I/O) -->
+        <dependency>
+            <groupId>com.google.zxing</groupId>
+            <artifactId>javase</artifactId>
+            <version>3.5.1</version>
         </dependency>
     </dependencies>
 

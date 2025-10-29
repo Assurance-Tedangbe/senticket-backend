@@ -169,8 +169,4 @@ public class UserServiceImpl implements UserService {
         log.info("Role {} removed from user with userId: {}", roleId, userId);
     }
 
-    @Override
-    public void scanCodeQr(UserDTO userDto) {
-        
-    }
 }
