@@ -141,9 +141,6 @@ public class AccountServiceImpl implements AccountService {
       log.info("Linking account {} to user with userId: {}", accountId, userId);
 
         Account account = getAccountById(accountId);
-        /*Account account = accountRepository.findById(accountId)
-                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
-                  "Account not found with ID: {0}", accountId)));*/
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
@@ -172,9 +169,6 @@ public class AccountServiceImpl implements AccountService {
       log.info("Unlinking account {} from user with userId: {}", accountId, userId);
 
         Account account = getAccountById(accountId);
-        /*Account account = accountRepository.findById(accountId)
-                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
-                  "Account not found with ID: {0}", accountId)));*/
                   
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
@@ -197,9 +191,6 @@ public class AccountServiceImpl implements AccountService {
         log.info("Updating balance for account with accountId: {}", accountId);
 
         Account account = getAccountById(accountId);
-       /* Account account = accountRepository.findById(accountId)
-                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
-                  "Account not found with ID: {0}", accountId)));*/
 
         account.setBalance(newBalance);
 
@@ -214,9 +205,6 @@ public class AccountServiceImpl implements AccountService {
         log.info("Updating account number for account with accountId: {}", accountId);
 
         Account account = getAccountById(accountId);
-        /*Account account = accountRepository.findById(accountId)
-                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
-                  "Account not found with ID: {0}", accountId)));*/
 
         account.setAccountNumber(newAccountNumber);
 
@@ -231,9 +219,6 @@ public class AccountServiceImpl implements AccountService {
         log.info("Activating account with accountId: {}", accountId);
 
         Account account = getAccountById(accountId);
-        /*Account account = accountRepository.findById(accountId)
-                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
-                  "Account not found with ID: {0}", accountId)));*/
 
         account.setActive(true);
 
@@ -248,9 +233,6 @@ public class AccountServiceImpl implements AccountService {
         log.info("Deactivating account with accountId: {}", accountId);
 
         Account account = getAccountById(accountId);
-        /*Account account = accountRepository.findById(accountId)
-                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
-                  "Account not found with ID: {0}", accountId)));*/
 
         account.setActive(false);
 
@@ -342,9 +324,6 @@ public class AccountServiceImpl implements AccountService {
       }
 
         Account account = getAccountById(accountId);
-      /*Account account = accountRepository.findById(accountId)
-          .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
-              "Account not found with ID: {0}", accountId)));*/
 
       if (!account.isActive()) {
         throw new IllegalArgumentException("Cannot credit an inactive account.");
@@ -373,10 +352,7 @@ public class AccountServiceImpl implements AccountService {
         throw new IllegalArgumentException("Cancel amount must be positive.");
       }
 
-        Account account = getAccountById(accountId);
-      /*Account account = accountRepository.findById(accountId)
-          .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
-              "Account not found with ID: {0}", accountId)));*/
+      Account account = getAccountById(accountId);
 
       Double currentBalance = account.getBalance() == null ? 0.0 : account.getBalance();
 
@@ -392,6 +368,7 @@ public class AccountServiceImpl implements AccountService {
        amount, accountId, account.getBalance());
     }
 
+
     @Override
     /**
      * Generate ONE-TIME QR code for debit operation - STATELESS approach
@@ -403,8 +380,6 @@ public class AccountServiceImpl implements AccountService {
 
         // Validate account exists and is active
         Account account = getAccountById(accountId);
-       /* Account account = accountRepository.findById(accountId)
-                .orElseThrow(() -> new AccountNotFoundException("Account not found with id: " + accountId));*/
 
         if (!account.isActive()) {
             throw new InvalidAccountException("Account is not active");
@@ -562,8 +537,6 @@ public class AccountServiceImpl implements AccountService {
 
         // 1. Validate account exists and is active
         Account account = getAccountById(accountId);
-       /* Account account = accountRepository.findById(accountId)
-                .orElseThrow(() -> new AccountNotFoundException("Account not found"));*/
 
         if (!account.isActive()) {
             throw new InvalidAccountException("Account is not active");
