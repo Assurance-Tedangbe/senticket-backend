@@ -16,16 +16,20 @@ import sn.estm.managingrestauranttickets.exceptions.InvalidQRCodeException;
 @AllArgsConstructor
 public class QrCodeDataDTO {
 
+    /** uniqueCode Purpose: Randomness & Uniqueness
+     */
     @NotNull
     private Long accountId; //the account id of the user that the QR code has been scanned
 
-    private String uniqueCode;
+    private String uniqueCode;  //🔒 Prevents replay attacks (random).ensures uniqueness
 
-    private long timestamp;     // Generation time (Unix seconds)
+    private long timestamp;     //Generation time (Unix seconds)(prevents future/past use)
 
-    private long expiresIn;     // 300 seconds (5 minutes)
+    private long expiresIn;     //How long valid: 300 seconds (5 minutes)
 
-    private String signature;   // HMAC signature for security
+    /** signature Purpose: Integrity & Authentication
+     */
+    private String signature;   //🔒Prevents tampering,verifies authenticity.HMAC signature for security
 
     /**
      * Convert to JSON string for QR code encoding
