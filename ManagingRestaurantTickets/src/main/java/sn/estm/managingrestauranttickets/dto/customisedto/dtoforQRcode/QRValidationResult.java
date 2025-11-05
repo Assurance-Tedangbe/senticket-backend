@@ -22,14 +22,4 @@ public class QRValidationResult {
     private String message;
     private List<TicketDTO> availableTickets;
 
-   /* private boolean valid;
-    private Long studentAccountId;
-    private String studentName;
-    private BigDecimal accountBalance;
-    private String message;
-    private List<TicketDTO> availableTickets;
-
-    // QR code usage info
-    private int totalScans;
-    private boolean qrActive;*/
 }

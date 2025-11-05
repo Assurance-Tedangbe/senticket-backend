@@ -13,7 +13,4 @@ public class QRValidationRequest {
 
     private String qrData; // The full JSON QR data from scanning
 
-   /* private Long accountId;
-    private String uniqueCode;*/
-
 }
