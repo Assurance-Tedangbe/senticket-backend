@@ -5,6 +5,7 @@ import java.util.List;
 import sn.estm.managingrestauranttickets.dto.AccountDTO;
 import sn.estm.managingrestauranttickets.dto.customisedto.dtoforQRcode.QRCodeResponse;
 import sn.estm.managingrestauranttickets.dto.customisedto.dtoforQRcode.QrCodeDataDTO;
+import sn.estm.managingrestauranttickets.entities.User;
 
 
 public interface AccountService {
@@ -41,5 +42,7 @@ public interface AccountService {
     void cancelCreditAccount(Long accountId, Double amount);
 
     QRCodeResponse qrCode(QrCodeDataDTO qrCodeDataDTO);
+
+    void validateDebitQRCode(QrCodeDataDTO qrCodeDataDTO, User scanningUser);
 
 }

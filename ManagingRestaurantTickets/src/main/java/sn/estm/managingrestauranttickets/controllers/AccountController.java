@@ -24,6 +24,14 @@ import sn.estm.managingrestauranttickets.services.serviceInterfaces.AccountServi
 
 import java.util.List;
 
+//dependencies for qrcode endpoints /qr-code & /validate-qr
+import sn.estm.managingrestauranttickets.dto.customisedto.dtoforQRcode.QrCodeDataDTO;
+import sn.estm.managingrestauranttickets.dto.customisedto.dtoforQRcode.ApiResponse;
+import sn.estm.managingrestauranttickets.dto.customisedto.dtoforQRcode.QRCodeRequest;
+import sn.estm.managingrestauranttickets.dto.customisedto.dtoforQRcode.QRCodeResponse;
+import sn.estm.managingrestauranttickets.dto.customisedto.dtoforQRcode.QRValidationRequest;
+import sn.estm.managingrestauranttickets.entities.User;
+//import org.springframework.security.core.annotation.AuthenticationPrincipal;
 
 @Slf4j
 @Data
@@ -235,6 +243,53 @@ public class AccountController {
         accountService.cancelCreditAccount(accountId, amount);
 
         log.info("Cancelled credit account with ID: {} credited by amount: {}", accountId, amount);
+    }
+
+    /**
+     * Generate ONE-TIME debit QR code for an account
+     * Uses the exact qrCode method signature: QRCodeResponse qrCode(QrCodeDataDTO qrCodeDataDTO)
+     */
+    @PostMapping("/qr-code")
+    public ResponseEntity<ApiResponse<QRCodeResponse>> generateQRCode(
+            @RequestBody QRCodeRequest request,
+           // @AuthenticationPrincipal
+            User user) {
+
+        log.info("Generating QR code for account: {}, requested by user: {}",
+                request.getAccountId(), user.getUserId());
+
+        // Create QRCodeDataDTO with accountId
+        QrCodeDataDTO qrCodeDataDTO = QrCodeDataDTO.builder()
+                .accountId(request.getAccountId())
+                .build();
+
+        // Call the qrCode method with exact signature
+        QRCodeResponse response = accountService.qrCode(qrCodeDataDTO);
+
+        log.info("QR code generated successfully for account: {}", request.getAccountId());
+
+        return ResponseEntity.ok(ApiResponse.success("ONE-TIME QR code generated successfully", response));
+    }
+
+    /**
+     * Validate ONE-TIME debit QR code
+     */
+    @PostMapping("/validate-qr")
+    public ResponseEntity<ApiResponse<Void>> validateQRCode(
+            @RequestBody QRValidationRequest request,
+            //@AuthenticationPrincipal
+            User user) {
+
+        log.info("Validating QR code for user: {}", user.getUserId());
+
+        // Parse QR data from request
+        QrCodeDataDTO qrCodeDataDTO = QrCodeDataDTO.fromJsonString(request.getQrData());
+
+        accountService.validateDebitQRCode(qrCodeDataDTO, user);
+
+        log.info("QR code validated successfully for user: {}", user.getUserId());
+
+        return ResponseEntity.ok(ApiResponse.success("QR code validated successfully", null));
     }
 }
 
