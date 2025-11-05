@@ -1,12 +1,17 @@
 package sn.estm.managingrestauranttickets.services.serviceImpl;
 
+import com.google.zxing.BarcodeFormat;
+import com.google.zxing.EncodeHintType;
+import com.google.zxing.MultiFormatWriter;
 import org.springframework.stereotype.Service;
 import sn.estm.managingrestauranttickets.dto.AccountDTO;
 import sn.estm.managingrestauranttickets.dto.customisedto.CreationTicketsRequestDTO;
-import sn.estm.managingrestauranttickets.dto.customisedto.QrCodeDataDTO;
+import sn.estm.managingrestauranttickets.dto.customisedto.dtoforQRcode.QRCodeCryptoSecurity;
+import sn.estm.managingrestauranttickets.dto.customisedto.dtoforQRcode.QRCodeResponse;
+import sn.estm.managingrestauranttickets.dto.customisedto.dtoforQRcode.QrCodeDataDTO;
 import sn.estm.managingrestauranttickets.entities.Account;
 import sn.estm.managingrestauranttickets.entities.User;
-import sn.estm.managingrestauranttickets.exceptions.ResourceNotFoundException;
+import sn.estm.managingrestauranttickets.exceptions.*;
 import sn.estm.managingrestauranttickets.mappers.AccountMapper;
 import sn.estm.managingrestauranttickets.repositories.AccountRepository;
 import sn.estm.managingrestauranttickets.repositories.UserRepository;
@@ -22,6 +27,20 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 
+import com.google.zxing.client.j2se.MatrixToImageWriter;
+import com.google.zxing.common.BitMatrix;
+import com.google.zxing.common.HybridBinarizer;
+import com.google.zxing.client.j2se.BufferedImageLuminanceSource;
+import org.apache.commons.codec.digest.HmacUtils;
+
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
+import java.util.Base64;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -31,6 +50,12 @@ public class AccountServiceImpl implements AccountService {
   private final UserRepository userRepository;
   private final AccountMapper accountMapper;
   private final TicketService ticketService;
+  private final QRCodeCryptoSecurity cryptoSecurity;
+
+  private static final int QR_CODE_WIDTH = 400;
+  private static final int QR_CODE_HEIGHT = 400;
+  private static final int QR_EXPIRY_SECONDS = 300; // 5 minutes
+  private static final String QR_SECRET_KEY = "your-32-byte-secret-key-for-qr-codes-2024";
 
   @Override
   public AccountDTO createAccount(AccountDTO accountDto) {
@@ -359,8 +384,203 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    public void scanCodeQr(QrCodeDataDTO qrCodeDataDTO) {
+    /**
+     * Generate ONE-TIME QR code for debit operation - STATELESS approach
+     * Exact signature: QRCodeResponse qrCode(QRCodeDataDTO qrCodeDataDTO)
+     */
+    public QRCodeResponse qrCode(QrCodeDataDTO qrCodeDataDTO) {
+        Long accountId = qrCodeDataDTO.getAccountId();
+        log.info("Generating ONE-TIME QR code for account: {}", accountId);
 
+        // Validate account exists and is active
+        Account account = accountRepository.findById(accountId)
+                .orElseThrow(() -> new AccountNotFoundException("Account not found with id: " + accountId));
+
+        if (!account.isActive()) {
+            throw new InvalidAccountException("Account is not active");
+        }
+
+        // Only ETUDIANT accounts can generate debit QR codes
+        if (!"ETUDIANT".equalsIgnoreCase(account.getUser().getRole().getName())) {
+            throw new AccessDeniedException("Only ETUDIANT accounts can generate debit QR codes");
+        }
+        /*if (!UserRole.ETUDIANT.equals(account.getUser().getRole())) {
+            throw new AccessDeniedException("Only ETUDIANT accounts can generate debit QR codes");
+        }*/
+
+        // 🔄 Generate NEW unique code EVERY time (ONE-TIME)
+        // Override any uniqueCode passed in the DTO to ensure it's always new
+        String uniqueCode = generateOneTimeUniqueCode();
+
+        // 🔥 Create STATELESS QR data with cryptographic security
+        QrCodeDataDTO securedQRData = createSecuredQRData(accountId, uniqueCode,
+                QR_EXPIRY_SECONDS);
+
+        // Generate QR code image using ZXing
+        String qrCodeImageBase64 = generateQRCodeImage(securedQRData);
+
+        // Calculate expiration time
+        java.time.Instant expiresAt = java.time.Instant.ofEpochSecond(
+                securedQRData.getTimestamp() + securedQRData.getExpiresIn()
+        );
+
+        log.info("ONE-TIME QR code generated successfully for account: {}, uniqueCode: {}",
+                accountId, uniqueCode);
+
+        return QRCodeResponse.builder()
+                .accountId(accountId)
+                .uniqueCode(uniqueCode)
+                .qrCodeImageBase64(qrCodeImageBase64)
+                .expiresAt(expiresAt)
+                .generatedAt(java.time.Instant.ofEpochSecond(securedQRData.getTimestamp()))
+                .build();
+    }
+
+    /**
+     * Create secured QR code data with HMAC signature
+     */
+    private QrCodeDataDTO createSecuredQRData(Long accountId, String uniqueCode, long expiresIn) {
+        long timestamp = System.currentTimeMillis() / 1000;
+
+        QrCodeDataDTO qrData = QrCodeDataDTO.builder()
+                .accountId(accountId)
+                .uniqueCode(uniqueCode)
+                .timestamp(timestamp)
+                .expiresIn(expiresIn)
+                .build();
+
+        // Add cryptographic signature
+        String signature = generateSignature(qrData);
+        qrData.setSignature(signature);
+
+        return qrData;
+    }
+
+    /**
+     * Generate HMAC signature for QR code data
+     */
+    private String generateSignature(QrCodeDataDTO data) {
+        String payload = data.getAccountId() + ":" +
+                data.getUniqueCode() + ":" +
+                data.getTimestamp() + ":" +
+                data.getExpiresIn();
+
+        return HmacUtils.hmacSha256Hex(QR_SECRET_KEY, payload);
+    }
+
+    /**
+     * Generate QR code image using ZXing library
+     */
+    private String generateQRCodeImage(QrCodeDataDTO qrCodeDataDTO) {
+        try {
+            Map<EncodeHintType, Object> hints = new HashMap<>();
+            hints.put(EncodeHintType.CHARACTER_SET, "UTF-8");
+            hints.put(EncodeHintType.MARGIN, 1);
+            hints.put(EncodeHintType.ERROR_CORRECTION, com.google.zxing.qrcode.decoder.
+                    ErrorCorrectionLevel.M);
+
+            BitMatrix bitMatrix = new MultiFormatWriter().encode(
+                    qrCodeDataDTO.toJsonString(),
+                    BarcodeFormat.QR_CODE,
+                    QR_CODE_WIDTH,
+                    QR_CODE_HEIGHT,
+                    hints
+            );
+
+            ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+            MatrixToImageWriter.writeToStream(bitMatrix, "PNG", outputStream);
+
+            return Base64.getEncoder().encodeToString(outputStream.toByteArray());
+
+        } catch (Exception e) {
+            log.error("Failed to generate QR code image for account: {}",
+                    qrCodeDataDTO.getAccountId(), e);
+            throw new QRCodeGenerationException("Failed to generate QR code image");
+        }
+    }
+
+    /**
+     * Generate unique code for ONE-TIME QR
+     */
+    private String generateOneTimeUniqueCode() {
+        // 12-character random code - NEW each time
+        return "DEBIT_" + UUID.randomUUID().toString()
+                .replace("-", "")
+                .substring(0, 10)
+                .toUpperCase();
+    }
+
+    // ... other AccountService methods (createAccount, updateAccount, deleteAccount, etc.) ...
+
+    /**
+     * Validate ONE-TIME QR code for debit operation - STATELESS validation
+     * Companion method for QR code validation
+     */
+    public void validateDebitQRCode(QrCodeDataDTO qrCodeDataDTO, User scanningUser) {
+        try {
+            // STATELESS Cryptographic validation (NO database call)
+            if (!verifySignature(qrCodeDataDTO)) {
+                throw new InvalidQRCodeException("Invalid QR code signature");
+            }
+
+            // STATELESS Expiration check (NO database call)
+            if (qrCodeDataDTO.isExpired()) {
+                throw new QRCodeExpiredException("QR code has expired");
+            }
+
+            // Business validation (ONLY database call - for account/permissions)
+            validateDebitPermissions(qrCodeDataDTO.getAccountId(), scanningUser);
+
+            log.info("ONE-TIME debit QR validation successful for account: {}, scannedBy: {}",
+                    qrCodeDataDTO.getAccountId(), scanningUser.getUserId());
+
+        } catch (Exception e) {
+            throw new InvalidQRCodeException("QR code validation failed: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Verify HMAC signature of QR code data
+     */
+    private boolean verifySignature(QrCodeDataDTO data) {
+        String expectedSignature = generateSignature(data);
+        return expectedSignature.equals(data.getSignature());
+    }
+
+    /**
+     * Validate debit permissions and account status
+     */
+    public void validateDebitPermissions(Long accountId, User scanningUser) {
+        // 1. Validate account exists and is active
+        Account account = accountRepository.findById(accountId)
+                .orElseThrow(() -> new AccountNotFoundException("Account not found"));
+
+        if (!account.isActive()) {
+            throw new InvalidAccountException("Account is not active");
+        }
+
+        // 2. 🔥 Validate scanning user is PORTIER (role is a class)
+        if (scanningUser.getRole() == null) {
+            throw new AccessDeniedException("User role is not defined");
+        }
+
+        if (!"PORTIER".equalsIgnoreCase(scanningUser.getRole().getName())) {
+            throw new AccessDeniedException("Only PORTIER can scan debit QR codes");
+        }
+
+        // 3. Validate account belongs to an ETUDIANT
+        if (!"ETUDIANT".equalsIgnoreCase(account.getUser().getRole().getName())) {
+            throw new AccessDeniedException("Can only debit ETUDIANT accounts");
+        }
+    }
+
+    /**
+     * Utility method to get account by ID (used by other methods)
+     */
+    public Account getAccountById(Long accountId) {
+        return accountRepository.findById(accountId)
+                .orElseThrow(() -> new AccountNotFoundException("Account not found with id: " +
+                        accountId));
     }
 
 }

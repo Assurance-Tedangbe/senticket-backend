@@ -3,7 +3,8 @@ package sn.estm.managingrestauranttickets.services.serviceInterfaces;
 import java.util.List;
 
 import sn.estm.managingrestauranttickets.dto.AccountDTO;
-import sn.estm.managingrestauranttickets.dto.customisedto.QrCodeDataDTO;
+import sn.estm.managingrestauranttickets.dto.customisedto.dtoforQRcode.QRCodeResponse;
+import sn.estm.managingrestauranttickets.dto.customisedto.dtoforQRcode.QrCodeDataDTO;
 
 
 public interface AccountService {
@@ -39,6 +40,6 @@ public interface AccountService {
 
     void cancelCreditAccount(Long accountId, Double amount);
 
-    void scanCodeQr(QrCodeDataDTO qrCodeDataDTO);
+    QRCodeResponse qrCode(QrCodeDataDTO qrCodeDataDTO);
 
 }
