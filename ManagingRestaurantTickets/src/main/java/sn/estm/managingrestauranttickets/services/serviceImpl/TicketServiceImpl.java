@@ -134,7 +134,7 @@ public class TicketServiceImpl implements TicketService {
         existingTicket.setTicketDescription(ticketDTO.getTicketDescription());
         existingTicket.setAccount(ticketMapper.toEntity(ticketDTO).getAccount());
         existingTicket.setUser(ticketMapper.toEntity(ticketDTO).getUser());
-        existingTicket.setMenu(ticketMapper.toEntity(ticketDTO).getMenu());
+       // existingTicket.setMenu(ticketMapper.toEntity(ticketDTO).getMenu());
 
         Ticket updatedTicket = ticketRepository.save(existingTicket);
 
@@ -254,40 +254,6 @@ public class TicketServiceImpl implements TicketService {
                 .map(ticketMapper::toDto)
                 .collect(Collectors.toList());
     }
-
-     @Override
-    public List<TicketDTO> readTicketsByMenuIdAndUserId(Long menuId, Long userId) {
-
-        log.info("Reading tickets for menu ID: {} and user ID: {}", menuId, userId);
-
-        List<Ticket> tickets = ticketRepository.findByMenuMenuId(menuId).stream()
-                .filter(ticket -> ticket.getAccount() != null && ticket.getAccount().getUser() != null
-                        && ticket.getAccount().getUser().getUserId().equals(userId))
-                .collect(Collectors.toList());
-
-        return tickets.stream()
-                .map(ticketMapper::toDto)
-                .collect(Collectors.toList());
-    }
-
-
-   @Override
-    public List<TicketDTO> readTicketsByMenuIdAndUserIdAndStatus(Long menuId, Long userId,
-                                                                 TicketStatus status) {
-        log.info("Reading tickets for menu ID: {}, user ID: {}, and status: {}",
-         menuId, userId, status);
-
-        List<Ticket> tickets = ticketRepository.findByMenuMenuId(menuId).stream()
-                .filter(ticket -> ticket.getAccount() != null && ticket.getAccount().getUser() != null
-                        && ticket.getAccount().getUser().getUserId().equals(userId)
-                        && ticket.getTicketStatus().equals(status))
-                .collect(Collectors.toList());
-                
-        return tickets.stream()
-                .map(ticketMapper::toDto)
-                .collect(Collectors.toList());
-    }
-
 
 @Transactional
 @Override
@@ -687,4 +653,37 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
 
         log.debug("Batch updated {} tickets to USED status", updatedTickets);
     }
+
+    /*    @Override
+    public List<TicketDTO> readTicketsByMenuIdAndUserId(Long menuId, Long userId) {
+
+        log.info("Reading tickets for menu ID: {} and user ID: {}", menuId, userId);
+
+        List<Ticket> tickets = ticketRepository.findByMenuMenuId(menuId).stream()
+                .filter(ticket -> ticket.getAccount() != null && ticket.getAccount().getUser() != null
+                        && ticket.getAccount().getUser().getUserId().equals(userId))
+                .collect(Collectors.toList());
+
+        return tickets.stream()
+                .map(ticketMapper::toDto)
+                .collect(Collectors.toList());
+    }
+
+   @Override
+    public List<TicketDTO> readTicketsByMenuIdAndUserIdAndStatus(Long menuId, Long userId,
+                                                                 TicketStatus status) {
+        log.info("Reading tickets for menu ID: {}, user ID: {}, and status: {}",
+         menuId, userId, status);
+
+        List<Ticket> tickets = ticketRepository.findByMenuMenuId(menuId).stream()
+                .filter(ticket -> ticket.getAccount() != null && ticket.getAccount().getUser() != null
+                        && ticket.getAccount().getUser().getUserId().equals(userId)
+                        && ticket.getTicketStatus().equals(status))
+                .collect(Collectors.toList());
+
+        return tickets.stream()
+                .map(ticketMapper::toDto)
+                .collect(Collectors.toList());
+    }
+*/
 }

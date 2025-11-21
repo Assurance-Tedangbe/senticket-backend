@@ -182,35 +182,6 @@ public class TicketController {
     }
 
 
-    //@PostAuthorize("hasAnyAuthority('ADMIN', 'AGENT', 'ETUDIANT', 'PORTIER')")
-    @GetMapping(value = "/menuId/{menuId}/userId/{userId}", produces = "application/json")
-    public ResponseEntity<List<TicketDTO>> readTicketsByMenuIdAndUserId(@PathVariable Long menuId, 
-                                                                        @PathVariable Long userId) {
-
-        List<TicketDTO> ticketsByMenuIdandUserId = ticketService.
-                                                   readTicketsByMenuIdAndUserId(menuId, userId);
-         
-        log.info("Fetched tickets by a given menuId and userId: {}, {}", menuId, userId);
-
-        return new ResponseEntity<>(ticketsByMenuIdandUserId, HttpStatus.OK);
-    }
-
-
-      //@PostAuthorize("hasAnyAuthority('ADMIN', 'AGENT', 'ETUDIANT', 'PORTIER')")
-    @GetMapping(value = "/menuId/{menuId}/userId/{userId}/status/{ticketStatus}", produces = "application/json")
-    public ResponseEntity<List<TicketDTO>> readTicketsByMenuIdAndUserIdAndStatus(@PathVariable Long menuId, 
-                                                                                 @PathVariable Long userId, 
-                                                                                 @PathVariable TicketStatus ticketStatus) {
-
-        List<TicketDTO> ticketsByMenuIdandUserIdAndStatus = ticketService.
-                                                 readTicketsByMenuIdAndUserIdAndStatus(
-                                                    menuId, userId, ticketStatus);
-         
-        log.info("Fetched tickets by a given menuId, userId and status: {},{},{}", menuId, userId, ticketStatus);
-
-        return new ResponseEntity<>(ticketsByMenuIdandUserIdAndStatus, HttpStatus.OK);
-    } 
-
     //@PostAuthorize("hasAnyAuthority('ADMIN', 'ETUDIANT')")
     @PostMapping(value = "/{purchase}", consumes = "application/json", produces = "application/json")
     public ResponseEntity<List<TicketDTO>> purchaseTickets(@Valid @RequestBody PurchaseTicketsRequestDTO purchaseTicketsRequestDTO) {
@@ -266,4 +237,34 @@ public class TicketController {
         log.info("Debited account successfully {}", debitAccountRequestDTO);
     }
 
+    /*
+    //@PostAuthorize("hasAnyAuthority('ADMIN', 'AGENT', 'ETUDIANT', 'PORTIER')")
+    @GetMapping(value = "/menuId/{menuId}/userId/{userId}", produces = "application/json")
+    public ResponseEntity<List<TicketDTO>> readTicketsByMenuIdAndUserId(@PathVariable Long menuId,
+                                                                        @PathVariable Long userId) {
+
+        List<TicketDTO> ticketsByMenuIdandUserId = ticketService.
+                                                   readTicketsByMenuIdAndUserId(menuId, userId);
+
+        log.info("Fetched tickets by a given menuId and userId: {}, {}", menuId, userId);
+
+        return new ResponseEntity<>(ticketsByMenuIdandUserId, HttpStatus.OK);
+    }
+
+
+      //@PostAuthorize("hasAnyAuthority('ADMIN', 'AGENT', 'ETUDIANT', 'PORTIER')")
+    @GetMapping(value = "/menuId/{menuId}/userId/{userId}/status/{ticketStatus}", produces = "application/json")
+    public ResponseEntity<List<TicketDTO>> readTicketsByMenuIdAndUserIdAndStatus(@PathVariable Long menuId,
+                                                                                 @PathVariable Long userId,
+                                                                                 @PathVariable TicketStatus ticketStatus) {
+
+        List<TicketDTO> ticketsByMenuIdandUserIdAndStatus = ticketService.
+                                                 readTicketsByMenuIdAndUserIdAndStatus(
+                                                    menuId, userId, ticketStatus);
+
+        log.info("Fetched tickets by a given menuId, userId and status: {},{},{}", menuId, userId, ticketStatus);
+
+        return new ResponseEntity<>(ticketsByMenuIdandUserIdAndStatus, HttpStatus.OK);
+    }
+     */
 }

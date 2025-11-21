@@ -10,15 +10,17 @@ import sn.estm.managingrestauranttickets.dto.TicketDTO;
 import sn.estm.managingrestauranttickets.entities.Ticket;
 
 
-@Mapper(componentModel = "spring", uses = {AccountMapper.class, UserMapper.class, MenuMapper.class})
+@Mapper(componentModel = "spring", uses = {AccountMapper.class, UserMapper.class
+       // , MenuMapper.class
+})
 public interface TicketMapper {
 
-    @Mapping(source = "menu", target = "menuDTO")
+   // @Mapping(source = "menu", target = "menuDTO")
     @Mapping(source = "user", target = "userDTO")
     @Mapping(source = "account", target = "accountDTO")
     TicketDTO toDto(Ticket ticket);
 
-    @Mapping(target = "menu", ignore = true) 
+   // @Mapping(target = "menu", ignore = true)
     @Mapping(target = "user", ignore = true) 
     @Mapping(target = "account", ignore = true)
     Ticket toEntity(TicketDTO ticketDTO);

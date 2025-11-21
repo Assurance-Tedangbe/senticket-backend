@@ -51,9 +51,9 @@ public class TicketDTO {
     @NotBlank(message = "The ticket needs a description.")
     private String ticketDescription;
 
-    @Valid
+    /*@Valid
     @NotNull(message = "The menu is required.")
-    private MenuDTO menuDTO;
+    private MenuDTO menuDTO;*/
 
     @Valid
     @NotNull(message = "The user is required.")
