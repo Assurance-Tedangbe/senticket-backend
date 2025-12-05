@@ -17,6 +17,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.CrossOrigin;
 
 import sn.estm.managingrestauranttickets.dto.RoleDTO;
 import sn.estm.managingrestauranttickets.services.serviceInterfaces.RoleService;
@@ -30,6 +31,13 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/roles")
 @RequiredArgsConstructor
+/*@CrossOrigin(origins = {
+        "http://localhost",
+        "http://localhost:*",
+        "http://10.0.2.2",
+        "http://10.0.2.2:*",
+        "http://127.0.0.1"
+})*/
 public class RoleController {
     
     private final RoleService roleService;

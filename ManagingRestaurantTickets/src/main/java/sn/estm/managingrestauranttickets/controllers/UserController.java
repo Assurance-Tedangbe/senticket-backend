@@ -18,6 +18,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.CrossOrigin;
+
 
 import sn.estm.managingrestauranttickets.dto.UserDTO;
 import sn.estm.managingrestauranttickets.services.serviceInterfaces.UserService;
@@ -30,6 +32,13 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
+/*@CrossOrigin(origins = {
+        "http://localhost",
+        "http://localhost:*",
+        "http://10.0.2.2",
+        "http://10.0.2.2:*",
+        "http://127.0.0.1"
+})*/
 public class UserController {
     
     private final UserService userService;
