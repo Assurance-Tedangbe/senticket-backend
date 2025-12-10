@@ -59,6 +59,12 @@ public class RoleController {
     public ResponseEntity<List<RoleDTO>> getAllRoles() {
         List<RoleDTO> roles = roleService.readRoles();
 
+        // Log pour debug
+        System.out.println("Roles count: " + roles.size());
+        roles.forEach(role ->
+                System.out.println("Role: id=" + role.getRoleId() + ", name=" + role.getName())
+        );
+
         log.info("Fetched roles: {}", roles);
 
         return new ResponseEntity<>(roles, HttpStatus.OK);
