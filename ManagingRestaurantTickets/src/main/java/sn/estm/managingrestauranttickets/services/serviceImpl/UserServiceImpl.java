@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 import sn.estm.managingrestauranttickets.dto.UserDTO;
 import sn.estm.managingrestauranttickets.entities.Role;
 import sn.estm.managingrestauranttickets.entities.User;
+import sn.estm.managingrestauranttickets.exceptions.InvalidCredentialsException;
 import sn.estm.managingrestauranttickets.exceptions.ResourceNotFoundException;
 import sn.estm.managingrestauranttickets.mappers.UserMapper;
 import sn.estm.managingrestauranttickets.repositories.RoleRepository;
@@ -42,6 +43,60 @@ public class UserServiceImpl implements UserService {
        
         return userMapper.toDto(savedUser);
     }
+
+    @Override
+    public UserDTO authenticate(String username, String password) {
+        log.info("Tentative d'authentification pour l'utilisateur: {}", username);
+
+        // Recherche de l'utilisateur
+        User user = userRepository.findByUsername(username)
+                .orElseThrow(() -> {
+                    log.warn("Utilisateur non trouvé: {}", username);
+                    return new ResourceNotFoundException(
+                            MessageFormat.format("Utilisateur non trouvé: {0}", username)
+                    );
+                });
+
+        // Vérification du mot de passe
+        // ⚠️ IMPORTANT : Dans un système de production, utilisez BCryptPasswordEncoder !
+        if (!user.getPassword().equals(password)) {
+            log.warn("Mot de passe incorrect pour l'utilisateur: {}", username);
+            throw new IllegalArgumentException("Mot de passe incorrect");
+        }
+
+        log.info("Authentification réussie pour: {}", username);
+        return userMapper.toDto(user);
+    }
+
+    @Override
+    public boolean validateCredentials(String username, String password) {
+        log.info("Validation des identifiants pour: {}", username);
+
+        try {
+            User user = userRepository.findByUsername(username)
+                    .orElse(null);
+
+            if (user == null) {
+                log.warn("Utilisateur non trouvé: {}", username);
+                return false;
+            }
+
+            // Vérification du mot de passe
+            boolean isValid = user.getPassword().equals(password);
+
+            if (!isValid) {
+                log.warn("Mot de passe incorrect pour: {}", username);
+            } else {
+                log.info("Identifiants valides pour: {}", username);
+            }
+
+            return isValid;
+        } catch (Exception e) {
+            log.error("Erreur lors de la validation des identifiants: {}", e.getMessage());
+            return false;
+        }
+    }
+
 
     @Override
     public List<UserDTO> readUsers() {
