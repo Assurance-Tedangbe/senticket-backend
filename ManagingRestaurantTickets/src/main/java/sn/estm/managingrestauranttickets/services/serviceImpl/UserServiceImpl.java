@@ -5,6 +5,7 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.stereotype.Service;
 
+import sn.estm.managingrestauranttickets.dto.RoleDTO;
 import sn.estm.managingrestauranttickets.dto.UserDTO;
 import sn.estm.managingrestauranttickets.entities.Role;
 import sn.estm.managingrestauranttickets.entities.User;
@@ -30,7 +31,7 @@ public class UserServiceImpl implements UserService {
     private final UserMapper userMapper;
     private final RoleRepository roleRepository;
 
-    @Override
+   /* @Override
     public UserDTO createUser(UserDTO userDto) {
 
         log.info("Creating user with details: {}", userDto);
@@ -42,6 +43,43 @@ public class UserServiceImpl implements UserService {
         log.info("User created successfully with ID: {}", savedUser.getUserId());
        
         return userMapper.toDto(savedUser);
+    }*/
+    @Override
+    public UserDTO createUser(UserDTO userDto) {
+
+        log.info("Creating user with details: {}", userDto);
+
+        // Vérifier que le rôle est fourni
+        if (userDto.getRoleDTO() == null) {
+            throw new IllegalArgumentException("Le rôle est obligatoire pour créer un utilisateur");
+        }
+
+        // 1. Vérifier si le rôle existe dans la base de données
+        RoleDTO roleDto = userDto.getRoleDTO();
+        Role role = roleRepository.findById(roleDto.getRoleId())
+                .orElseThrow(() -> new RuntimeException(
+                        "Rôle non trouvé avec l'ID: " + roleDto.getRoleId()
+                ));
+
+        log.info("Rôle trouvé: {} (ID: {})", role.getName(), role.getRoleId());
+
+        // 2. Convertir UserDTO en entité User
+        User user = userMapper.toEntity(userDto);
+
+        // 3. Assigner explicitement le rôle à l'utilisateur
+        user.setRole(role);
+
+        // 4. Sauvegarder l'utilisateur
+        User savedUser = userRepository.save(user);
+
+        log.info("User created successfully with ID: {}", savedUser.getUserId());
+
+        // 5. Convertir en DTO pour la réponse
+        UserDTO savedUserDto = userMapper.toDto(savedUser);
+
+        log.info("User created successfully with ID: {}", savedUserDto.getUserId());
+
+        return savedUserDto;
     }
 
     @Override
