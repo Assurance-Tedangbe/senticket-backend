@@ -31,7 +31,7 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
      * @param account the account for which to find tickets
      * @return a list of tickets belonging to the given account
      */
-    List<Ticket> findByAccount(Account account);
+  //  List<Ticket> findByAccount(Account account);
 
     /**
      * Retrieves a list of tickets based on their booked status.

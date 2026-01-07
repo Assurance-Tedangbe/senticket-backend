@@ -32,15 +32,15 @@ public interface TicketService {
 
     List<TicketDTO> readTicketsByStatus(TicketStatus status);
 
-    List<TicketDTO> readTicketsByAccountId(Long accountId);
+  //  List<TicketDTO> readTicketsByAccountId(Long accountId);
 
     List<TicketDTO> readTicketsByUserId(Long userId);
 
     List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTicketsRequestDTO);
 
-    void transferTickets(TransferTicketsRequestDTO transferTicketsRequestDTO);
+   // void transferTickets(TransferTicketsRequestDTO transferTicketsRequestDTO);
 
-    void cancelTransferTickets(CancelTransferTicketsRequestDTO cancelTransferTicketsRequestDTO);
+   // void cancelTransferTickets(CancelTransferTicketsRequestDTO cancelTransferTicketsRequestDTO);
 
     void debitAccount(DebitAccountRequestDTO debitAccountRequestDTO);
 

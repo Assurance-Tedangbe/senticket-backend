@@ -41,7 +41,7 @@ public class TicketController {
 
     private final TicketService ticketService;
 
-     //@PostAuthorize("hasAuthority('ADMIN')")
+    /* //@PostAuthorize("hasAuthority('ADMIN')")
     @PostMapping(consumes = "application/json", produces = "application/json")
     public ResponseEntity<List<TicketDTO>> createTicket(@RequestBody CreationTicketsRequestDTO creationTicketsRequestDTO) {
 
@@ -52,7 +52,7 @@ public class TicketController {
         log.info("Tickets created successfully with IDs: {}", createdTickets);
 
         return new ResponseEntity<>(createdTickets, HttpStatus.CREATED);
-    }
+    }*/
       
     
     //@PostAuthorize("hasAnyAuthority('ADMIN', 'AGENT', 'ETUDIANT', 'PORTIER')")
@@ -158,7 +158,7 @@ public class TicketController {
     }
 
 
-    //@PostAuthorize("hasAnyAuthority('ADMIN', 'AGENT', 'ETUDIANT', 'PORTIER')")
+  /*  //@PostAuthorize("hasAnyAuthority('ADMIN', 'AGENT', 'ETUDIANT', 'PORTIER')")
     @GetMapping(value = "/accountId/{accoundId}", produces = "application/json")
     public ResponseEntity<List<TicketDTO>> readTicketsByAccountId(@PathVariable Long accountId) {
 
@@ -167,7 +167,7 @@ public class TicketController {
          log.info("Fetched tickets by a given accountId: {}", accountId);
 
         return new ResponseEntity<>(ticketsByAccountId, HttpStatus.OK);
-    }
+    }*/
 
 
     //@PostAuthorize("hasAnyAuthority('ADMIN', 'AGENT', 'ETUDIANT', 'PORTIER')")
@@ -198,7 +198,7 @@ public class TicketController {
         return new ResponseEntity<>(purchasedTickets, HttpStatus.CREATED);
     }
 
-    //@PostAuthorize("hasAuthority('ADMIN', 'ETUDIANT')")
+    /*//@PostAuthorize("hasAuthority('ADMIN', 'ETUDIANT')")
     @PutMapping(value = "/transferTickets")
     @ResponseStatus(HttpStatus.OK)
     public void transferTickets( @RequestBody TransferTicketsRequestDTO transferTicketsRequestDTO) {
@@ -208,9 +208,9 @@ public class TicketController {
         ticketService.transferTickets(transferTicketsRequestDTO);
 
         log.info("Transfer of tickets completed successfully {}", transferTicketsRequestDTO);
-    }
+    }*/
 
-    //@PostAuthorize("hasAuthority('ADMIN', 'ETUDIANT')")
+   /* //@PostAuthorize("hasAuthority('ADMIN', 'ETUDIANT')")
     @PutMapping(value = "/cancelTransferTickets")
     @ResponseStatus(HttpStatus.OK)
     public void  cancelTransferTickets(@RequestBody CancelTransferTicketsRequestDTO
@@ -223,7 +223,7 @@ public class TicketController {
 
         log.info("Cancelled transfer tickets completed successfully {}",
                 cancelTransferTicketsRequestDTO);
-    }
+    }*/
 
     //@PostAuthorize("hasAuthority('ADMIN, PORTIER')")
     @PutMapping(value = "/debitAccount")

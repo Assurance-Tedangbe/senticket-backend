@@ -5,18 +5,28 @@ import lombok.RequiredArgsConstructor;
 
 import org.springframework.stereotype.Service;
 
+import org.springframework.transaction.annotation.Transactional;
 import sn.estm.managingrestauranttickets.dto.RoleDTO;
 import sn.estm.managingrestauranttickets.dto.UserDTO;
+import sn.estm.managingrestauranttickets.dto.customisedto.CreationTicketsRequestDTO;
 import sn.estm.managingrestauranttickets.entities.Role;
+import sn.estm.managingrestauranttickets.entities.Ticket;
 import sn.estm.managingrestauranttickets.entities.User;
+import sn.estm.managingrestauranttickets.enumerations.TicketStatus;
+import sn.estm.managingrestauranttickets.enumerations.TicketType;
 import sn.estm.managingrestauranttickets.exceptions.InvalidCredentialsException;
 import sn.estm.managingrestauranttickets.exceptions.ResourceNotFoundException;
+import sn.estm.managingrestauranttickets.mappers.TicketMapper;
 import sn.estm.managingrestauranttickets.mappers.UserMapper;
 import sn.estm.managingrestauranttickets.repositories.RoleRepository;
+import sn.estm.managingrestauranttickets.repositories.TicketRepository;
 import sn.estm.managingrestauranttickets.repositories.UserRepository;
+import sn.estm.managingrestauranttickets.services.serviceInterfaces.TicketService;
 import sn.estm.managingrestauranttickets.services.serviceInterfaces.UserService;
 
 import java.text.MessageFormat;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -30,6 +40,11 @@ public class UserServiceImpl implements UserService {
     private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final RoleRepository roleRepository;
+    private final TicketRepository ticketRepository;
+    private final TicketService ticketService;
+    private final TicketMapper ticketMapper;
+   // private final UserService userService;
+
 
    /* @Override
     public UserDTO createUser(UserDTO userDto) {
@@ -44,6 +59,7 @@ public class UserServiceImpl implements UserService {
        
         return userMapper.toDto(savedUser);
     }*/
+    @Transactional
     @Override
     public UserDTO createUser(UserDTO userDto) {
 
@@ -78,6 +94,69 @@ public class UserServiceImpl implements UserService {
         UserDTO savedUserDto = userMapper.toDto(savedUser);
 
         log.info("User created successfully with ID: {}", savedUserDto.getUserId());
+
+        //var userDTO = userService.readUserByUserId(userDto.getUserId());
+        //**************************************
+        log.info("BEGIN BUILDING TICKETS:");
+        CreationTicketsRequestDTO creationTicketsRequestDTO = CreationTicketsRequestDTO.builder()
+                .userDTO(userDto)
+                .countA(5)
+                .countB(5)
+                .build();
+
+        /*log.info("Deep: Creating tickets with details {}", creationTicketsRequestDTO);*/
+
+        if (creationTicketsRequestDTO.getCountA() < 0 || creationTicketsRequestDTO.getCountB() < 0) {
+            throw new IllegalArgumentException("Ticket counts cannot be negative");
+        }
+
+        List<Ticket> ticketsToSave = new ArrayList<>();
+        LocalDateTime creationTime = LocalDateTime.now();
+
+        // Create Type A tickets
+        for (int i = 0; i < creationTicketsRequestDTO.getCountA(); i++) {
+            Ticket ticketA = Ticket.builder()
+                    .ticketType(TicketType.A)
+                    .ticketPrice(100.0)
+                    .payementCode("")
+                    .ticketStatus(TicketStatus.AVAILABLE)
+                    .booked(false)
+                    .ticketCreationDate(creationTime)
+                    .ticketDescription("Ticket Type A - " + (i + 1))
+                    .build();
+            ticketsToSave.add(ticketA);
+        }
+
+        // Create Type B tickets
+        for (int i = 0; i < creationTicketsRequestDTO.getCountB(); i++) {
+            Ticket ticketB = Ticket.builder()
+                    .ticketType(TicketType.B)
+                    .ticketPrice(150.0)
+                    .payementCode("")
+                    .ticketStatus(TicketStatus.AVAILABLE)
+                    .booked(false)
+                    .ticketCreationDate(creationTime)
+                    .ticketDescription("Ticket Type B - " + (i + 1))
+                    .build();
+            ticketsToSave.add(ticketB);
+        }
+
+        // Use saveAll for efficient batch insertion
+        List<Ticket> savedTickets = ticketRepository.saveAll(ticketsToSave);
+        log.info("*****savetickets****** "+savedTickets);
+
+
+        creationTicketsRequestDTO.setTicketDTO(ticketMapper.toDtoSet(savedTickets));
+        log.info("********creationTicketsRequests********* "+creationTicketsRequestDTO);
+        log.info("ENDING BUILDING TICKETS:");
+
+        //******************************
+        log.info("Deep: Creating tickets with details {}", creationTicketsRequestDTO);
+
+        ticketService.createTickets(creationTicketsRequestDTO);
+
+        log.info("Successfully created tickets {} with requests {}",
+                savedTickets.size(), creationTicketsRequestDTO);
 
         return savedUserDto;
     }

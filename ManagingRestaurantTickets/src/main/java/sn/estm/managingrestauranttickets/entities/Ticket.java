@@ -58,7 +58,7 @@ public class Ticket implements Serializable {
     * The unique constraint should be applied *only* when the code is set. 
     * It's safer to handle the uniqueness and generation in the service layer
     */
-   @Column(unique = true)
+  // @Column(unique = true)
    private String payementCode;
 
    /* Booked, Default value false
@@ -98,14 +98,14 @@ public class Ticket implements Serializable {
    private String ticketDescription;
 
    @ManyToOne(fetch = FetchType.LAZY)
-   @JoinColumn(name="account_id")
-   private Account account;
-
-   @ManyToOne(fetch = FetchType.LAZY)
    @JoinColumn(name="user_id")
    private User user;
    
    /*@ManyToOne(fetch = FetchType.LAZY)
    @JoinColumn(name="menu_id")
    private Menu menu;*/
+
+   /*@ManyToOne(fetch = FetchType.LAZY)
+   @JoinColumn(name="account_id")
+   private Account account;*/
 }

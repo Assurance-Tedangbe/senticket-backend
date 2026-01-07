@@ -1,6 +1,7 @@
 /* This interface is responsible for mapping Ticket entities to their DTOs and vice versa. */
 package sn.estm.managingrestauranttickets.mappers;
 
+import java.util.List;
 import java.util.Set;
 
 import org.mapstruct.Mapper;
@@ -10,22 +11,24 @@ import sn.estm.managingrestauranttickets.dto.TicketDTO;
 import sn.estm.managingrestauranttickets.entities.Ticket;
 
 
-@Mapper(componentModel = "spring", uses = {AccountMapper.class, UserMapper.class
+@Mapper(componentModel = "spring", uses = {
+       // AccountMapper.class,
+        UserMapper.class
        // , MenuMapper.class
 })
 public interface TicketMapper {
 
    // @Mapping(source = "menu", target = "menuDTO")
     @Mapping(source = "user", target = "userDTO")
-    @Mapping(source = "account", target = "accountDTO")
+  //  @Mapping(source = "account", target = "accountDTO")
     TicketDTO toDto(Ticket ticket);
 
    // @Mapping(target = "menu", ignore = true)
     @Mapping(target = "user", ignore = true) 
-    @Mapping(target = "account", ignore = true)
+  //  @Mapping(target = "account", ignore = true)
     Ticket toEntity(TicketDTO ticketDTO);
 
-    Set<TicketDTO> toDtoSet(Set<Ticket> tickets);
+    List<TicketDTO> toDtoSet(List<Ticket> tickets);
 
     Set<Ticket> toEntitySet(Set<TicketDTO> ticketDTOs); 
 }

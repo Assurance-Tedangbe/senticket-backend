@@ -30,7 +30,9 @@ public class TicketDTO {
     @NotNull(message = "The ticket price is required.")
     private Double ticketPrice;
 
-    @Column(unique = true, nullable = false)
+    /*@Column(unique = true
+           // , nullable = false
+    )*/
     @NotNull(message = "The payment code is required.")
     private String paymentCode;
 
@@ -51,15 +53,15 @@ public class TicketDTO {
     @NotBlank(message = "The ticket needs a description.")
     private String ticketDescription;
 
-    /*@Valid
-    @NotNull(message = "The menu is required.")
-    private MenuDTO menuDTO;*/
-
     @Valid
     @NotNull(message = "The user is required.")
     private UserDTO userDTO;
 
-    @Valid
+    /*@Valid
+    @NotNull(message = "The menu is required.")
+    private MenuDTO menuDTO;*/
+
+    /*@Valid
     @NotNull(message = "The account is required.")
-    private AccountDTO accountDTO;
+    private AccountDTO accountDTO;*/
 }
