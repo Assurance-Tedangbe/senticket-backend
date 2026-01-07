@@ -51,7 +51,7 @@ public class TicketServiceImpl implements TicketService {
 
         //private static final double price_a = 100.0;
 
-        log.info("********Deep: Creating tickets with requests******** {}", creationTicketsRequestDTO);
+        log.info("Deep: Creating tickets with requests {}", creationTicketsRequestDTO);
 
         if (creationTicketsRequestDTO.getCountA() < 0 || creationTicketsRequestDTO.getCountB() < 0) {
             throw new IllegalArgumentException("Ticket counts cannot be negative");
@@ -61,7 +61,7 @@ public class TicketServiceImpl implements TicketService {
         LocalDateTime creationTime = LocalDateTime.now();
 
         // Create Type A tickets
-        for (int i = 0; i < creationTicketsRequestDTO.getCountA(); i++) {
+       /* for (int i = 0; i < creationTicketsRequestDTO.getCountA(); i++) {
             Ticket ticketA = Ticket.builder()
                     .ticketType(TicketType.A)
                     .ticketPrice(100.0)
@@ -70,13 +70,12 @@ public class TicketServiceImpl implements TicketService {
                     .booked(false)
                     .ticketCreationDate(creationTime)
                     .ticketDescription("Ticket Type A - " + (i + 1))
-                    // .user(creationTicketsRequestDTO.getUserDTO(userMapper.toDto()))
                     .build();
             ticketsToSave.add(ticketA);
-        }
+        }*/
 
         // Create Type B tickets
-        for (int i = 0; i < creationTicketsRequestDTO.getCountB(); i++) {
+        /*for (int i = 0; i < creationTicketsRequestDTO.getCountB(); i++) {
             Ticket ticketB = Ticket.builder()
                     .ticketType(TicketType.B)
                     .ticketPrice(150.0)
@@ -87,16 +86,15 @@ public class TicketServiceImpl implements TicketService {
                     .ticketDescription("Ticket Type B - " + (i + 1))
                     .build();
             ticketsToSave.add(ticketB);
-        }
+        }*/
 
         // Use saveAll for efficient batch insertion
         List<Ticket> savedTickets = ticketRepository.saveAll(ticketsToSave);
 
+       // creationTicketsRequestDTO.setTicketDTO(ticketMapper.toDtoSet(savedTickets));
 
-        creationTicketsRequestDTO.setTicketDTO(ticketMapper.toDtoSet(savedTickets));
-
-        log.info("Successfully created tickets {} with requests {}",
-                savedTickets.size(), creationTicketsRequestDTO);
+      /*  log.info("Successfully created tickets {} with requests {}",
+                savedTickets.size(), creationTicketsRequestDTO);*/
 
         return savedTickets.stream()
                 .map(ticketMapper::toDto)

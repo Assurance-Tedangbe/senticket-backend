@@ -43,7 +43,6 @@ public class UserServiceImpl implements UserService {
     private final TicketRepository ticketRepository;
     private final TicketService ticketService;
     private final TicketMapper ticketMapper;
-   // private final UserService userService;
 
 
    /* @Override
@@ -88,23 +87,17 @@ public class UserServiceImpl implements UserService {
         // 4. Sauvegarder l'utilisateur
         User savedUser = userRepository.save(user);
 
-        log.info("User created successfully with ID: {}", savedUser.getUserId());
-
         // 5. Convertir en DTO pour la réponse
         UserDTO savedUserDto = userMapper.toDto(savedUser);
 
         log.info("User created successfully with ID: {}", savedUserDto.getUserId());
 
-        //var userDTO = userService.readUserByUserId(userDto.getUserId());
-        //**************************************
         log.info("BEGIN BUILDING TICKETS:");
         CreationTicketsRequestDTO creationTicketsRequestDTO = CreationTicketsRequestDTO.builder()
-                .userDTO(userDto)
-                .countA(5)
-                .countB(5)
+                //.userDTO(userDto)
+                .countA(4)
+                .countB(4)
                 .build();
-
-        /*log.info("Deep: Creating tickets with details {}", creationTicketsRequestDTO);*/
 
         if (creationTicketsRequestDTO.getCountA() < 0 || creationTicketsRequestDTO.getCountB() < 0) {
             throw new IllegalArgumentException("Ticket counts cannot be negative");
@@ -123,6 +116,7 @@ public class UserServiceImpl implements UserService {
                     .booked(false)
                     .ticketCreationDate(creationTime)
                     .ticketDescription("Ticket Type A - " + (i + 1))
+                    .user(user)
                     .build();
             ticketsToSave.add(ticketA);
         }
@@ -137,21 +131,19 @@ public class UserServiceImpl implements UserService {
                     .booked(false)
                     .ticketCreationDate(creationTime)
                     .ticketDescription("Ticket Type B - " + (i + 1))
+                    .user(user)
                     .build();
             ticketsToSave.add(ticketB);
         }
 
         // Use saveAll for efficient batch insertion
         List<Ticket> savedTickets = ticketRepository.saveAll(ticketsToSave);
-        log.info("*****savetickets****** "+savedTickets);
-
 
         creationTicketsRequestDTO.setTicketDTO(ticketMapper.toDtoSet(savedTickets));
-        log.info("********creationTicketsRequests********* "+creationTicketsRequestDTO);
-        log.info("ENDING BUILDING TICKETS:");
 
-        //******************************
-        log.info("Deep: Creating tickets with details {}", creationTicketsRequestDTO);
+        log.info("END BUILDING TICKETS:");
+
+        log.info("Creating tickets with details {}", creationTicketsRequestDTO);
 
         ticketService.createTickets(creationTicketsRequestDTO);
 
