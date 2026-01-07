@@ -8,6 +8,10 @@ public interface UserService {
 
     UserDTO createUser(UserDTO userDto);
 
+    UserDTO authenticate(String username, String password);
+
+    boolean validateCredentials(String username, String password);
+
     List<UserDTO> readUsers();
 
     UserDTO updateUser(UserDTO userDto);

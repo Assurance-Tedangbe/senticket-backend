@@ -21,7 +21,7 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
 
     /**
      * Retrieves a list of tickets that match the specified status.
-     * @param ticketStatus the status of the tickets to retrieve
+     * @param ticketstatus the status of the tickets to retrieve
      * @return a list of {@link Ticket} objects with the given status
      */
     List<Ticket> findByTicketStatus(TicketStatus ticketstatus);
@@ -31,7 +31,7 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
      * @param account the account for which to find tickets
      * @return a list of tickets belonging to the given account
      */
-    List<Ticket> findByAccount(Account account);
+  //  List<Ticket> findByAccount(Account account);
 
     /**
      * Retrieves a list of tickets based on their booked status.
@@ -54,16 +54,6 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
      */ 
     Optional<Ticket> findByTicketId(Long ticketId);
 
-    
-    /**
-     * Retrieves a list of Ticket entities associated with the specified menu ID.
-     *
-     * @param menuId the ID of the menu to filter tickets by
-     * @return a list of Ticket entities linked to the given menu ID
-     */
-    List<Ticket> findByMenuMenuId(Long menuId);
-
-
     /**
      * Retrieves a list of tickets associated with a specific user's ID.
      * @param userId the unique identifier of the user whose tickets are to be retrieved
@@ -81,16 +71,20 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
      */
     List<Ticket> findByUserUserIdAndTicketStatus(Long userId, TicketStatus ticketStatus);
 
+    /**
+     * Retrieves a list of Ticket entities associated with the specified menu ID.
+     * @param menuId the ID of the menu to filter tickets by
+     * @return a list of Ticket entities linked to the given menu ID
+     */
+   // List<Ticket> findByMenuMenuId(Long menuId);
 
     /**
      * Retrieves a list of {@link Ticket} entities filtered by the specified menu ID and user ID.
-     *
      * @param menuId the ID of the menu to filter tickets by
      * @param userId the ID of the user to filter tickets by
      * @return a list of tickets associated with the given menu and user
      */
-    List<Ticket> findByMenuMenuIdAndUserUserId(Long menuId, Long userId);
-    
+ //   List<Ticket> findByMenuMenuIdAndUserUserId(Long menuId, Long userId);
 
     /**
      * Retrieves a list of Ticket entities filtered by the specified menu ID, user ID, and status.
@@ -99,5 +93,5 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
      * @param ticketStaus the status of the tickets to filter by
      * @return a list of Ticket entities matching the given menu ID, user ID, and status
      */
-    List<Ticket> findByMenuMenuIdAndUserUserIdAndTicketStatus(Long menuId, Long userId, TicketStatus ticketStatus);
+  // List<Ticket> findByMenuMenuIdAndUserUserIdAndTicketStatus(Long menuId, Long userId, TicketStatus ticketStatus);
 }
