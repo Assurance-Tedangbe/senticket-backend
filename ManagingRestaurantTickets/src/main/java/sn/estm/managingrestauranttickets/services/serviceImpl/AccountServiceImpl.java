@@ -41,12 +41,12 @@ public class AccountServiceImpl implements AccountService {
 
       log.info("Account created successfully with ID: {}", savedAccount.getAccountId());
 
-      CreationTicketsRequestDTO creationTicketsRequestDTO = CreationTicketsRequestDTO.builder()
+      /*CreationTicketsRequestDTO creationTicketsRequestDTO = CreationTicketsRequestDTO.builder()
               .countA(5)
               .countB(5)
               .build();
 
-      ticketService.createTickets(creationTicketsRequestDTO);
+      ticketService.createTickets(creationTicketsRequestDTO);*/
 
       return accountMapper.toDto(savedAccount);
     }
