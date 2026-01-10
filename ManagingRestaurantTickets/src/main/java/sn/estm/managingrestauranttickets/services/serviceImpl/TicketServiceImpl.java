@@ -285,10 +285,10 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
     }
 
     // Get account and user
-    Account account = accountRepository.findById(purchaseTicketsRequestDTO.getAccountDTO().getAccountId())
+    /*Account account = accountRepository.findById(purchaseTicketsRequestDTO.getAccountDTO().getAccountId())
             .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
                     "Account not found with ID: {0}", 
-                    purchaseTicketsRequestDTO.getAccountDTO().getAccountId())));
+                    purchaseTicketsRequestDTO.getAccountDTO().getAccountId())));*/
 
     User user = userRepository.findById(purchaseTicketsRequestDTO.getUserDTO().getUserId())
             .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
@@ -344,7 +344,7 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
         }
     }
 
-    // Validate account balance
+   /* // Validate account balance
     Double balance = account.getBalance();
     if (balance == null || balance < totalPrice) {
         throw new IllegalStateException(MessageFormat.format(
@@ -353,7 +353,7 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
 
     // Deduct total price from account
     account.setBalance(balance - totalPrice);
-    Account savedAccount = accountRepository.save(account);
+    Account savedAccount = accountRepository.save(account);*/
 
     // Update each purchase ticket
     LocalDateTime purchaseDateTime = LocalDateTime.now();
@@ -381,8 +381,8 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
     // Lines commented from 394 to 401 is to summarize to this one line
     purchasedTickets = ticketRepository.saveAll(inPurchasingTickets);
 
-    log.info("Successfully purchased {} tickets for account {}. Total amount: {}. Type A: {}, Type B: {}",
-            purchasedTickets.size(), savedAccount.getAccountId(), totalPrice, countAPurchased, countBPurchased);
+  /*  log.info("Successfully purchased {} tickets for account {}. Total amount: {}. Type A: {}, Type B: {}",
+            purchasedTickets.size(), savedAccount.getAccountId(), totalPrice, countAPurchased, countBPurchased);*/
 
     // Automatically recreate the purchased tickets to maintain inventory
     if (countAPurchased > 0 || countBPurchased > 0) {
