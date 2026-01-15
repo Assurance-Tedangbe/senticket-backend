@@ -31,11 +31,12 @@ public class CorsConfig {
                // "http://localhost:*"        // Tous les ports locaux (ex: 3000, 4200, 8081)
                 //"http://127.0.0.1",
                // "http://127.0.0.1:*",
-                "http://localhost:54181"
+                //"http://localhost:54181"
                // "http://10.0.2.2",           // Émulateur Android
                // "http://10.0.2.2:*",         // Émulateur Android avec tous ports
-              //  "http://192.168.0.0/16",     // Tout le réseau local (192.168.x.x)
-              //  "http://0.0.0.0",            // Toutes interfaces réseau
+                "http://192.168.1.4"
+                //"http://192.168.0.0/16",    // Tout le réseau local (192.168.x.x)
+                //"http://0.0.0.0"            // Toutes interfaces réseau
                // "http://[::1]"               // Localhost IPv6
         ));
 
