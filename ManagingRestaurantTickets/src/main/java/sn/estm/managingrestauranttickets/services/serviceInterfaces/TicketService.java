@@ -18,6 +18,8 @@ public interface TicketService {
 
     List<TicketDTO> readTickets();
 
+    List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTicketsRequestDTO);
+
     TicketDTO readTicketById(Long idTicket);
 
     TicketDTO updateTicket(TicketDTO ticketDTO);
@@ -35,8 +37,6 @@ public interface TicketService {
   //  List<TicketDTO> readTicketsByAccountId(Long accountId);
 
     List<TicketDTO> readTicketsByUserId(Long userId);
-
-    List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTicketsRequestDTO);
 
    // void transferTickets(TransferTicketsRequestDTO transferTicketsRequestDTO);
 

@@ -183,19 +183,14 @@ public class TicketController {
 
 
     //@PostAuthorize("hasAnyAuthority('ADMIN', 'ETUDIANT')")
-    @PostMapping(value = "/{purchase}", consumes = "application/json", produces = "application/json")
+    @PutMapping(value = "/purchase", consumes = "application/json", produces = "application/json")
     public ResponseEntity<List<TicketDTO>> purchaseTickets(@Valid @RequestBody PurchaseTicketsRequestDTO purchaseTicketsRequestDTO) {
-        
-        log.info("Purchasing ticket(s) with accountID with details: {}, {}",
-        purchaseTicketsRequestDTO.getAccountDTO().getAccountId(),
-                purchaseTicketsRequestDTO);
-        
-        // Call the service layer to execute the business logic
+
         List<TicketDTO> purchasedTickets = ticketService.purchaseTickets(purchaseTicketsRequestDTO);
 
         log.info("Tickets purchased successfully: {}", purchasedTickets);
 
-        return new ResponseEntity<>(purchasedTickets, HttpStatus.CREATED);
+        return new ResponseEntity<>(purchasedTickets, HttpStatus.OK);
     }
 
     /*//@PostAuthorize("hasAuthority('ADMIN', 'ETUDIANT')")

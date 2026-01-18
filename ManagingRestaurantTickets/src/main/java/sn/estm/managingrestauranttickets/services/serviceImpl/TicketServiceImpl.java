@@ -273,10 +273,10 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
         throw new IllegalArgumentException("Ticket purchase data must be provided");
     }
 
-    Long accountId = purchaseTicketsRequestDTO.getAccountDTO().getAccountId();
+    /*Long accountId = purchaseTicketsRequestDTO.getAccountDTO().getAccountId();
     if (accountId == null) {
         throw new IllegalArgumentException("Account ID must be provided in TicketFromDTO.");
-    } 
+    } */
 
     List<Long> ticketIds = purchaseTicketsRequestDTO.getSelectedTicketIds();
     
@@ -290,10 +290,10 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
                     "Account not found with ID: {0}", 
                     purchaseTicketsRequestDTO.getAccountDTO().getAccountId())));*/
 
-    User user = userRepository.findById(purchaseTicketsRequestDTO.getUserDTO().getUserId())
+    User user = userRepository.findById(purchaseTicketsRequestDTO.getPurchaseUserDTO().getUserId())
             .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
                     "User not found with ID: {0}",
-                     purchaseTicketsRequestDTO.getUserDTO().getUserId())));
+                     purchaseTicketsRequestDTO.getPurchaseUserDTO().getUserId())));
 
     // Fetch all tickets
     List<Ticket> tickets = ticketRepository.findAllById(ticketIds);
@@ -310,7 +310,7 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
     int countBPurchased = 0;
 
     for (Ticket ticket : tickets) {
-        // Check eligibility por purchase: NOT booked AND TicketStatus.AVAILABLE
+        // Check eligibility for purchase: NOT booked AND TicketStatus.AVAILABLE
         if (ticket.isBooked() || ticket.getTicketStatus() != TicketStatus.AVAILABLE) {
             throw new IllegalStateException(MessageFormat.format(
                     "Ticket with ID: {0} is not available for purchase",
@@ -393,8 +393,8 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
 
        // createTickets(creationTicketsRequestDTO);
 
-        log.info("Automatically recreated {} Type A tickets and {} Type B tickets to maintain inventory",
-                countAPurchased, countBPurchased);
+        log.info("Number of type A tickets {} and {} Type B tickets purchased {} ",
+                countAPurchased, countBPurchased, purchaseTicketsRequestDTO.getSelectedTicketIds());
     }
 
     // return purchased tickets as DTOs
