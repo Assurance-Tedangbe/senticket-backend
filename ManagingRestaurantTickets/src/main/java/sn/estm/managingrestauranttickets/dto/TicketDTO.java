@@ -30,9 +30,7 @@ public class TicketDTO {
     @NotNull(message = "The ticket price is required.")
     private Double ticketPrice;
 
-    /*@Column(unique = true
-           // , nullable = false
-    )*/
+    @Column(unique = true, nullable = false)
     @NotNull(message = "The payment code is required.")
     private String paymentCode;
 
