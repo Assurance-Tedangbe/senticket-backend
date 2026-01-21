@@ -17,9 +17,7 @@ public class PurchaseUserDTO {
     @NotNull(message = "User ID is required")
     private Long userId;
 
-    @NotBlank(message = "Le prénom est obligatoire")
-    private String firstName;
+    @NotBlank(message = "Username is required")
+    private String username;;
 
-    @NotBlank(message = "Le nom est obligatoire")
-    private String lastName;
 }
