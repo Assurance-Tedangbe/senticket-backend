@@ -20,6 +20,12 @@ public interface TicketService {
 
     List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTicketsRequestDTO);
 
+    void debitAccount(DebitAccountRequestDTO debitAccountRequestDTO);
+
+    // void transferTickets(TransferTicketsRequestDTO transferTicketsRequestDTO);
+
+    // void cancelTransferTickets(CancelTransferTicketsRequestDTO cancelTransferTicketsRequestDTO);
+
     TicketDTO readTicketById(Long idTicket);
 
     TicketDTO updateTicket(TicketDTO ticketDTO);
@@ -34,15 +40,9 @@ public interface TicketService {
 
     List<TicketDTO> readTicketsByStatus(TicketStatus status);
 
-  //  List<TicketDTO> readTicketsByAccountId(Long accountId);
+    // List<TicketDTO> readTicketsByAccountId(Long accountId);
 
     List<TicketDTO> readTicketsByUserId(Long userId);
-
-   // void transferTickets(TransferTicketsRequestDTO transferTicketsRequestDTO);
-
-   // void cancelTransferTickets(CancelTransferTicketsRequestDTO cancelTransferTicketsRequestDTO);
-
-    void debitAccount(DebitAccountRequestDTO debitAccountRequestDTO);
 
     /**
      * Retrieves a list of tickets associated with a specific menu and user.
