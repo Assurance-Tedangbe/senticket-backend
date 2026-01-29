@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -15,11 +16,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import sn.estm.managingrestauranttickets.dto.TicketDTO;
-import sn.estm.managingrestauranttickets.dto.customisedto.DebitAccountRequestDTO;
-import sn.estm.managingrestauranttickets.dto.customisedto.CreationTicketsRequestDTO;
-import sn.estm.managingrestauranttickets.dto.customisedto.PurchaseTicketsRequestDTO;
-import sn.estm.managingrestauranttickets.dto.customisedto.TransferTicketsRequestDTO;
-import sn.estm.managingrestauranttickets.dto.customisedto.CancelTransferTicketsRequestDTO;
+import sn.estm.managingrestauranttickets.dto.customisedto.*;
 import sn.estm.managingrestauranttickets.entities.Account;
 import sn.estm.managingrestauranttickets.entities.Ticket;
 import sn.estm.managingrestauranttickets.entities.User;
@@ -106,157 +103,6 @@ public class TicketServiceImpl implements TicketService {
     public List<TicketDTO> readTickets() {
         List<Ticket> tickets = ticketRepository.findAll();
         
-        return tickets.stream()
-                .map(ticketMapper::toDto)
-                .collect(Collectors.toList());
-    }
-    
-
-    @Override
-    public TicketDTO readTicketById(Long ticketId) {
-
-        log.info("Reading ticket by id: {}", ticketId);
-
-        Ticket ticket = ticketRepository.findById(ticketId)
-                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
-                    "Ticket not found with ID: {0}", ticketId)));
-
-        return ticketMapper.toDto(ticket);
-    }
-
-
-    @Override
-    public TicketDTO updateTicket(TicketDTO ticketDTO) {
-
-        log.info("Updating ticket details: {}", ticketDTO);
-
-        Ticket existingTicket = ticketRepository.findById(ticketDTO.getTicketId())
-                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
-                    "Ticket not found with ID: {0}", ticketDTO.getTicketId())));          
-        
-        existingTicket.setTicketType(ticketDTO.getTicketType());
-        existingTicket.setTicketPrice(ticketDTO.getTicketPrice());
-        existingTicket.setBooked(ticketDTO.isBooked());
-        existingTicket.setTicketStatus(ticketDTO.getTicketStatus());
-        existingTicket.setTicketDescription(ticketDTO.getTicketDescription());
-      //  existingTicket.setAccount(ticketMapper.toEntity(ticketDTO).getAccount());
-        existingTicket.setUser(ticketMapper.toEntity(ticketDTO).getUser());
-       // existingTicket.setMenu(ticketMapper.toEntity(ticketDTO).getMenu());
-
-        Ticket updatedTicket = ticketRepository.save(existingTicket);
-
-        log.info("Ticket updated successfully with ID: {}", updatedTicket.getTicketId());
-
-        return ticketMapper.toDto(updatedTicket);
-    }
-
-
-    @Override
-    public void deleteTicket(Long ticketId) {
-
-        log.info("Deleting ticket with ID: {}", ticketId);
-
-        if (!ticketRepository.existsById(ticketId)) {
-            throw new ResourceNotFoundException(MessageFormat.format(
-                    "Ticket not found with ID: {0}", ticketId));
-        }
-
-        ticketRepository.deleteById(ticketId);
-
-        log.info("Deleted ticket with ID: {}", ticketId);
-    }
-
-     @Override
-    public void updateTicketStatus(Long ticketId, TicketStatus newStatus) {
-        
-        log.info("Updating ticket status for ticket ID: {} to {}", ticketId, newStatus);
-
-        Ticket ticket = ticketRepository.findById(ticketId)
-                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
-                    "Ticket not found with ID: {0}", ticketId)));
-
-        ticket.setTicketStatus(newStatus);
-
-        ticketRepository.save(ticket);
-
-        log.info("Updated ticket status for ticket ID: {} to {}", ticketId, newStatus);
-    }
-
-
-    @Override
-    public void bookTicket(Long ticketId) {
-       
-        log.info("Booking ticket with ID: {}", ticketId);
-
-        Ticket ticket = ticketRepository.findById(ticketId)
-                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
-                    "Ticket not found with ID: {0}", ticketId)));
-
-        ticket.setBooked(true);
-
-        ticketRepository.save(ticket);
-
-        log.info("Booked ticket with ID: {}", ticketId);
-    }
-
-
-    @Override
-    public void unbookTicket(Long ticketId) {
-
-        log.info("Unbooking ticket with ID: {}", ticketId);
-        
-        Ticket ticket = ticketRepository.findById(ticketId)
-                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
-                    "Ticket not found with ID: {0}", ticketId)));
-
-        ticket.setBooked(false);
-
-        ticketRepository.save(ticket);
-
-        log.info("Unbooked ticket with ID: {}", ticketId);
-    }
-
-    
-    @Override
-    public List<TicketDTO> readTicketsByStatus(TicketStatus ticketStatus) {
-       log.info("Reading tickets with status: {}", ticketStatus);
-
-       List<Ticket> tickets = ticketRepository.findByTicketStatus(ticketStatus);
-
-       return tickets.stream()
-               .map(ticketMapper::toDto)
-               .collect(Collectors.toList());
-   }
-
-
-   /* @Override
-    public List<TicketDTO> readTicketsByAccountId(Long accountId) {
-       
-        log.info("Reading tickets for account with ID: {}", accountId);
-
-        Account account = accountRepository.findById(accountId)
-                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
-                    "Account not found with ID: {0}", accountId)));
-        
-        List<Ticket> tickets = ticketRepository.findByAccount(account);
-
-        return tickets.stream()
-                .map(ticketMapper::toDto)
-                .collect(Collectors.toList());
-    }*/
-
-
-    @Override
-    public List<TicketDTO> readTicketsByUserId(Long userId) {
-        
-        log.info("Reading tickets for user with ID: {}", userId);
-
-         User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
-                    "Account not found with ID: {0}", userId)));
-        
-        List<Ticket> tickets = ticketRepository.findByUser(user);
-
         return tickets.stream()
                 .map(ticketMapper::toDto)
                 .collect(Collectors.toList());
@@ -450,7 +296,271 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
             .collect(Collectors.toList());
    }
 
- /*  @Transactional
+    @Transactional
+    @Override
+    public void debitAccount(DebitAccountRequestDTO debitAccountRequestDTO) {
+        log.info("Processing debit request: Porter {} debiting Student {} for tickets {}",
+                debitAccountRequestDTO.getDebitPorterDTO().getPorterUsername(),
+                debitAccountRequestDTO.getDebitStudentDTO().getUsername(),
+                debitAccountRequestDTO.getTicketIds());
+
+        // --- 1. Validate Input ---
+        validateDebitRequest(debitAccountRequestDTO);
+
+        // --- 2. Retrieve and Validate Users ---
+        User porter = validatePorter(debitAccountRequestDTO.getDebitPorterDTO());
+        User student = validateStudent(debitAccountRequestDTO.getDebitStudentDTO());
+
+        // --- 3. Check Authorization ---
+        checkAuthorization(porter);
+
+        // --- 4. Retrieve and Validate Tickets ---
+        List<Ticket> tickets = ticketRepository.findAllById(debitAccountRequestDTO.getTicketIds());
+        validateTickets(tickets, debitAccountRequestDTO.getTicketIds().size(), student);
+
+        // --- 5. Process Debit for All Tickets ---
+        processTicketsDebit(tickets);
+
+        log.info("Successfully debited {} tickets for Student {} by Portier {}",
+                tickets.size(), student.getUsername(), porter.getUsername());
+    }
+
+    private void validateDebitRequest(DebitAccountRequestDTO debitRequest) {
+        if (debitRequest == null) {
+            throw new IllegalArgumentException("Debit request cannot be null");
+        }
+        if (debitRequest.getDebitPorterDTO() == null) {
+            throw new IllegalArgumentException("Porter information is required");
+        }
+        if (debitRequest.getDebitStudentDTO() == null) {
+            throw new IllegalArgumentException("Student information is required");
+        }
+        if (debitRequest.getTicketIds() == null || debitRequest.getTicketIds().isEmpty()) {
+            throw new IllegalArgumentException("At least one ticket ID must be provided");
+        }
+
+        if (debitRequest.getDebitPorterDTO().getPorterUsername()
+                .equals(debitRequest.getDebitStudentDTO().getUsername())) {
+            throw new IllegalArgumentException("Portier and Etudiant cannot be the same");
+        }
+    }
+
+    private User validatePorter(DebitPorterDTO debitPorterDTO) {
+        User porter = userRepository.findById(debitPorterDTO.getPorterId())
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Porter user not found with ID: " + debitPorterDTO.getPorterId()));
+
+        // Validate username matches
+        if (!porter.getUsername().equals(debitPorterDTO.getPorterUsername())) {
+            throw new IllegalArgumentException("Porter username does not match the provided ID");
+        }
+
+        return porter;
+    }
+
+    private User validateStudent(DebitStudentDTO studentDTO) {
+        User student = userRepository.findById(studentDTO.getDebitStudentId())
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Student user not found with ID: " + studentDTO.getDebitStudentId()));
+
+        // Validate username matches
+        if (!student.getUsername().equals(studentDTO.getUsername())) {
+            throw new IllegalArgumentException("Student username does not match the provided ID");
+        }
+
+        // Validate role is ETUDIANT
+        if (!student.getRole().getName().equals("ETUDIANT")) {
+            throw new IllegalStateException("Target user must have ETUDIANT role");
+        }
+
+        return student;
+    }
+
+    private void checkAuthorization(User porter) {
+        String roleName = porter.getRole().getName();
+
+        if (!roleName.equals("PORTIER")
+             //   && !roleName.equals("ADMIN")
+        ) {
+            throw new AccessDeniedException(
+                    "Only PORTIER  role can perform debit operations. Current role: " + roleName);
+        }
+    }
+
+    private void validateTickets(List<Ticket> tickets, int expectedCount, User student) {
+        // Check if all tickets were found
+        if (tickets.size() != expectedCount) {
+            throw new ResourceNotFoundException(
+                    "One or more specified tickets were not found. Expected: "
+                            + expectedCount + ", Found: " + tickets.size());
+        }
+
+        // Validate each ticket
+        for (Ticket ticket : tickets) {
+            // Check ownership
+            if (ticket.getUser() == null || !ticket.getUser().getUserId().equals(student.getUserId())) {
+                throw new IllegalStateException(
+                        "Ticket " + ticket.getTicketId() + " does not belong to the specified student");
+            }
+
+            // Check eligibility for debit (must be booked with BOOKED status)
+            if (!ticket.isBooked() || ticket.getTicketStatus() != TicketStatus.BOOKED) {
+                throw new IllegalStateException(MessageFormat.format(
+                        "Ticket ID {0} is not eligible for debit. Must be booked with BOOKED status. Current: {1}, Booked: {2}",
+                        ticket.getTicketId(), ticket.getTicketStatus(), ticket.isBooked()));
+            }
+        }
+    }
+
+    private void processTicketsDebit(List<Ticket> tickets) {
+        LocalDateTime usageTime = LocalDateTime.now();
+        List<Ticket> updatedTickets = new ArrayList<>();
+
+        for (Ticket ticket : tickets) {
+            ticket.setTicketStatus(TicketStatus.USED);
+            ticket.setTicketPurchaseDate(usageTime);
+            updatedTickets.add(ticket);
+        }
+        // Batch save all updated tickets
+        ticketRepository.saveAll(updatedTickets);
+
+        log.debug("Batch updated {} tickets to USED status", updatedTickets);
+    }
+
+    @Override
+    public TicketDTO readTicketById(Long ticketId) {
+
+        log.info("Reading ticket by id: {}", ticketId);
+
+        Ticket ticket = ticketRepository.findById(ticketId)
+                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
+                        "Ticket not found with ID: {0}", ticketId)));
+
+        return ticketMapper.toDto(ticket);
+    }
+
+
+    @Override
+    public TicketDTO updateTicket(TicketDTO ticketDTO) {
+
+        log.info("Updating ticket details: {}", ticketDTO);
+
+        Ticket existingTicket = ticketRepository.findById(ticketDTO.getTicketId())
+                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
+                        "Ticket not found with ID: {0}", ticketDTO.getTicketId())));
+
+        existingTicket.setTicketType(ticketDTO.getTicketType());
+        existingTicket.setTicketPrice(ticketDTO.getTicketPrice());
+        existingTicket.setBooked(ticketDTO.isBooked());
+        existingTicket.setTicketStatus(ticketDTO.getTicketStatus());
+        existingTicket.setTicketDescription(ticketDTO.getTicketDescription());
+        //  existingTicket.setAccount(ticketMapper.toEntity(ticketDTO).getAccount());
+        existingTicket.setUser(ticketMapper.toEntity(ticketDTO).getUser());
+        // existingTicket.setMenu(ticketMapper.toEntity(ticketDTO).getMenu());
+
+        Ticket updatedTicket = ticketRepository.save(existingTicket);
+
+        log.info("Ticket updated successfully with ID: {}", updatedTicket.getTicketId());
+
+        return ticketMapper.toDto(updatedTicket);
+    }
+
+
+    @Override
+    public void deleteTicket(Long ticketId) {
+
+        log.info("Deleting ticket with ID: {}", ticketId);
+
+        if (!ticketRepository.existsById(ticketId)) {
+            throw new ResourceNotFoundException(MessageFormat.format(
+                    "Ticket not found with ID: {0}", ticketId));
+        }
+
+        ticketRepository.deleteById(ticketId);
+
+        log.info("Deleted ticket with ID: {}", ticketId);
+    }
+
+    @Override
+    public void updateTicketStatus(Long ticketId, TicketStatus newStatus) {
+
+        log.info("Updating ticket status for ticket ID: {} to {}", ticketId, newStatus);
+
+        Ticket ticket = ticketRepository.findById(ticketId)
+                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
+                        "Ticket not found with ID: {0}", ticketId)));
+
+        ticket.setTicketStatus(newStatus);
+
+        ticketRepository.save(ticket);
+
+        log.info("Updated ticket status for ticket ID: {} to {}", ticketId, newStatus);
+    }
+
+
+    @Override
+    public void bookTicket(Long ticketId) {
+
+        log.info("Booking ticket with ID: {}", ticketId);
+
+        Ticket ticket = ticketRepository.findById(ticketId)
+                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
+                        "Ticket not found with ID: {0}", ticketId)));
+
+        ticket.setBooked(true);
+
+        ticketRepository.save(ticket);
+
+        log.info("Booked ticket with ID: {}", ticketId);
+    }
+
+
+    @Override
+    public void unbookTicket(Long ticketId) {
+
+        log.info("Unbooking ticket with ID: {}", ticketId);
+
+        Ticket ticket = ticketRepository.findById(ticketId)
+                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
+                        "Ticket not found with ID: {0}", ticketId)));
+
+        ticket.setBooked(false);
+
+        ticketRepository.save(ticket);
+
+        log.info("Unbooked ticket with ID: {}", ticketId);
+    }
+
+
+    @Override
+    public List<TicketDTO> readTicketsByStatus(TicketStatus ticketStatus) {
+        log.info("Reading tickets with status: {}", ticketStatus);
+
+        List<Ticket> tickets = ticketRepository.findByTicketStatus(ticketStatus);
+
+        return tickets.stream()
+                .map(ticketMapper::toDto)
+                .collect(Collectors.toList());
+    }
+
+
+    @Override
+    public List<TicketDTO> readTicketsByUserId(Long userId) {
+
+        log.info("Reading tickets for user with ID: {}", userId);
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
+                        "Account not found with ID: {0}", userId)));
+
+        List<Ticket> tickets = ticketRepository.findByUser(user);
+
+        return tickets.stream()
+                .map(ticketMapper::toDto)
+                .collect(Collectors.toList());
+    }
+
+     /*  @Transactional
    @Override
    public void transferTickets(TransferTicketsRequestDTO transferTicketsRequestDTO) {
 
@@ -601,125 +711,23 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
                ticketsToSave.size(), currentOwnerAccountId, originalSenderAccountId);
    }*/
 
+    /* @Override
+    public List<TicketDTO> readTicketsByAccountId(Long accountId) {
 
-   @Transactional
-   @Override
-   public void debitAccount(DebitAccountRequestDTO debitAccountRequestDTO) {
-       log.info("Processing debit request: Portier {} debiting Etudiant {} for tickets {}",
-               debitAccountRequestDTO.getPortierAccountId(), debitAccountRequestDTO.getEtudiantAccountId(),
-               debitAccountRequestDTO.getTicketIds());
+        log.info("Reading tickets for account with ID: {}", accountId);
 
-       // --- 1. Validate Input ---
-       validateDebitRequest(debitAccountRequestDTO);
+        Account account = accountRepository.findById(accountId)
+                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
+                    "Account not found with ID: {0}", accountId)));
 
-       // --- 2. Retrieve and Validate Accounts ---
-       Account portierAccount = validatePortierAccount(debitAccountRequestDTO.getPortierAccountId());
-       Account etudiantAccount = validateEtudiantAccount(debitAccountRequestDTO.getEtudiantAccountId());
+        List<Ticket> tickets = ticketRepository.findByAccount(account);
 
-       // --- 3. Retrieve and Validate Tickets ---
-       List<Ticket> tickets = ticketRepository.findAllById(debitAccountRequestDTO.getTicketIds());
-       validateTickets(tickets, debitAccountRequestDTO.getTicketIds().size(),
-               debitAccountRequestDTO.getEtudiantAccountId());
-
-       // --- 4. Process Debit for All Tickets ---
-       processTicketsDebit(tickets);
-
-       log.info("Successfully debited {} tickets for Etudiant account {} by Portier {}",
-               tickets.size(), debitAccountRequestDTO.getEtudiantAccountId(),
-               debitAccountRequestDTO.getPortierAccountId());
-   }
-
-    private void validateDebitRequest(DebitAccountRequestDTO debitRequest) {
-        if (debitRequest == null) {
-            throw new IllegalArgumentException("Debit request cannot be null");
-        }
-        if (debitRequest.getPortierAccountId() == null) {
-            throw new IllegalArgumentException("Portier account ID is required");
-        }
-        if (debitRequest.getEtudiantAccountId() == null) {
-            throw new IllegalArgumentException("Etudiant account ID is required");
-        }
-        if (debitRequest.getTicketIds() == null || debitRequest.getTicketIds().isEmpty()) {
-            throw new IllegalArgumentException("At least one ticket ID must be provided");
-        }
-        if (debitRequest.getPortierAccountId().equals(debitRequest.getEtudiantAccountId())) {
-            throw new IllegalArgumentException("Portier and Etudiant accounts cannot be the same");
-        }
+        return tickets.stream()
+                .map(ticketMapper::toDto)
+                .collect(Collectors.toList());
     }
 
-    private Account validatePortierAccount(Long portierAccountId) {
-        Account account = accountRepository.findById(portierAccountId)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Portier account not found with ID: " + portierAccountId));
-
-        User portierUser = account.getUser();
-        if (portierUser == null || !portierUser.getRole().getName()
-                .equalsIgnoreCase("PORTIER")) {
-            throw new IllegalStateException("User must have PORTIER role to perform debit operations");
-        }
-
-        return account;
-    }
-
-    private Account validateEtudiantAccount(Long etudiantAccountId) {
-        Account account = accountRepository.findById(etudiantAccountId)
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "Etudiant account not found with ID: " + etudiantAccountId));
-
-        User etudiantUser = account.getUser();
-        if (etudiantUser == null || etudiantUser.getRole().getName()
-                .equalsIgnoreCase("ETUDIANT")) {
-            throw new IllegalStateException("Target account must belong to an ETUDIANT");
-        }
-
-        return account;
-    }
-
-    private void validateTickets(List<Ticket> tickets, int expectedCount, Long etudiantId) {
-        // Check if all tickets were found
-        if (tickets.size() != expectedCount) {
-            throw new ResourceNotFoundException("One or more specified tickets were not found");
-        }
-
-        // Validate each ticket
-        for (Ticket ticket : tickets) {
-            // Check ownership
-            if (ticket.getUser() == null || !ticket.getUser().getUserId()
-                    .equals(etudiantId)) {
-                throw new IllegalStateException(
-                        "Ticket " + ticket.getTicketId() + " does not belong to the specified Etudiant account");
-            }
-            /*if (ticket.getAccount() == null || !ticket.getAccount().getAccountId()
-                    .equals(etudiantAccountId)) {
-                throw new IllegalStateException(
-                        "Ticket " + ticket.getTicketId() + " does not belong to the specified Etudiant account");
-            }*/
-
-            // Check eligibility for debit (must be booked with BOOKED status)
-            if (!ticket.isBooked() || ticket.getTicketStatus() != TicketStatus.BOOKED) {
-                throw new IllegalStateException(MessageFormat.format(
-                        "Ticket ID {0} is not eligible for debit. Must be booked with BOOKED status. Current: {1}, Booked: {2}",
-                        ticket.getTicketId(), ticket.getTicketStatus(), ticket.isBooked()));
-            }
-        }
-    }
-
-    private void processTicketsDebit(List<Ticket> tickets) {
-        LocalDateTime usageTime = LocalDateTime.now();
-        List<Ticket> updatedTickets = new ArrayList<>();
-
-        for (Ticket ticket : tickets) {
-            ticket.setTicketStatus(TicketStatus.USED);
-            ticket.setTicketPurchaseDate(usageTime);
-            updatedTickets.add(ticket);
-        }
-        // Batch save all updated tickets
-        ticketRepository.saveAll(updatedTickets);
-
-        log.debug("Batch updated {} tickets to USED status", updatedTickets);
-    }
-
-    /*    @Override
+       @Override
     public List<TicketDTO> readTicketsByMenuIdAndUserId(Long menuId, Long userId) {
 
         log.info("Reading tickets for menu ID: {} and user ID: {}", menuId, userId);
