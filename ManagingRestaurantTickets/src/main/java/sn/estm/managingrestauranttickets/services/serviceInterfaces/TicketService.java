@@ -10,6 +10,7 @@ import sn.estm.managingrestauranttickets.dto.customisedto.PurchaseTicketsRequest
 import sn.estm.managingrestauranttickets.dto.customisedto.TransferTicketsRequestDTO;
 import sn.estm.managingrestauranttickets.dto.customisedto.CancelTransferTicketsRequestDTO;
 import sn.estm.managingrestauranttickets.enumerations.TicketStatus;
+import sn.estm.managingrestauranttickets.enumerations.TicketType;
 
 
 public interface TicketService {
@@ -21,6 +22,8 @@ public interface TicketService {
     List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTicketsRequestDTO);
 
     void debitAccount(DebitAccountRequestDTO debitAccountRequestDTO);
+
+    List<TicketDTO> getPurchasedTicketsByUser(Long userId, TicketType ticketType);
 
     // void transferTickets(TransferTicketsRequestDTO transferTicketsRequestDTO);
 
