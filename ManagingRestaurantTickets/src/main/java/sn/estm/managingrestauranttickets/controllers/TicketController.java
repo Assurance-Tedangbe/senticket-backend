@@ -2,15 +2,7 @@ package sn.estm.managingrestauranttickets.controllers;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import jakarta.validation.Valid;
 
@@ -27,6 +19,7 @@ import sn.estm.managingrestauranttickets.dto.customisedto.PurchaseTicketsRequest
 import sn.estm.managingrestauranttickets.dto.customisedto.TransferTicketsRequestDTO;
 import sn.estm.managingrestauranttickets.dto.customisedto.CancelTransferTicketsRequestDTO;
 import sn.estm.managingrestauranttickets.enumerations.TicketStatus;
+import sn.estm.managingrestauranttickets.enumerations.TicketType;
 import sn.estm.managingrestauranttickets.services.serviceInterfaces.TicketService;
 
 import java.util.List;
@@ -74,6 +67,45 @@ public class TicketController {
         ticketService.debitAccount(debitAccountRequestDTO);
 
         log.info("Debited student account successfully {}", debitAccountRequestDTO);
+    }
+
+    @GetMapping(value = "/user/{userId}/purchased", produces = "application/json")
+    public ResponseEntity<List<TicketDTO>> getPurchasedTicketsByUser(
+            @PathVariable Long userId,
+            @RequestParam TicketType ticketType) {
+
+        log.info("Requête pour récupérer les tickets achetés - User ID: {}, Ticket Type: {}",
+                userId, ticketType);
+
+        List<TicketDTO> purchasedTickets = ticketService.getPurchasedTicketsByUser(userId, ticketType);
+
+        log.info("Retour de {} tickets achetés pour l'utilisateur ID: {} avec type: {}",
+                purchasedTickets.size(), userId, ticketType);
+
+        return new ResponseEntity<>(purchasedTickets, HttpStatus.OK);
+    }
+
+    // avec paramètres optionnels
+    @GetMapping(value = "/user/{userId}/filter", produces = "application/json")
+    public ResponseEntity<List<TicketDTO>> getTicketsByUserWithFilters(
+            @PathVariable Long userId,
+            @RequestParam(required = false) TicketType ticketType,
+            @RequestParam(required = false) Boolean booked,
+            @RequestParam(required = false) TicketStatus ticketStatus) {
+
+        log.info("Requête pour récupérer les tickets avec filtres - User ID: {}, Type: {}, Booked: {}, Status: {}",
+                userId, ticketType, booked, ticketStatus);
+
+        // Créer un service plus générique si nécessaire
+        // Pour l'instant, nous utilisons le service existant avec une logique conditionnelle
+        if (ticketType != null) {
+            // Appeler la méthode spécifique
+            List<TicketDTO> tickets = ticketService.getPurchasedTicketsByUser(userId, ticketType);
+            return new ResponseEntity<>(tickets, HttpStatus.OK);
+        } else {
+            // Implémenter une méthode plus générique si besoin
+            throw new IllegalArgumentException("Le paramètre ticketType est requis pour cette version");
+        }
     }
 
     /*//@PostAuthorize("hasAuthority('ADMIN', 'ETUDIANT')")

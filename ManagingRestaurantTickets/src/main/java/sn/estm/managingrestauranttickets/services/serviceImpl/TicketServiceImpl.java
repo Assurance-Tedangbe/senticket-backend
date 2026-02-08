@@ -428,6 +428,38 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
     }
 
     @Override
+    public List<TicketDTO> getPurchasedTicketsByUser(Long userId, TicketType ticketType) {
+        log.info("Récupération des tickets achetés pour l'utilisateur ID: {} avec type: {}", userId, ticketType);
+
+        // 1. Vérifier que l'utilisateur existe ---
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Utilisateur non trouvé avec ID: " + userId));
+
+        // 2. Vérifier que l'utilisateur a le rôle ETUDIANT ---
+        if (!user.getRole().getName().equals("ETUDIANT")) {
+            throw new IllegalStateException(
+                    "Seuls les utilisateurs avec le rôle ETUDIANT peuvent avoir des tickets achetés");
+        }
+
+        // 3. Récupérer les tickets selon les critères: user, ticketType, booked & ticketStatus
+        List<Ticket> tickets = ticketRepository.findByUserAndTicketTypeAndBookedAndTicketStatus(
+                user,
+                ticketType,
+                true,
+                TicketStatus.BOOKED
+        );
+
+        log.info("Trouvé {} tickets achetés pour l'utilisateur ID: {} avec type: {}",
+                tickets.size(), userId, ticketType);
+
+        // 4. Convertir en DTO et retourner ---
+        return tickets.stream()
+                .map(ticketMapper::toDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public TicketDTO readTicketById(Long ticketId) {
 
         log.info("Reading ticket by id: {}", ticketId);

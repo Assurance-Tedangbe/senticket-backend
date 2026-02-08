@@ -10,14 +10,32 @@ import sn.estm.managingrestauranttickets.entities.Account;
 import sn.estm.managingrestauranttickets.entities.Ticket;
 import sn.estm.managingrestauranttickets.entities.User;
 import sn.estm.managingrestauranttickets.enumerations.TicketStatus;
+import sn.estm.managingrestauranttickets.enumerations.TicketType;
 
 @Repository
 public interface TicketRepository extends JpaRepository<Ticket, Long> {
    
     /**
-     * Retrieves a list of tickets associated with the specified user 
+     * Retrieves a list of tickets associated with the specified user
      */
     List<Ticket> findByUser(User user);
+
+    // Méthode pour trouver les tickets par utilisateur, type, booked et statut
+
+    /**
+     * Retrieves list of tickets by user, ticketType, booked, ticketStatus
+     * @param user
+     * @param ticketType
+     * @param booked
+     * @param ticketStatus
+     * @return
+     */
+    List<Ticket> findByUserAndTicketTypeAndBookedAndTicketStatus(
+            User user,
+            TicketType ticketType,
+            boolean booked,
+            TicketStatus ticketStatus
+    );
 
     /**
      * Retrieves a list of tickets that match the specified status.
