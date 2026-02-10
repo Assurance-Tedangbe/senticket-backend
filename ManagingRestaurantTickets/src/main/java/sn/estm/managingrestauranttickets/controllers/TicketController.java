@@ -108,19 +108,18 @@ public class TicketController {
         }
     }
 
-    /*//@PostAuthorize("hasAuthority('ADMIN', 'ETUDIANT')")
-    @PutMapping(value = "/transferTickets")
+    @PutMapping(value = "/transferTickets", consumes = "application/json", produces = "application/json")
     @ResponseStatus(HttpStatus.OK)
     public void transferTickets( @RequestBody TransferTicketsRequestDTO transferTicketsRequestDTO) {
 
-        log.info("Transferring ticket(s) with details {}:", transferTicketsRequestDTO);
+        log.info("Processing ticket transfer request {}:", transferTicketsRequestDTO);
 
         ticketService.transferTickets(transferTicketsRequestDTO);
 
         log.info("Transfer of tickets completed successfully {}", transferTicketsRequestDTO);
     }
 
-    //@PostAuthorize("hasAuthority('ADMIN', 'ETUDIANT')")
+   /* //@PostAuthorize("hasAuthority('ADMIN', 'ETUDIANT')")
     @PutMapping(value = "/cancelTransferTickets")
     @ResponseStatus(HttpStatus.OK)
     public void  cancelTransferTickets(@RequestBody CancelTransferTicketsRequestDTO

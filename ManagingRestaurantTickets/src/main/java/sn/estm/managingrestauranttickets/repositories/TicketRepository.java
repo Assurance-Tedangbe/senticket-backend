@@ -14,13 +14,10 @@ import sn.estm.managingrestauranttickets.enumerations.TicketType;
 
 @Repository
 public interface TicketRepository extends JpaRepository<Ticket, Long> {
-   
     /**
      * Retrieves a list of tickets associated with the specified user
      */
     List<Ticket> findByUser(User user);
-
-    // Méthode pour trouver les tickets par utilisateur, type, booked et statut
 
     /**
      * Retrieves list of tickets by user, ticketType, booked, ticketStatus

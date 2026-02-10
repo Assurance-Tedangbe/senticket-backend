@@ -25,7 +25,7 @@ public interface TicketService {
 
     List<TicketDTO> getPurchasedTicketsByUser(Long userId, TicketType ticketType);
 
-    // void transferTickets(TransferTicketsRequestDTO transferTicketsRequestDTO);
+    void transferTickets(TransferTicketsRequestDTO transferTicketsRequestDTO);
 
     // void cancelTransferTickets(CancelTransferTicketsRequestDTO cancelTransferTicketsRequestDTO);
 
