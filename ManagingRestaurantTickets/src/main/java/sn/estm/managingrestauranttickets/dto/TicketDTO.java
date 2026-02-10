@@ -44,9 +44,6 @@ public class TicketDTO {
     @NotNull(message = "The ticket creation date is required.")
     private LocalDateTime ticketCreationDate;
 
-    @NotNull(message = "The ticket purchase date is required.")
-    private LocalDateTime ticketPurchaseDate;
-
     @Size(min = 3, max = 100)
     @NotBlank(message = "The ticket needs a description.")
     private String ticketDescription;
@@ -54,12 +51,4 @@ public class TicketDTO {
     @Valid
     @NotNull(message = "The user is required.")
     private UserDTO userDTO;
-
-    /*@Valid
-    @NotNull(message = "The menu is required.")
-    private MenuDTO menuDTO;*/
-
-    /*@Valid
-    @NotNull(message = "The account is required.")
-    private AccountDTO accountDTO;*/
 }

@@ -18,17 +18,22 @@ import lombok.extern.slf4j.Slf4j;
 
 import sn.estm.managingrestauranttickets.dto.TicketDTO;
 import sn.estm.managingrestauranttickets.dto.customisedto.*;
-import sn.estm.managingrestauranttickets.entities.Account;
+import sn.estm.managingrestauranttickets.dto.historydto.DebitHistoryDTO;
+import sn.estm.managingrestauranttickets.dto.historydto.PurchaseHistoryDTO;
+import sn.estm.managingrestauranttickets.dto.historydto.TransfertHistoryDTO;
 import sn.estm.managingrestauranttickets.entities.Ticket;
 import sn.estm.managingrestauranttickets.entities.User;
 import sn.estm.managingrestauranttickets.enumerations.TicketStatus;
 import sn.estm.managingrestauranttickets.enumerations.TicketType;
 import sn.estm.managingrestauranttickets.exceptions.ResourceNotFoundException;
 import sn.estm.managingrestauranttickets.mappers.TicketMapper;
-import sn.estm.managingrestauranttickets.repositories.AccountRepository;
+import sn.estm.managingrestauranttickets.mappers.UserMapper;
 import sn.estm.managingrestauranttickets.repositories.TicketRepository;
 import sn.estm.managingrestauranttickets.repositories.UserRepository;
+import sn.estm.managingrestauranttickets.services.serviceInterfaces.DebitHistoryService;
+import sn.estm.managingrestauranttickets.services.serviceInterfaces.PurchaseHistoryService;
 import sn.estm.managingrestauranttickets.services.serviceInterfaces.TicketService;
+import sn.estm.managingrestauranttickets.services.serviceInterfaces.TransfertHistoryService;
 
 import static java.util.regex.Pattern.matches;
 
@@ -40,8 +45,11 @@ public class TicketServiceImpl implements TicketService {
 
     private final TicketRepository ticketRepository;
     private final TicketMapper ticketMapper;
-    private final AccountRepository accountRepository;
     private final UserRepository userRepository;
+    private final UserMapper userMapper;
+    private final TransfertHistoryService transfertHistoryService;
+    private final DebitHistoryService debitHistoryService;
+    private final PurchaseHistoryService purchaseHistoryService;
    // private final PasswordEncoder passwordEncoder; // For password validation
 
     @Transactional
@@ -189,14 +197,12 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
     Account savedAccount = accountRepository.save(account);*/
 
     // Update each purchase ticket
-    LocalDateTime purchaseDateTime = LocalDateTime.now();
     List<Ticket> purchasedTickets;
     List<Ticket> inPurchasingTickets = new ArrayList<>();
 
     for (Ticket ticket : availableTickets) {
         ticket.setBooked(true);
         ticket.setTicketStatus(TicketStatus.BOOKED);
-        ticket.setTicketPurchaseDate(purchaseDateTime);
         ticket.setPayementCode(UUID.randomUUID().toString());
         ticket.setUser(user);
 
@@ -204,6 +210,12 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
 
         //collect purchased tickets
         inPurchasingTickets.add(ticket);
+
+        PurchaseHistoryDTO purchaseHistoryDTO = PurchaseHistoryDTO.builder()
+                .ticketDTO(ticketMapper.toDto(ticket))
+                .purchaseUserDTO(userMapper.toDto(user))
+                .build();
+        purchaseHistoryService.createPurchaseHistory(purchaseHistoryDTO);
     }
     purchasedTickets = ticketRepository.saveAll(inPurchasingTickets);
 
@@ -294,7 +306,7 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
         validateTickets(tickets, debitAccountRequestDTO.getTicketIds().size(), student);
 
         // 5. Process Debit for All Tickets ---
-        processTicketsDebit(tickets);
+        processTicketsDebit(tickets, porter, student);
 
         log.info("Successfully debited {} tickets for Student {} by Portier {}",
                 tickets.size(), student.getUsername(), porter.getUsername());
@@ -385,12 +397,19 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
         }
     }
 
-    private void processTicketsDebit(List<Ticket> tickets) {
+    private void processTicketsDebit(List<Ticket> tickets, User porter,  User student) {
         List<Ticket> updatedTickets = new ArrayList<>();
 
         for (Ticket ticket : tickets) {
             ticket.setTicketStatus(TicketStatus.USED);
             updatedTickets.add(ticket);
+
+            DebitHistoryDTO debitHistoryDTO= DebitHistoryDTO.builder()
+                    .ticketDTO(ticketMapper.toDto(ticket))
+                    .debitPorterDTO(userMapper.toDto(porter))
+                    .debitStudentDTO(userMapper.toDto(student))
+                    .build();
+            debitHistoryService.createDebitHistory(debitHistoryDTO);
         }
         // Batch save all updated tickets
         ticketRepository.saveAll(updatedTickets);
@@ -462,7 +481,7 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
         );
 
         // 6. Process Ticket Transfer
-        processTicketTransfer(ticketsToTransfer, recipient);
+        processTicketTransfer(ticketsToTransfer, sender, recipient);
 
         log.info("Successfully transferred {} tickets of type {} from {} to {}",
                 ticketsToTransfer.size(),
@@ -567,14 +586,18 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
         return availableTickets.subList(0, numberOfTickets);
     }
 
-    private void processTicketTransfer(List<Ticket> tickets, User recipient) {
+    private void processTicketTransfer(List<Ticket> tickets, User sender, User recipient) {
 
         for (Ticket ticket : tickets) {
             // Update ticket ownership (Reassignment)
             ticket.setUser(recipient);
 
-            // transfer history
-            // createTransferHistory(ticket, sender, recipient, transferTime);
+            TransfertHistoryDTO transfertHistoryDTO = TransfertHistoryDTO.builder()
+                    .ticketDTO(ticketMapper.toDto(ticket))
+                    .senderDTO(userMapper.toDto(sender))
+                    .recipientDTO(userMapper.toDto(recipient))
+                    .build();
+            transfertHistoryService.createTransferHistory(transfertHistoryDTO);
         }
 
         // Batch save all updated tickets
@@ -583,15 +606,6 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
         log.debug("Transferred {} tickets to user {}", tickets.size(), recipient.getUsername());
     }
 
-    private void createTransferHistory(Ticket ticket, User sender, User recipient, LocalDateTime transferTime) {
-
-        // If you have a TransferHistory entity, you can create records here
-        // TransferHistory transferHistory = new TransferHistory();
-        // transferHistory.setTicket(ticket);
-        // transferHistory.setSender(sender);
-        // transferHistory.setRecipient(recipient);
-        // transferHistoryRepository.save(transferHistory);
-    }
  // ******** End transfert service *********
 
     // Suppl. methods
