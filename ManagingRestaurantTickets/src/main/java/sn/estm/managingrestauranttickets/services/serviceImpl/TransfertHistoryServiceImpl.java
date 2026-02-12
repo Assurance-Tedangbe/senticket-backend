@@ -21,10 +21,6 @@ public class TransfertHistoryServiceImpl implements TransfertHistoryService {
     private final TransfertHistoryMapper transfertHistoryMapper;
 
     @Override
-    public void createTransferHistory(TransfertHistoryDTO transfertHistoryDTO) {
-    }
-
-    @Override
     public List<TransfertHistoryDTO> readTransfertHistories() {
 
         List<TransfertHistory> transfertHistories = transfertHistoryRepository.findAll();

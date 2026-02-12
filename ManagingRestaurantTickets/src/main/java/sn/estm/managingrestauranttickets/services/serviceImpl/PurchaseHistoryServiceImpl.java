@@ -9,6 +9,7 @@ import sn.estm.managingrestauranttickets.mappers.PurchaseHistoryMapper;
 import sn.estm.managingrestauranttickets.repositories.PurchaseHistoryRepository;
 import sn.estm.managingrestauranttickets.services.serviceInterfaces.PurchaseHistoryService;
 
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -20,9 +21,6 @@ public class PurchaseHistoryServiceImpl implements PurchaseHistoryService {
     private final PurchaseHistoryRepository purchaseHistoryRepository;
     private final PurchaseHistoryMapper purchaseHistoryMapper;
 
-    @Override
-    public void createPurchaseHistory(PurchaseHistoryDTO purchaseHistoryDTO) {
-    }
 
     @Override
     public List<PurchaseHistoryDTO> readPurchaseHistories() {
