@@ -4,14 +4,23 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import sn.estm.managingrestauranttickets.dto.historydto.DebitHistoryDTO;
+import sn.estm.managingrestauranttickets.entities.DebitHistory;
+import sn.estm.managingrestauranttickets.entities.PurchaseHistory;
+import sn.estm.managingrestauranttickets.mappers.DebitHistoryMapper;
+import sn.estm.managingrestauranttickets.mappers.TransfertHistoryMapper;
+import sn.estm.managingrestauranttickets.repositories.DebitHistoryRepository;
 import sn.estm.managingrestauranttickets.services.serviceInterfaces.DebitHistoryService;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Slf4j
 @Service
 @RequiredArgsConstructor
 public class DebitHistoryServiceImpl implements DebitHistoryService {
+
+    private final DebitHistoryRepository debitHistoryRepository;
+    private final DebitHistoryMapper debitHistoryMapper;
 
     @Override
     public void createDebitHistory(DebitHistoryDTO debitHistoryDTO) {
@@ -19,6 +28,11 @@ public class DebitHistoryServiceImpl implements DebitHistoryService {
 
     @Override
     public List<DebitHistoryDTO> readDebitHistories() {
-        return List.of();
+
+        List<DebitHistory> debitHistories = debitHistoryRepository.findAll();
+
+        return debitHistories.stream()
+                .map(debitHistoryMapper::toDto)
+                .collect(Collectors.toList());
     }
 }

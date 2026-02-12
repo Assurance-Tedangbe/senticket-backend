@@ -25,7 +25,6 @@ import sn.estm.managingrestauranttickets.services.serviceInterfaces.RoleService;
 import java.util.List;
 
 
-
 @Slf4j
 @Data
 @RestController

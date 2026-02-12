@@ -26,8 +26,10 @@ import sn.estm.managingrestauranttickets.entities.User;
 import sn.estm.managingrestauranttickets.enumerations.TicketStatus;
 import sn.estm.managingrestauranttickets.enumerations.TicketType;
 import sn.estm.managingrestauranttickets.exceptions.ResourceNotFoundException;
+import sn.estm.managingrestauranttickets.mappers.PurchaseHistoryMapper;
 import sn.estm.managingrestauranttickets.mappers.TicketMapper;
 import sn.estm.managingrestauranttickets.mappers.UserMapper;
+import sn.estm.managingrestauranttickets.repositories.PurchaseHistoryRepository;
 import sn.estm.managingrestauranttickets.repositories.TicketRepository;
 import sn.estm.managingrestauranttickets.repositories.UserRepository;
 import sn.estm.managingrestauranttickets.services.serviceInterfaces.DebitHistoryService;
@@ -50,6 +52,8 @@ public class TicketServiceImpl implements TicketService {
     private final TransfertHistoryService transfertHistoryService;
     private final DebitHistoryService debitHistoryService;
     private final PurchaseHistoryService purchaseHistoryService;
+    private final PurchaseHistoryRepository purchaseHistoryRepository;
+    private final PurchaseHistoryMapper purchaseHistoryMapper;
    // private final PasswordEncoder passwordEncoder; // For password validation
 
     @Transactional
@@ -215,7 +219,10 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
                 .ticketDTO(ticketMapper.toDto(ticket))
                 .purchaseUserDTO(userMapper.toDto(user))
                 .build();
+        log.info("purchaseHistoryDTO {}", purchaseHistoryDTO );
         purchaseHistoryService.createPurchaseHistory(purchaseHistoryDTO);
+        purchaseHistoryRepository.save(purchaseHistoryMapper.toEntity(purchaseHistoryDTO));
+
     }
     purchasedTickets = ticketRepository.saveAll(inPurchasingTickets);
 
