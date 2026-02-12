@@ -30,5 +30,5 @@ public class PurchaseHistoryDTO {
     private UserDTO purchaseUserDTO;
 
     @NotNull(message = "transferDate is required.")
-    private LocalDateTime transferDate;
+    private LocalDateTime purchaseDate;
 }
