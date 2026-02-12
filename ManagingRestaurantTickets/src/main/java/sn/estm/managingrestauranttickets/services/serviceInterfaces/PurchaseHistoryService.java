@@ -6,7 +6,5 @@ import java.util.List;
 
 public interface PurchaseHistoryService {
 
-    void createPurchaseHistory(PurchaseHistoryDTO purchaseHistoryDTO);
-
     List<PurchaseHistoryDTO> readPurchaseHistories();
 }

@@ -6,8 +6,6 @@ import java.util.List;
 
 public interface TransfertHistoryService {
 
-    void createTransferHistory(TransfertHistoryDTO transfertHistoryDTO);
-
     List<TransfertHistoryDTO> readTransfertHistories();
 }
 
