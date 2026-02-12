@@ -9,6 +9,7 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -17,18 +18,26 @@ import lombok.extern.slf4j.Slf4j;
 
 import sn.estm.managingrestauranttickets.dto.TicketDTO;
 import sn.estm.managingrestauranttickets.dto.customisedto.*;
-import sn.estm.managingrestauranttickets.entities.Account;
+import sn.estm.managingrestauranttickets.dto.historydto.DebitHistoryDTO;
+import sn.estm.managingrestauranttickets.dto.historydto.PurchaseHistoryDTO;
+import sn.estm.managingrestauranttickets.dto.historydto.TransfertHistoryDTO;
 import sn.estm.managingrestauranttickets.entities.Ticket;
 import sn.estm.managingrestauranttickets.entities.User;
 import sn.estm.managingrestauranttickets.enumerations.TicketStatus;
 import sn.estm.managingrestauranttickets.enumerations.TicketType;
 import sn.estm.managingrestauranttickets.exceptions.ResourceNotFoundException;
+import sn.estm.managingrestauranttickets.mappers.PurchaseHistoryMapper;
 import sn.estm.managingrestauranttickets.mappers.TicketMapper;
 import sn.estm.managingrestauranttickets.mappers.UserMapper;
-import sn.estm.managingrestauranttickets.repositories.AccountRepository;
+import sn.estm.managingrestauranttickets.repositories.PurchaseHistoryRepository;
 import sn.estm.managingrestauranttickets.repositories.TicketRepository;
 import sn.estm.managingrestauranttickets.repositories.UserRepository;
+import sn.estm.managingrestauranttickets.services.serviceInterfaces.DebitHistoryService;
+import sn.estm.managingrestauranttickets.services.serviceInterfaces.PurchaseHistoryService;
 import sn.estm.managingrestauranttickets.services.serviceInterfaces.TicketService;
+import sn.estm.managingrestauranttickets.services.serviceInterfaces.TransfertHistoryService;
+
+import static java.util.regex.Pattern.matches;
 
 
 @Slf4j
@@ -38,9 +47,14 @@ public class TicketServiceImpl implements TicketService {
 
     private final TicketRepository ticketRepository;
     private final TicketMapper ticketMapper;
-    private final AccountRepository accountRepository;
     private final UserRepository userRepository;
     private final UserMapper userMapper;
+    private final TransfertHistoryService transfertHistoryService;
+    private final DebitHistoryService debitHistoryService;
+    private final PurchaseHistoryService purchaseHistoryService;
+    private final PurchaseHistoryRepository purchaseHistoryRepository;
+    private final PurchaseHistoryMapper purchaseHistoryMapper;
+   // private final PasswordEncoder passwordEncoder; // For password validation
 
     @Transactional
     @Override
@@ -119,23 +133,13 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
         throw new IllegalArgumentException("Ticket purchase data must be provided");
     }
 
-    /*Long accountId = purchaseTicketsRequestDTO.getAccountDTO().getAccountId();
-    if (accountId == null) {
-        throw new IllegalArgumentException("Account ID must be provided in TicketFromDTO.");
-    } */
-
     List<Long> ticketIds = purchaseTicketsRequestDTO.getSelectedTicketIds();
 
     if (ticketIds.isEmpty()) {
         throw new IllegalArgumentException("No tickets provided for purchase");
     }
 
-    // Get account and user
-    /*Account account = accountRepository.findById(purchaseTicketsRequestDTO.getAccountDTO().getAccountId())
-            .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
-                    "Account not found with ID: {0}", 
-                    purchaseTicketsRequestDTO.getAccountDTO().getAccountId())));*/
-
+    // Get user
     User user = userRepository.findById(purchaseTicketsRequestDTO.getPurchaseUserDTO().getUserId())
             .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
                     "User not found with ID: {0}",
@@ -174,10 +178,6 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
                         "Invalid ticket type for ticket ID: {0}", ticket.getTicketId()));
             }
         }
-        /* if (ticket.getTicketPrice() == null) {
-            ticket.setTicketPrice(ticket.getTicketType() == TicketType.A ? 100.0 : 150.0);
-        }
-       */
 
         totalPrice += ticket.getTicketPrice();
         availableTickets.add(ticket);
@@ -189,7 +189,6 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
             countBPurchased++;
         }
     }
-
    /* // Validate account balance
     Double balance = account.getBalance();
     if (balance == null || balance < totalPrice) {
@@ -202,33 +201,30 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
     Account savedAccount = accountRepository.save(account);*/
 
     // Update each purchase ticket
-    LocalDateTime purchaseDateTime = LocalDateTime.now();
     List<Ticket> purchasedTickets;
     List<Ticket> inPurchasingTickets = new ArrayList<>();
 
     for (Ticket ticket : availableTickets) {
         ticket.setBooked(true);
         ticket.setTicketStatus(TicketStatus.BOOKED);
-        ticket.setTicketPurchaseDate(purchaseDateTime);
         ticket.setPayementCode(UUID.randomUUID().toString());
-        // ticket.setAccount(savedAccount);
         ticket.setUser(user);
 
         //  Ticket savedTicket = ticketRepository.save(ticket);
 
         //collect purchased tickets
-        //  purchasedTickets.add(savedTicket);
         inPurchasingTickets.add(ticket);
 
-     /*   log.info("Ticket purchased successfully. ticketId={},+ ticketType={}, ticketPrice={}, paymentCode={}",
-                  savedTicket.getTicketId(), savedTicket.getTicketType(),
-                  savedTicket.getTicketPrice(), savedTicket.getPayementCode());*/
-    }
-    // Lines commented from 394 to 401 is to summarize to this one line
-    purchasedTickets = ticketRepository.saveAll(inPurchasingTickets);
+        PurchaseHistoryDTO purchaseHistoryDTO = PurchaseHistoryDTO.builder()
+                .ticketDTO(ticketMapper.toDto(ticket))
+                .purchaseUserDTO(userMapper.toDto(user))
+                .build();
+        log.info("purchaseHistoryDTO {}", purchaseHistoryDTO );
+        purchaseHistoryService.createPurchaseHistory(purchaseHistoryDTO);
+        purchaseHistoryRepository.save(purchaseHistoryMapper.toEntity(purchaseHistoryDTO));
 
-  /*  log.info("Successfully purchased {} tickets for account {}. Total amount: {}. Type A: {}, Type B: {}",
-            purchasedTickets.size(), savedAccount.getAccountId(), totalPrice, countAPurchased, countBPurchased);*/
+    }
+    purchasedTickets = ticketRepository.saveAll(inPurchasingTickets);
 
     log.info("BEGIN BUILDING TICKETS:");
     if (countAPurchased > 0 || countBPurchased > 0) {
@@ -237,9 +233,7 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
                 .countB(countBPurchased)  // Recreate same number of Type B tickets
                 .build();
 
-        // createTickets(creationTicketsRequestDTO);
-
-        log.info("Number of type A tickets {} and {} Type B tickets purchased {} ",
+    log.info("Number of type A tickets {} and {} Type B tickets purchased {} ",
                 countAPurchased, countBPurchased, purchaseTicketsRequestDTO.getSelectedTicketIds());
 
     List<Ticket> ticketsToSave = new ArrayList<>();
@@ -288,7 +282,6 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
 
     log.info("Successfully created tickets {} with requests {}",
             savedTickets.size(), creationTicketsRequestDTO);
-
 }
     // return purchased tickets as DTOs
     return purchasedTickets.stream()
@@ -296,6 +289,7 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
             .collect(Collectors.toList());
    }
 
+   // ******** debitAccount service *********
     @Transactional
     @Override
     public void debitAccount(DebitAccountRequestDTO debitAccountRequestDTO) {
@@ -304,22 +298,22 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
                 debitAccountRequestDTO.getDebitStudentDTO().getUsername(),
                 debitAccountRequestDTO.getTicketIds());
 
-        // --- 1. Validate Input ---
+        // 1. Validate Input ---
         validateDebitRequest(debitAccountRequestDTO);
 
-        // --- 2. Retrieve and Validate Users ---
+        // 2. Retrieve and Validate Users ---
         User porter = validatePorter(debitAccountRequestDTO.getDebitPorterDTO());
         User student = validateStudent(debitAccountRequestDTO.getDebitStudentDTO());
 
-        // --- 3. Check Authorization ---
+        // 3. Check Authorization ---
         checkAuthorization(porter);
 
-        // --- 4. Retrieve and Validate Tickets ---
+        // 4. Retrieve and Validate Tickets ---
         List<Ticket> tickets = ticketRepository.findAllById(debitAccountRequestDTO.getTicketIds());
         validateTickets(tickets, debitAccountRequestDTO.getTicketIds().size(), student);
 
-        // --- 5. Process Debit for All Tickets ---
-        processTicketsDebit(tickets);
+        // 5. Process Debit for All Tickets ---
+        processTicketsDebit(tickets, porter, student);
 
         log.info("Successfully debited {} tickets for Student {} by Portier {}",
                 tickets.size(), student.getUsername(), porter.getUsername());
@@ -354,7 +348,6 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
         if (!porter.getUsername().equals(debitPorterDTO.getPorterUsername())) {
             throw new IllegalArgumentException("Porter username does not match the provided ID");
         }
-
         return porter;
     }
 
@@ -372,7 +365,6 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
         if (!student.getRole().getName().equals("ETUDIANT")) {
             throw new IllegalStateException("Target user must have ETUDIANT role");
         }
-
         return student;
     }
 
@@ -412,14 +404,19 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
         }
     }
 
-    private void processTicketsDebit(List<Ticket> tickets) {
-        LocalDateTime usageTime = LocalDateTime.now();
+    private void processTicketsDebit(List<Ticket> tickets, User porter,  User student) {
         List<Ticket> updatedTickets = new ArrayList<>();
 
         for (Ticket ticket : tickets) {
             ticket.setTicketStatus(TicketStatus.USED);
-            ticket.setTicketPurchaseDate(usageTime);
             updatedTickets.add(ticket);
+
+            DebitHistoryDTO debitHistoryDTO= DebitHistoryDTO.builder()
+                    .ticketDTO(ticketMapper.toDto(ticket))
+                    .debitPorterDTO(userMapper.toDto(porter))
+                    .debitStudentDTO(userMapper.toDto(student))
+                    .build();
+            debitHistoryService.createDebitHistory(debitHistoryDTO);
         }
         // Batch save all updated tickets
         ticketRepository.saveAll(updatedTickets);
@@ -458,7 +455,167 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
                 .map(ticketMapper::toDto)
                 .collect(Collectors.toList());
     }
+    // ******* End debitAccount service *********
 
+    // ******* transferTickets service *********
+    @Transactional
+    @Override
+    public void transferTickets(TransferTicketsRequestDTO transferTicketsRequestDTO) {
+        log.info("Processing ticket transfer: Sender {} transferring {} tickets of type {} to Recipient {}",
+                transferTicketsRequestDTO.getSenderDTO().getSenderUsername(),
+                transferTicketsRequestDTO.getNumberOfTicketsToTransfer(),
+                transferTicketsRequestDTO.getTicketType(),
+                transferTicketsRequestDTO.getRecipientDTO().getRecipientUsername());
+
+        // 1. Validate Input
+        validateTransferRequest(transferTicketsRequestDTO);
+
+        // 2. Retrieve and Validate Users
+        User sender = validateSender(transferTicketsRequestDTO.getSenderDTO());
+        User recipient = validateRecipient(transferTicketsRequestDTO.getRecipientDTO());
+
+        // 3. Check Sender Authorization
+        checkSenderAuthorization(sender);
+
+        // 4. Validate Password
+        validatePassword(transferTicketsRequestDTO.getSenderDTO().getSenderPassword(), sender.getPassword());
+
+        // 5. Retrieve and Validate Tickets for Transfer
+        List<Ticket> ticketsToTransfer = findTicketsForTransfer(
+                sender,
+                transferTicketsRequestDTO.getTicketType(),
+                transferTicketsRequestDTO.getNumberOfTicketsToTransfer()
+        );
+
+        // 6. Process Ticket Transfer
+        processTicketTransfer(ticketsToTransfer, sender, recipient);
+
+        log.info("Successfully transferred {} tickets of type {} from {} to {}",
+                ticketsToTransfer.size(),
+                transferTicketsRequestDTO.getTicketType(),
+                sender.getUsername(),
+                recipient.getUsername());
+    }
+
+    private void validateTransferRequest(TransferTicketsRequestDTO transferRequest) {
+        if (transferRequest == null) {
+            throw new IllegalArgumentException("Transfer request cannot be null");
+        }
+        if (transferRequest.getSenderDTO() == null) {
+            throw new IllegalArgumentException("Sender information is required");
+        }
+        if (transferRequest.getRecipientDTO() == null) {
+            throw new IllegalArgumentException("Recipient information is required");
+        }
+        if (transferRequest.getTicketType() == null) {
+            throw new IllegalArgumentException("Ticket type is required");
+        }
+        if (transferRequest.getNumberOfTicketsToTransfer() == null ||
+                transferRequest.getNumberOfTicketsToTransfer() <= 0) {
+            throw new IllegalArgumentException("Number of tickets to transfer must be at least 1");
+        }
+
+        // Check if sender is trying to transfer to himself
+        if (transferRequest.getSenderDTO().getSenderUsername()
+                .equals(transferRequest.getRecipientDTO().getRecipientUsername())) {
+            throw new IllegalArgumentException("Cannot transfer tickets to yourself");
+        }
+    }
+
+    private User validateSender(SenderDTO senderDTO) {
+        User sender = userRepository.findById(senderDTO.getSenderId())
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Sender user not found with ID: " + senderDTO.getSenderId()));
+
+        // Validate username matches
+        if (!sender.getUsername().equals(senderDTO.getSenderUsername())) {
+            throw new IllegalArgumentException("Sender username does not match the provided ID");
+        }
+
+        // Validate role is ETUDIANT
+        if (!sender.getRole().getName().equals("ETUDIANT")) {
+            throw new IllegalStateException("Sender must have ETUDIANT role");
+        }
+
+        return sender;
+    }
+
+    private User validateRecipient(RecipientDTO recipientDTO) {
+        User recipient = userRepository.findById(recipientDTO.getRecipientId())
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        "Recipient user not found with ID: " + recipientDTO.getRecipientId()));
+
+        // Validate username matches
+        if (!recipient.getUsername().equals(recipientDTO.getRecipientUsername())) {
+            throw new IllegalArgumentException("Recipient username does not match the provided ID");
+        }
+
+        // Validate role is ETUDIANT
+        if (!recipient.getRole().getName().equals("ETUDIANT")) {
+            throw new IllegalStateException("Recipient must have ETUDIANT role");
+        }
+
+        return recipient;
+    }
+
+    private void checkSenderAuthorization(User sender) {
+        String roleName = sender.getRole().getName();
+
+        if (!roleName.equals("ETUDIANT")) {
+            throw new AccessDeniedException(
+                    "Only ETUDIANT role can perform ticket transfers. Current role: " + roleName);
+        }
+    }
+
+    private void validatePassword(String providedPassword, String storedPasswordHash) {
+        if (!matches(providedPassword, storedPasswordHash)) {
+            throw new IllegalArgumentException("Invalid password");
+        }
+    }
+
+    private List<Ticket> findTicketsForTransfer(User sender, TicketType ticketType, int numberOfTickets) {
+
+        // Find sender's tickets that are booked, have BOOKED status, and match the ticket type
+        List<Ticket> availableTickets = ticketRepository.findByUserAndTicketTypeAndBookedAndTicketStatus(
+                sender,
+                ticketType,
+                true,
+                TicketStatus.BOOKED
+        );
+
+        if (availableTickets.size() < numberOfTickets) {
+            throw new IllegalStateException(String.format(
+                    "Sender does not have enough tickets of type %s to transfer. Available: %d, Requested: %d",
+                    ticketType, availableTickets.size(), numberOfTickets));
+        }
+
+        // Select the first N tickets (you might want to use a specific selection strategy)
+        return availableTickets.subList(0, numberOfTickets);
+    }
+
+    private void processTicketTransfer(List<Ticket> tickets, User sender, User recipient) {
+
+        for (Ticket ticket : tickets) {
+            // Update ticket ownership (Reassignment)
+            ticket.setUser(recipient);
+
+            TransfertHistoryDTO transfertHistoryDTO = TransfertHistoryDTO.builder()
+                    .ticketDTO(ticketMapper.toDto(ticket))
+                    .senderDTO(userMapper.toDto(sender))
+                    .recipientDTO(userMapper.toDto(recipient))
+                    .build();
+            transfertHistoryService.createTransferHistory(transfertHistoryDTO);
+        }
+
+        // Batch save all updated tickets
+        ticketRepository.saveAll(tickets);
+
+        log.debug("Transferred {} tickets to user {}", tickets.size(), recipient.getUsername());
+    }
+
+ // ******** End transfert service *********
+
+    // Suppl. methods
     @Override
     public TicketDTO readTicketById(Long ticketId) {
 
@@ -591,82 +748,6 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
                 .map(ticketMapper::toDto)
                 .collect(Collectors.toList());
     }
-
-     /*  @Transactional
-   @Override
-   public void transferTickets(TransferTicketsRequestDTO transferTicketsRequestDTO) {
-
-        log.info("Gemi: Attempting to transfer tickets {} from Account {} to Account {}",
-                transferTicketsRequestDTO.getSelectedTicketIdsToTransfer(),
-                transferTicketsRequestDTO.getFromAccountId(),
-                transferTicketsRequestDTO.getToAccountId());
-
-        // --- 1. Input Validation ---
-        if (transferTicketsRequestDTO.getSelectedTicketIdsToTransfer() == null ||
-                transferTicketsRequestDTO.getSelectedTicketIdsToTransfer().isEmpty()) {
-            throw new IllegalArgumentException("The list of ticket IDs to transfer cannot be empty.");
-        }
-        if (transferTicketsRequestDTO.getFromAccountId() == null ||
-                transferTicketsRequestDTO.getToAccountId() == null) {
-            throw new IllegalArgumentException("Both sender (from) and recipient (to) account IDs must be provided.");
-        }
-        if (transferTicketsRequestDTO.getFromAccountId().
-                equals(transferTicketsRequestDTO.getToAccountId())) {
-            throw new IllegalArgumentException("Cannot transfer tickets to the same account.");
-        }
-
-        // --- 2. Retrieve Accounts ---
-        Account fromAccount = accountRepository.findById(transferTicketsRequestDTO.getFromAccountId())
-                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
-                        "Sender account not found with ID: {0}",
-                        transferTicketsRequestDTO.getFromAccountId())));
-
-        Account toAccount = accountRepository.findById(transferTicketsRequestDTO.getToAccountId())
-                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
-                        "Recipient account not found with ID: {0}",
-                        transferTicketsRequestDTO.getToAccountId())));
-
-        // --- 3. Fetch Tickets ---
-        List<Ticket> ticketsToTransfer = ticketRepository.
-                findAllById(transferTicketsRequestDTO.getSelectedTicketIdsToTransfer());
-
-        if (ticketsToTransfer.size() != transferTicketsRequestDTO.getSelectedTicketIdsToTransfer().size()) {
-            throw new ResourceNotFoundException("One or more tickets to transfer could not be found.");
-        }
-
-       // --- 4. Validation and Update ---
-        List<Ticket> ticketsToSave = ticketsToTransfer.stream()
-                .peek(ticket -> {
-                    // Check transfer eligibility: booked=true AND status=BOOKED
-                    if (!ticket.isBooked() || ticket.getTicketStatus() != TicketStatus.BOOKED) {
-                        throw new IllegalStateException(MessageFormat.format(
-                                "Ticket ID {0} is not eligible for transfer.Current Status: {1}, Booked: {2}",
-                                ticket.getTicketId(), ticket.getTicketStatus(), ticket.isBooked()));
-                    }
-
-                    // Security Check: Ensure the ticket belongs to the sender
-                    if (ticket.getAccount() == null || !ticket.getAccount().getAccountId().
-                            equals(transferTicketsRequestDTO.getFromAccountId())) {
-                        throw new IllegalStateException(MessageFormat.format(
-                                "Ticket ID {} does not belong to the sender's account ID {}.",
-                                ticket.getTicketId(), transferTicketsRequestDTO.getFromAccountId()));
-                    }
-
-                    // Update the ticket ownership (Reassignment)
-                    // 1. Delete attachment from sender (by updating foreign key)
-                    ticket.setAccount(toAccount);
-                    // 2. Attach to the new user/owner
-                    ticket.setUser(toAccount.getUser());
-                })
-                .collect(Collectors.toList());
-
-        // --- 5. Batch Saving ---
-        ticketRepository.saveAll(ticketsToSave);
-
-        log.info("Successfully transferred {} tickets from account {} to account {}",
-                ticketsToSave.size(), transferTicketsRequestDTO.getFromAccountId(),
-                transferTicketsRequestDTO.getToAccountId());
-    }*/
 
  /*  @Transactional
    @Override

@@ -84,15 +84,6 @@ public class Ticket implements Serializable {
    @Column(nullable = false, updatable = false) 
    private LocalDateTime ticketCreationDate;
 
-   /* Ticket Purchase Date (Automatic value on purchase/update)
-    * This value is only updated when the ticket is purchased, so @UpdateTimestamp is appropriate.
-    * However, since it only updates on purchase,it's better to manage 
-    * this manually in the service layer, but @UpdateTimestamp works for now.
-    *  @UpdateTimestamp to set the value on update
-    */
-   @Temporal(TemporalType.TIMESTAMP) 
-   private LocalDateTime ticketPurchaseDate;
-
    @Size(min = 3, max = 100)
    @NotBlank(message = "The ticket needs a description.")
    private String ticketDescription;
@@ -104,8 +95,4 @@ public class Ticket implements Serializable {
    /*@ManyToOne(fetch = FetchType.LAZY)
    @JoinColumn(name="menu_id")
    private Menu menu;*/
-
-   /*@ManyToOne(fetch = FetchType.LAZY)
-   @JoinColumn(name="account_id")
-   private Account account;*/
 }

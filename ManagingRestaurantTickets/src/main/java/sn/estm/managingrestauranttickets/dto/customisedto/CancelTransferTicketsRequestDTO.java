@@ -9,7 +9,7 @@ import lombok.NoArgsConstructor;
 
 import java.util.ArrayList;
 import java.util.List;
-
+/*
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -24,4 +24,4 @@ public class CancelTransferTicketsRequestDTO {
 
     @NotEmpty(message = "At least one ticket ID must be provided")
     private List<Long> ticketIdsToCancel  = new ArrayList<>();
-}
+}*/

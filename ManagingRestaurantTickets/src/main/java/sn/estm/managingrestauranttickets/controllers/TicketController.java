@@ -17,7 +17,6 @@ import sn.estm.managingrestauranttickets.dto.customisedto.DebitAccountRequestDTO
 import sn.estm.managingrestauranttickets.dto.customisedto.CreationTicketsRequestDTO;
 import sn.estm.managingrestauranttickets.dto.customisedto.PurchaseTicketsRequestDTO;
 import sn.estm.managingrestauranttickets.dto.customisedto.TransferTicketsRequestDTO;
-import sn.estm.managingrestauranttickets.dto.customisedto.CancelTransferTicketsRequestDTO;
 import sn.estm.managingrestauranttickets.enumerations.TicketStatus;
 import sn.estm.managingrestauranttickets.enumerations.TicketType;
 import sn.estm.managingrestauranttickets.services.serviceInterfaces.TicketService;
@@ -108,19 +107,18 @@ public class TicketController {
         }
     }
 
-    /*//@PostAuthorize("hasAuthority('ADMIN', 'ETUDIANT')")
-    @PutMapping(value = "/transferTickets")
+    @PutMapping(value = "/transferTickets", consumes = "application/json", produces = "application/json")
     @ResponseStatus(HttpStatus.OK)
     public void transferTickets( @RequestBody TransferTicketsRequestDTO transferTicketsRequestDTO) {
 
-        log.info("Transferring ticket(s) with details {}:", transferTicketsRequestDTO);
+        log.info("Processing ticket transfer request {}:", transferTicketsRequestDTO);
 
         ticketService.transferTickets(transferTicketsRequestDTO);
 
         log.info("Transfer of tickets completed successfully {}", transferTicketsRequestDTO);
     }
 
-    //@PostAuthorize("hasAuthority('ADMIN', 'ETUDIANT')")
+   /* //@PostAuthorize("hasAuthority('ADMIN', 'ETUDIANT')")
     @PutMapping(value = "/cancelTransferTickets")
     @ResponseStatus(HttpStatus.OK)
     public void  cancelTransferTickets(@RequestBody CancelTransferTicketsRequestDTO
