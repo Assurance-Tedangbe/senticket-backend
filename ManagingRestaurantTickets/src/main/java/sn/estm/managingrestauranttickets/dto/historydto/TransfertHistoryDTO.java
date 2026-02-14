@@ -6,12 +6,10 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import sn.estm.managingrestauranttickets.dto.TicketDTO;
 import sn.estm.managingrestauranttickets.dto.UserDTO;
-import sn.estm.managingrestauranttickets.dto.customisedto.RecipientDTO;
-import sn.estm.managingrestauranttickets.dto.customisedto.SenderDTO;
 
 import java.time.LocalDateTime;
+
 
 @Data
 @NoArgsConstructor
@@ -19,11 +17,13 @@ import java.time.LocalDateTime;
 @Builder
 public class TransfertHistoryDTO {
 
-    private Long transfertHistoryId;
+    private Long transferHistoryId;
 
-    @Valid
+    /*@Valid
     @NotNull(message = "tikcketDTO is required")
-    private TicketDTO ticketDTO;
+    private TicketDTO ticketDTO;*/
+
+    private String ticketIdsTransfered;
 
     @Valid
     @NotNull(message = "senderDTO is required")

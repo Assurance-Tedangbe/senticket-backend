@@ -15,10 +15,8 @@ public interface TransfertHistoryMapper {
 
     @Mapping(source = "sender", target = "senderDTO")
     @Mapping(source = "recipient", target = "recipientDTO")
-    @Mapping(source = "ticket", target = "ticketDTO")
     TransfertHistoryDTO toDto(TransfertHistory transfertHistory);
 
-    //@Mapping(target = "senderDTO", ignore = true)
     TransfertHistory toEntity(TransfertHistoryDTO transfertHistoryDTO);
 
     List<TransfertHistoryDTO> toDtoSet(List<TransfertHistory> transfertHistories);
