@@ -10,4 +10,6 @@ public interface DebitHistoryService {
     void createDebitHistory(DebitHistoryDTO debitHistoryDTO);
 
     List<DebitHistoryDTO> readDebitHistories();
+
+    DebitHistoryDTO readDebitHistoryByDebitHistoryId(Long debitHistoryId);
 }

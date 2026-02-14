@@ -7,6 +7,7 @@ import sn.estm.managingrestauranttickets.dto.TicketDTO;
 import sn.estm.managingrestauranttickets.dto.historydto.PurchaseHistoryDTO;
 import sn.estm.managingrestauranttickets.entities.PurchaseHistory;
 import sn.estm.managingrestauranttickets.entities.Ticket;
+import sn.estm.managingrestauranttickets.entities.TransfertHistory;
 import sn.estm.managingrestauranttickets.entities.User;
 import sn.estm.managingrestauranttickets.enumerations.TicketStatus;
 import sn.estm.managingrestauranttickets.enumerations.TicketType;
@@ -15,6 +16,7 @@ import sn.estm.managingrestauranttickets.mappers.PurchaseHistoryMapper;
 import sn.estm.managingrestauranttickets.repositories.PurchaseHistoryRepository;
 import sn.estm.managingrestauranttickets.services.serviceInterfaces.PurchaseHistoryService;
 
+import java.text.MessageFormat;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -46,5 +48,17 @@ public class PurchaseHistoryServiceImpl implements PurchaseHistoryService {
         return purchaseHistories.stream()
                 .map(purchaseHistoryMapper::toDto)
                 .collect(Collectors.toList());
+    }
+
+    @Override
+    public PurchaseHistoryDTO readPurchaseHistoryByPurchaseHistoryId(Long purchaseHistoryId) {
+
+        log.info("Reading PurchaseHistory by Id: {}", purchaseHistoryId);
+
+        PurchaseHistory purchaseHistory = purchaseHistoryRepository.findById(purchaseHistoryId)
+                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
+                        "PurchaseHistory not found with ID: {0}", purchaseHistoryId)));
+
+        return purchaseHistoryMapper.toDto(purchaseHistory);
     }
 }

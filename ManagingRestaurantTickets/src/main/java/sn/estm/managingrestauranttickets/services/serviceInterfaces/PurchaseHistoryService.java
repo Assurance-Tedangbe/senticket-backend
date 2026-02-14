@@ -10,4 +10,6 @@ public interface PurchaseHistoryService {
     List<PurchaseHistoryDTO> readPurchaseHistories();
 
     List<PurchaseHistoryDTO> findByDateBetween(LocalDateTime begin, LocalDateTime end);
+
+    PurchaseHistoryDTO readPurchaseHistoryByPurchaseHistoryId(Long purchaseHistoryId);
 }
