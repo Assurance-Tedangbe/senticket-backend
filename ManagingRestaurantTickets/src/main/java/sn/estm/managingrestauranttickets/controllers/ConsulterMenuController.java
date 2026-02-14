@@ -1,24 +1,18 @@
 package sn.estm.managingrestauranttickets.controllers;
 
 import sn.estm.managingrestauranttickets.dto.ConsulterMenuDTO;
-import sn.estm.managingrestauranttickets.dto.MenuDTO;
 import sn.estm.managingrestauranttickets.services.serviceInterfaces.ConsulterMenuService;
 
 import java.util.List;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-
-//import org.springframework.security.access.prepost.PostAuthorize;
 
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -75,31 +69,4 @@ public class ConsulterMenuController {
         return new ResponseEntity<>(consulterMenuDTO, HttpStatus.OK);
     }
 
-
-    //@PostAuthorize("hasAuthority('ADMIN')")
-    @PutMapping(value = "/{consulterMenuId}", consumes = "application/json", produces = "application/json")
-    public ResponseEntity<ConsulterMenuDTO> updateConsulterMenu(@PathVariable Long consulterMenuId, 
-                                              @RequestBody ConsulterMenuDTO consulterMenuDTO) {
-
-        log.info("Updating conssulterMenu with ID: {} with details: {}", consulterMenuId, consulterMenuDTO);
-
-        ConsulterMenuDTO updatedConsulterMenu = consulterMenuService.updateConsulterMenu(consulterMenuDTO);
-
-        log.info("ConulterMenu updated successfully with ID: {}", updatedConsulterMenu.getConsulterMenuId());
-       
-        return new ResponseEntity<>(updatedConsulterMenu, HttpStatus.OK);
-    }
-
-
-    //@PostAuthorize("hasAuthority('ADMIN')")
-    @DeleteMapping(value = "/{consulterMenuId}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteConsulterMenu(@PathVariable Long consulterMenuId) {
-
-        log.info("Deleting consulterMenu with ID: {}", consulterMenuId);
-      
-        consulterMenuService.deleteConsulterMenu(consulterMenuId);
-      
-        log.info("ConsulterMenu deleted successfully with ID: {}", consulterMenuId);
-    }
 }

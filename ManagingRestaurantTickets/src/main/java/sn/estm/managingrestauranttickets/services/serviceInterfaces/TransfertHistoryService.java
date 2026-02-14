@@ -7,5 +7,7 @@ import java.util.List;
 public interface TransfertHistoryService {
 
     List<TransfertHistoryDTO> readTransfertHistories();
+
+    TransfertHistoryDTO  readTransferHistoryByTransferHistoryId(Long transferHistoryId);
 }
 

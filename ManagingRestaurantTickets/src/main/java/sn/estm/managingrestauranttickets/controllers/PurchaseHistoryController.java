@@ -6,7 +6,12 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RequestParam;
 import sn.estm.managingrestauranttickets.dto.historydto.PurchaseHistoryDTO;
 import sn.estm.managingrestauranttickets.services.serviceInterfaces.PurchaseHistoryService;
 
@@ -39,5 +44,17 @@ public class PurchaseHistoryController {
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime endDate
     ) {
         return purchaseHistoryService.findByDateBetween(beginDate, endDate);
+    }
+
+    @GetMapping(value = "/{purchaseHistoryId}", produces = "application/json")
+    public ResponseEntity<PurchaseHistoryDTO> getPurchaseHistoryById(@PathVariable Long purchaseHistoryId) {
+
+        log.info("Fetched PurchaseHistory with ID: {}", purchaseHistoryId);
+
+        PurchaseHistoryDTO purchaseHistoryDTO = purchaseHistoryService
+                .readPurchaseHistoryByPurchaseHistoryId(purchaseHistoryId);
+
+
+        return new ResponseEntity<>(purchaseHistoryDTO, HttpStatus.OK);
     }
 }

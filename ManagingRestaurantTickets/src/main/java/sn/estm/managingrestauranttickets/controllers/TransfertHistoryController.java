@@ -6,6 +6,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import sn.estm.managingrestauranttickets.dto.historydto.TransfertHistoryDTO;
@@ -30,5 +31,17 @@ public class TransfertHistoryController {
         log.info("Fetched transferHistories: {}", transferHistories);
 
         return new ResponseEntity<>(transferHistories, HttpStatus.OK);
+    }
+
+    @GetMapping(value = "/{transferHistoryId}", produces = "application/json")
+    public ResponseEntity<TransfertHistoryDTO> getTransferHistoryById(@PathVariable Long transferHistoryId) {
+
+        log.info("Fetched TransferHistory with ID: {}", transferHistoryId);
+
+        TransfertHistoryDTO transfertHistoryDTO = transfertHistoryService.
+                readTransferHistoryByTransferHistoryId(transferHistoryId);
+
+
+        return new ResponseEntity<>(transfertHistoryDTO, HttpStatus.OK);
     }
 }

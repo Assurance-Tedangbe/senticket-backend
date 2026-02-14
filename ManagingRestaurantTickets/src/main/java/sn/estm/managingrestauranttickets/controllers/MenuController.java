@@ -2,17 +2,12 @@ package sn.estm.managingrestauranttickets.controllers;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
-
-//import org.springframework.security.access.prepost.PostAuthorize;
 
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
@@ -67,33 +62,5 @@ public class MenuController {
        
 
         return new ResponseEntity<>(menu, HttpStatus.OK);
-    }
-
-
-    //@PostAuthorize("hasAuthority('ADMIN')")
-    @PutMapping(value = "/{menuId}", consumes = "application/json", produces = "application/json")
-    public ResponseEntity<MenuDTO> updateUser(@PathVariable Long menuId, 
-                                              @RequestBody MenuDTO menuDTO) {
-
-        log.info("Updating menu with ID: {} with details: {}", menuId, menuDTO);
-
-        MenuDTO updatedMenu = menuService.updateMenu(menuDTO);
-
-        log.info("Menu updated successfully with ID: {}", updatedMenu.getMenuId());
-       
-        return new ResponseEntity<>(updatedMenu, HttpStatus.OK);
-    }
-
-
-    //@PostAuthorize("hasAuthority('ADMIN')")
-    @DeleteMapping(value = "/{menuId}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteUser(@PathVariable Long menuId) {
-
-        log.info("Deleting menu with ID: {}", menuId);
-      
-        menuService.deleteMenu(menuId);
-      
-        log.info("Menu deleted successfully with ID: {}", menuId);
     }
 }
