@@ -1,16 +1,8 @@
 package sn.estm.managingrestauranttickets.entities;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.Table;
-import jakarta.persistence.Id;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Column;
-import jakarta.persistence.ManyToOne;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.PrePersist;
+import jakarta.persistence.*;
 
+import jakarta.validation.constraints.NotEmpty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -31,9 +23,13 @@ public class TransfertHistory {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long transferHistoryId;
 
-    @ManyToOne(fetch = FetchType.LAZY)
+    /*@ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ticket_id")
-    private Ticket ticket;
+    private Ticket ticket;*/
+
+    @NotEmpty(message = "At least one ticket ID must be provided")
+    @Column(name = "ticket_ids_transfered")
+    private String ticketIdsTransfered;
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "sender_id")

@@ -15,8 +15,6 @@ public interface ConsulterMenuMapper {
     @Mapping(source = "user", target = "userDTO")
     ConsulterMenuDTO toDto(ConsulterMenu consulterMenu);
 
-    @Mapping(target = "menu", ignore = true) 
-    @Mapping(target = "user", ignore = true)
     ConsulterMenu toEntity(ConsulterMenuDTO consulterMenuDTO);
 
     Set<ConsulterMenuDTO> toDtoSet(Set<ConsulterMenu> consulterMenus);

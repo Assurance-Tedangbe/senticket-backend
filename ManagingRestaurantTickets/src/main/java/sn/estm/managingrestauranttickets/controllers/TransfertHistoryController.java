@@ -44,4 +44,13 @@ public class TransfertHistoryController {
 
         return new ResponseEntity<>(transfertHistoryDTO, HttpStatus.OK);
     }
+
+    @GetMapping(value = "/ids/{transferHistoryId}", produces = "application/json")
+    public ResponseEntity<List<Long>> getTicketIdsTransfered(@PathVariable Long transferHistoryId) {
+
+        List<Long> get = transfertHistoryService.getTransferHistoryTicketIdsTransfered(transferHistoryId);
+
+        log.info("result en size {} et en contenu: {}", get.size(), get);
+        return new ResponseEntity<>(get, HttpStatus.OK);
+    }
 }

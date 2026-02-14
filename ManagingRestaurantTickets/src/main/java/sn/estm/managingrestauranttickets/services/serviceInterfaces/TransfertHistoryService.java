@@ -9,5 +9,7 @@ public interface TransfertHistoryService {
     List<TransfertHistoryDTO> readTransfertHistories();
 
     TransfertHistoryDTO  readTransferHistoryByTransferHistoryId(Long transferHistoryId);
+
+    List<Long> getTransferHistoryTicketIdsTransfered(Long id);
 }
 

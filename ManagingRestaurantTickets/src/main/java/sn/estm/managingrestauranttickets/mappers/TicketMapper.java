@@ -21,8 +21,7 @@ public interface TicketMapper {
     @Mapping(source = "user", target = "userDTO")
     TicketDTO toDto(Ticket ticket);
 
-   // @Mapping(target = "menu", ignore = true)
-    @Mapping(target = "user", ignore = true) 
+    @Mapping(target = "user", ignore = true)
     Ticket toEntity(TicketDTO ticketDTO);
 
     List<TicketDTO> toDtoSet(List<Ticket> tickets);
