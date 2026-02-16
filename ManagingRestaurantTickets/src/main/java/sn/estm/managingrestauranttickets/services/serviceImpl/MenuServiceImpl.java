@@ -37,7 +37,7 @@ public class MenuServiceImpl implements MenuService {
 
         Menu savedMenu = menuRepository.save(menu);
         
-        log.info("Menu created successfully with ID: {}", savedMenu.getMenuId());
+        log.info("Menu created successfully with ID: {}", savedMenu.getId());
        
         return menuMapper.toDto(savedMenu);
     }
@@ -76,13 +76,13 @@ public class MenuServiceImpl implements MenuService {
                 .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
                     "Menu not found with ID: {0}", menuDTO.getMenuId())));
                     
-        existingMenu.setMenuName(menuDTO.getMenuName());
-        existingMenu.setMenuType(menuDTO.getMenuType());
-        existingMenu.setMenuDescription(menuDTO.getMenuDescription());
+        existingMenu.setName(menuDTO.getMenuName());
+        existingMenu.setType(menuDTO.getMenuType());
+        existingMenu.setDescription(menuDTO.getMenuDescription());
         
         Menu updatedMenu = menuRepository.save(existingMenu);
 
-        log.info("Menu updated successfully with name: {}", updatedMenu.getMenuName());
+        log.info("Menu updated successfully with name: {}", updatedMenu.getName());
         
         return menuMapper.toDto(updatedMenu);
     }

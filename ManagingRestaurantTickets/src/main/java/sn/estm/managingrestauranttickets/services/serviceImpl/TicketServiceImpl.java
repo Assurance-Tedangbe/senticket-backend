@@ -3,10 +3,7 @@ package sn.estm.managingrestauranttickets.services.serviceImpl;
 
 import java.text.MessageFormat;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import org.springframework.security.access.AccessDeniedException;
@@ -128,31 +125,31 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
 
     for (Ticket ticket : tickets) {
         // Check eligibility for purchase: NOT booked AND TicketStatus.AVAILABLE
-        if (ticket.isBooked() || ticket.getTicketStatus() != TicketStatus.AVAILABLE) {
+        if (ticket.isBooked() || ticket.getStatus() != TicketStatus.AVAILABLE) {
             throw new IllegalStateException(MessageFormat.format(
                     "Ticket with ID: {0} is not available for purchase",
-                    ticket.getTicketId()));
+                    ticket.getId()));
         }
 
         // Ensure ticket price is set based on type
-        if (ticket.getTicketPrice() == null) {
-            if (ticket.getTicketType() == TicketType.A) {
-                ticket.setTicketPrice(100.0);
-            } else if (ticket.getTicketType() == TicketType.B) {
-                ticket.setTicketPrice(150.0);
+        if (ticket.getPrice() == null) {
+            if (ticket.getType() == TicketType.A) {
+                ticket.setPrice(100.0);
+            } else if (ticket.getType() == TicketType.B) {
+                ticket.setPrice(150.0);
             } else {
                 throw new IllegalStateException(MessageFormat.format(
-                        "Invalid ticket type for ticket ID: {0}", ticket.getTicketId()));
+                        "Invalid ticket type for ticket ID: {0}", ticket.getId()));
             }
         }
 
-        totalPrice += ticket.getTicketPrice();
+        totalPrice += ticket.getPrice();
         availableTickets.add(ticket);
 
         //Count ticket types
-        if (ticket.getTicketType() == TicketType.A) {
+        if (ticket.getType() == TicketType.A) {
             countAPurchased++;
-        } else if (ticket.getTicketType() == TicketType.B) {
+        } else if (ticket.getType() == TicketType.B) {
             countBPurchased++;
         }
     }
@@ -173,7 +170,7 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
 
     for (Ticket ticket : availableTickets) {
         ticket.setBooked(true);
-        ticket.setTicketStatus(TicketStatus.BOOKED);
+        ticket.setStatus(TicketStatus.BOOKED);
         ticket.setPayementCode(UUID.randomUUID().toString());
         ticket.setUser(user);
 
@@ -200,13 +197,13 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
     // Create Type A tickets
     for (int i = 0; i < creationTicketsRequestDTO.getCountA(); i++) {
         Ticket ticketA = Ticket.builder()
-                .ticketType(TicketType.A)
-                .ticketPrice(100.0)
+                .type(TicketType.A)
+                .price(100.0)
                 .payementCode("")
-                .ticketStatus(TicketStatus.AVAILABLE)
+                .status(TicketStatus.AVAILABLE)
                 .booked(false)
-                .ticketCreationDate(creationTime)
-                .ticketDescription("Ticket Type A - " + (i + 1))
+                .creationDate(creationTime)
+                .description("Ticket Type A - " + (i + 1))
                 .user(user)
                 .build();
         ticketsToSave.add(ticketA);
@@ -215,13 +212,13 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
     // Create Type B tickets
     for (int i = 0; i < creationTicketsRequestDTO.getCountB(); i++) {
         Ticket ticketB = Ticket.builder()
-                .ticketType(TicketType.B)
-                .ticketPrice(150.0)
+                .type(TicketType.B)
+                .price(150.0)
                 .payementCode("")
-                .ticketStatus(TicketStatus.AVAILABLE)
+                .status(TicketStatus.AVAILABLE)
                 .booked(false)
-                .ticketCreationDate(creationTime)
-                .ticketDescription("Ticket Type B - " + (i + 1))
+                .creationDate(creationTime)
+                .description("Ticket Type B - " + (i + 1))
                 .user(user)
                 .build();
         ticketsToSave.add(ticketB);
@@ -356,16 +353,16 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
         // Validate each ticket
         for (Ticket ticket : tickets) {
             // Check ownership
-            if (ticket.getUser() == null || !ticket.getUser().getUserId().equals(student.getUserId())) {
+            if (ticket.getUser() == null || !ticket.getUser().getId().equals(student.getId())) {
                 throw new IllegalStateException(
-                        "Ticket " + ticket.getTicketId() + " does not belong to the specified student");
+                        "Ticket " + ticket.getId() + " does not belong to the specified student");
             }
 
             // Check eligibility for debit (must be booked with BOOKED status)
-            if (!ticket.isBooked() || ticket.getTicketStatus() != TicketStatus.BOOKED) {
+            if (!ticket.isBooked() || ticket.getStatus() != TicketStatus.BOOKED) {
                 throw new IllegalStateException(MessageFormat.format(
                         "Ticket ID {0} is not eligible for debit. Must be booked with BOOKED status. Current: {1}, Booked: {2}",
-                        ticket.getTicketId(), ticket.getTicketStatus(), ticket.isBooked()));
+                        ticket.getId(), ticket.getStatus(), ticket.isBooked()));
             }
         }
     }
@@ -374,7 +371,7 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
         List<Ticket> updatedTickets = new ArrayList<>();
 
         for (Ticket ticket : tickets) {
-            ticket.setTicketStatus(TicketStatus.USED);
+            ticket.setStatus(TicketStatus.USED);
             updatedTickets.add(ticket);
         }
         // Batch save all updated tickets
@@ -413,7 +410,7 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
         }
 
         // 3. Récupérer les tickets selon les critères: user, ticketType, booked & ticketStatus
-        List<Ticket> tickets = ticketRepository.findByUserAndTicketTypeAndBookedAndTicketStatus(
+        List<Ticket> tickets = ticketRepository.findByUserAndTypeAndBookedAndStatus(
                 user,
                 ticketType,
                 true,
@@ -549,7 +546,7 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
     private List<Ticket> findTicketsForTransfer(User sender, TicketType ticketType, int numberOfTickets) {
 
         // Find sender's tickets that are booked, have BOOKED status, and match the ticket type
-        List<Ticket> availableTickets = ticketRepository.findByUserAndTicketTypeAndBookedAndTicketStatus(
+        List<Ticket> availableTickets = ticketRepository.findByUserAndTypeAndBookedAndStatus(
                 sender,
                 ticketType,
                 true,
@@ -578,21 +575,10 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
         log.debug("Transferred {} tickets to user {}", tickets.size(), recipient.getUsername());
 
         log.info("BEGIN BUILDING transfertHistory:");
-        /* List<TransfertHistory> ticketsTransferHistory = new ArrayList<>();
-        for (Ticket transferTicketHistory : tickets){
 
-            TransfertHistory transfertHistory = TransfertHistory.builder()
-                    .ticket(transferTicketHistory)
-                    .sender(sender)
-                    .recipient(recipient)
-                    .build();
-            ticketsTransferHistory.add(transfertHistory);
-            log.info("transferHistory to save {}", transfertHistory);
-            transfertHistoryRepository.saveAll(ticketsTransferHistory);
-        }*/
         List<Long> ticketIdsTransfered = new ArrayList<>();
         for (Ticket ticket : tickets){
-            ticketIdsTransfered.add(ticket.getTicketId());
+            ticketIdsTransfered.add(ticket.getId());
         }
         log.info("ticketIdsTransfered: {} ", ticketIdsTransfered.size());
             TransfertHistory transfertHistory = TransfertHistory.builder()
@@ -603,11 +589,6 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
         transfertHistoryRepository.save(transfertHistory);
         log.info("transferHistory: {} ",transfertHistory );
 
-       /* List<Long> ticketIds = Arrays.stream(transfertHistory
-                        .getTicketIdsTransfered().split(","))
-                .map(String::trim)
-                .map(Long::parseLong)
-                .collect(Collectors.toList()); */
 
         getTicketIds(transfertHistory);
         log.info("result en size {} et en contenu: {}", getTicketIds(transfertHistory).
@@ -625,79 +606,135 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
     }
     // ******** End transfert service *********
 
-/*   @Transactional
-   @Override
-   public void cancelTransferTickets(CancelTransferTicketsRequestDTO cancelTransferTicketsRequestDTO) {
-       List<Long> ticketIdsToCancel = cancelTransferTicketsRequestDTO.getTicketIdsToCancel();
-       Long originalSenderAccountId = cancelTransferTicketsRequestDTO.getOriginalSenderAccountId();
-       Long currentOwnerAccountId = cancelTransferTicketsRequestDTO.getCurrentOwnerAccountId();
+//********* cancelTransferTickets service ***********
+@Transactional
+@Override
+public void cancelTransferTickets(CancelTransferTicketsRequestDTO cancelTransferTicketsRequestDTO) {
 
-       log.info("Attempting to cancel transfer of tickets {} from current owner {} back to original sender {}",
-               ticketIdsToCancel, currentOwnerAccountId, originalSenderAccountId);
+    log.info("Attempting to cancel transfer for transaction {}",
+            cancelTransferTicketsRequestDTO.getCancelTransferDTO().getTransactionId());
 
-       // 1. Input Validation ---
-       if (ticketIdsToCancel == null || ticketIdsToCancel.isEmpty()) {
-           throw new IllegalArgumentException("The list of ticket IDs to cancel cannot be empty.");
-       }
-       if (originalSenderAccountId == null || currentOwnerAccountId == null) {
-           throw new IllegalArgumentException("Both original sender (from) and current owner (to) account IDs must be provided.");
-       }
-       if (originalSenderAccountId.equals(currentOwnerAccountId)) {
-           throw new IllegalArgumentException("Invalid operation: Target and source accounts are the same.");
-       }
+    // 1. Validate input
+    validateCancelRequest(cancelTransferTicketsRequestDTO);
 
-       // 2. Retrieve accounts ---
-       // Target Account (Original Sender, where the tickets will return)
-       Account targetAccount = accountRepository.findById(originalSenderAccountId)
-               .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
-                       "Target account (original sender) not found with ID: {0}", originalSenderAccountId)));
+    // 2. Extract DTOs
+    CancelTransferDTO cancelTransferDTO = cancelTransferTicketsRequestDTO.getCancelTransferDTO();
+    Long transactionId = cancelTransferDTO.getTransactionId();
+    SenderDTO originalSenderDTO = cancelTransferDTO.getOriginalSenderDTO();
+    RecipientDTO currentOwnerDTO = cancelTransferDTO.getCurrentOwnerDTO();
 
-       // Current Owner Account (The account currently holding the tickets)
-        Account currentOwnerAccount = accountRepository.findById(currentOwnerAccountId)
-               .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
-                       "Current owner account not found with ID: {0}", currentOwnerAccountId)));
+    // 3. Retrieve transfer history
+    TransfertHistory transferHistory = transfertHistoryRepository.findById(transactionId)
+            .orElseThrow(() -> new ResourceNotFoundException(
+                    "Transfer history not found with ID: " + transactionId));
 
-       // 3. Fetch Tickets to cancel ---
-       List<Ticket> ticketsToReassign = ticketRepository.findAllById(ticketIdsToCancel);
+    // 4. Validate that the original sender matches the history
+    if (!transferHistory.getSender().getId().equals(originalSenderDTO.getSenderId()) ||
+            !transferHistory.getSender().getUsername().equals(originalSenderDTO.getSenderUsername())) {
+        throw new IllegalArgumentException("Original sender information does not match the transfer record");
+    }
 
-       if (ticketsToReassign.size() != ticketIdsToCancel.size()) {
-           throw new ResourceNotFoundException("One or more tickets to cancel could not be found.");
-       }
+    // 5. Validate that the current owner matches the history recipient
+    if (!transferHistory.getRecipient().getId().equals(currentOwnerDTO.getRecipientId()) ||
+            !transferHistory.getRecipient().getUsername().equals(currentOwnerDTO.getRecipientUsername())) {
+        throw new IllegalArgumentException("Current owner information does not match the transfer record");
+    }
 
-       // --- 4. Validation and Update (Reassignment) ---
-       List<Ticket> ticketsToSave = ticketsToReassign.stream()
-               .peek(ticket -> {
-                   // Check transfer eligibility
-                   if (!ticket.isBooked() || ticket.getTicketStatus() != TicketStatus.BOOKED) {
-                       throw new IllegalStateException(MessageFormat.format(
-                               "Ticket ID {0} is not eligible for transfer cancellation",
-                               ticket.getTicketId()));
-                   }
+    /* // 6. Check that the authenticated user is the original sender
+    User authenticatedUser = getCurrentAuthenticatedUser(); // from security context
+    if (!authenticatedUser.getUserId().equals(originalSenderDTO.getUserId())) {
+        throw new AccessDeniedException("Only the original sender can cancel this transfer");
+    }*/
 
-                   // Security Check: Ensure the ticket is currently owned by the expected account (currentOwnerAccountId)
-                   if (ticket.getAccount() == null || !ticket.getAccount().getAccountId().equals(currentOwnerAccountId)) {
-                       throw new IllegalStateException(MessageFormat.format(
-                               "Ticket ID {0} is currently owned by account ID {1}, not the expected current owner {2}.",
-                               ticket.getTicketId(), ticket.getAccount() != null ? ticket.getAccount().getAccountId() : "N/A", currentOwnerAccountId));
-                   }
+    // 7. Validate that the provided ticket IDs match those in the history
+    List<Long> historyTicketIds = extractTicketIdsFromHistory(transferHistory);
+    List<Long> requestTicketIds = cancelTransferTicketsRequestDTO.getTicketIdsToCancel();
 
-                   if (ticket.getAccount() == null || !ticket.getAccount().getAccountId().equals(currentOwnerAccountId)) {
-                       throw new IllegalStateException(MessageFormat.format(
-                               "Ticket ID {0} is currently owned by account ID {1}, not the expected current owner {2}.",
-                               ticket.getTicketId(), ticket.getAccount() != null ? ticket.getAccount().getAccountId() : "N/A", currentOwnerAccountId));
-                   }
+    Collections.sort(historyTicketIds);
+    Collections.sort(requestTicketIds);
+    if (!historyTicketIds.equals(requestTicketIds)) {
+        throw new IllegalArgumentException("The ticket IDs provided do not match the tickets in the original transfer");
+    }
 
-                   // Update the ticket ownership to the original sender (cancellation/reassignment)
-                   ticket.setUser(targetAccount.getUser());
-               })
-               .collect(Collectors.toList());
+    // 8. Fetch tickets
+    List<Ticket> ticketsToReassign = ticketRepository.findAllById(historyTicketIds);
+    if (ticketsToReassign.size() != historyTicketIds.size()) {
+        throw new ResourceNotFoundException("One or more tickets not found");
+    }
 
-       // --- 5. Batch Save ---
-       ticketRepository.saveAll(ticketsToSave);
+    // 9. Validate each ticket: booked, status BOOKED, and owned by current owner
+    for (Ticket ticket : ticketsToReassign) {
+        if (!ticket.isBooked() || ticket.getStatus() != TicketStatus.BOOKED) {
+            throw new IllegalStateException("Ticket " + ticket.getId() + " is not eligible for cancellation");
+        }
+        if (ticket.getUser() == null || !ticket.getUser().getId().equals(currentOwnerDTO.getRecipientId())) {
+            throw new IllegalStateException("Ticket " + ticket.getId() + " is not owned by the expected current owner");
+        }
+    }
 
-       log.info("Successfully cancelled transfer for {} tickets. Reassigned from account {} back to account {}",
-               ticketsToSave.size(), currentOwnerAccountId, originalSenderAccountId);
-   }*/
+    // 10. Retrieve original sender user and his account (if needed)
+    User originalSender = userRepository.findById(originalSenderDTO.getSenderId())
+            .orElseThrow(() -> new ResourceNotFoundException("Original sender user not found"));
+
+    // 11. Reassign tickets back to original sender
+    for (Ticket ticket : ticketsToReassign) {
+        ticket.setUser(originalSender);
+    }
+    ticketRepository.saveAll(ticketsToReassign);
+
+    // 12. Delete the transfer history record
+    transfertHistoryRepository.delete(transferHistory);
+
+    log.info("Successfully cancelled transfer transaction {} and returned {} tickets to original sender {}",
+            transactionId, ticketsToReassign.size(), originalSender.getUsername());
+}
+
+    private void validateCancelRequest(CancelTransferTicketsRequestDTO request) {
+        if (request == null) {
+            throw new IllegalArgumentException("Cancel request cannot be null");
+        }
+        if (request.getCancelTransferDTO() == null) {
+            throw new IllegalArgumentException("CancelTransferDTO is required");
+        }
+        if (request.getCancelTransferDTO().getTransactionId() == null) {
+            throw new IllegalArgumentException("Transaction ID is required");
+        }
+        if (request.getCancelTransferDTO().getOriginalSenderDTO() == null) {
+            throw new IllegalArgumentException("Original sender information is required");
+        }
+        if (request.getCancelTransferDTO().getCurrentOwnerDTO() == null) {
+            throw new IllegalArgumentException("Current owner information is required");
+        }
+        if (request.getTicketIdsToCancel() == null || request.getTicketIdsToCancel().isEmpty()) {
+            throw new IllegalArgumentException("At least one ticket ID must be provided");
+        }
+    }
+
+    private List<Long> extractTicketIdsFromHistory(TransfertHistory history) {
+        String ticketIdsStr = history.getTicketIdsTransfered();
+        if (ticketIdsStr == null || ticketIdsStr.trim().isEmpty()) {
+            return Collections.emptyList();
+        }
+        // Remove brackets if stored as "[1,2,3]"
+        ticketIdsStr = ticketIdsStr.replace("[", "")
+                .replace("]", "").trim();
+        if (ticketIdsStr.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return Arrays.stream(ticketIdsStr.split(","))
+                .map(String::trim)
+                .map(Long::parseLong)
+                .collect(Collectors.toList());
+    }
+   /*   private User getCurrentAuthenticatedUser() {
+        // Implement based on your security context, e.g.:
+        // Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        // return (User) authentication.getPrincipal();
+        // For simplicity, assume a utility exists.
+        return SecurityUtils.getCurrentUser();
+    }*/
+
+    //********* end of cancelTransferTickets service ***********
 
     // Suppl. methods
     @Override
@@ -722,17 +759,17 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
                 .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
                         "Ticket not found with ID: {0}", ticketDTO.getTicketId())));
 
-        existingTicket.setTicketType(ticketDTO.getTicketType());
-        existingTicket.setTicketPrice(ticketDTO.getTicketPrice());
+        existingTicket.setType(ticketDTO.getTicketType());
+        existingTicket.setPrice(ticketDTO.getTicketPrice());
         existingTicket.setBooked(ticketDTO.isBooked());
-        existingTicket.setTicketStatus(ticketDTO.getTicketStatus());
-        existingTicket.setTicketDescription(ticketDTO.getTicketDescription());
+        existingTicket.setStatus(ticketDTO.getTicketStatus());
+        existingTicket.setDescription(ticketDTO.getTicketDescription());
         existingTicket.setUser(ticketMapper.toEntity(ticketDTO).getUser());
         // existingTicket.setMenu(ticketMapper.toEntity(ticketDTO).getMenu());
 
         Ticket updatedTicket = ticketRepository.save(existingTicket);
 
-        log.info("Ticket updated successfully with ID: {}", updatedTicket.getTicketId());
+        log.info("Ticket updated successfully with ID: {}", updatedTicket.getId());
 
         return ticketMapper.toDto(updatedTicket);
     }
@@ -762,7 +799,7 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
                 .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
                         "Ticket not found with ID: {0}", ticketId)));
 
-        ticket.setTicketStatus(newStatus);
+        ticket.setStatus(newStatus);
 
         ticketRepository.save(ticket);
 
@@ -808,7 +845,7 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
     public List<TicketDTO> readTicketsByStatus(TicketStatus ticketStatus) {
         log.info("Reading tickets with status: {}", ticketStatus);
 
-        List<Ticket> tickets = ticketRepository.findByTicketStatus(ticketStatus);
+        List<Ticket> tickets = ticketRepository.findByStatus(ticketStatus);
 
         return tickets.stream()
                 .map(ticketMapper::toDto)

@@ -27,17 +27,17 @@ public class Menu implements Serializable{
     @Id
 	@Column(unique = true, nullable = false)
 	@GeneratedValue(strategy =GenerationType.IDENTITY)
-	private Long menuId;
+	private Long id;
 	
 	@Column(length=70, nullable = false, unique = true)
 	@Size(min = 3, max = 70)
-	private String menuName;
+	private String name;
 
 	@Column(length=30)
 	@Size(min = 3, max = 30)
-	private String menuType;
+	private String type;
 
 	@Column(length=100)
 	@Size(min = 3, max = 100)
-	private String menuDescription;
+	private String description;
 }

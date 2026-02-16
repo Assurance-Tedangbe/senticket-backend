@@ -45,7 +45,7 @@ public class RoleServiceImpl implements RoleService {
 
         Role savedRole = roleRepository.save(role);
 
-        log.info("Role created successfully with ID: {}", savedRole.getRoleId());
+        log.info("Role created successfully with ID: {}", savedRole.getId());
 
         return roleMapper.toDto(savedRole);
     }
@@ -89,7 +89,7 @@ public class RoleServiceImpl implements RoleService {
 
         Role updatedRole = roleRepository.save(existingRole);
 
-        log.info("Role updated successfully with ID: {}", updatedRole.getRoleId());
+        log.info("Role updated successfully with ID: {}", updatedRole.getId());
 
         return roleMapper.toDto(updatedRole);
     }
@@ -101,7 +101,7 @@ public class RoleServiceImpl implements RoleService {
          /* Checking if resource exists */
         var role = readRoleByRoleId(roleId);
 
-        if(userRepository.existsAllByRoleRoleId(roleId)){
+        if(userRepository.existsAllByRoleId(roleId)){
             throw new ForbiddenActionException(HttpStatus.FORBIDDEN,
              "Cannot delete role assigned to users");
         }

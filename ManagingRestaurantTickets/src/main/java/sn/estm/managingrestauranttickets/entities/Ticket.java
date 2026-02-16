@@ -42,17 +42,17 @@ public class Ticket implements Serializable {
    @Column(unique = true, nullable = false)
    @Id
    @GeneratedValue(strategy =GenerationType.IDENTITY)
-   private Long ticketId;
+   private Long id;
    
    @Column(nullable = false)
    @Enumerated(EnumType.STRING)
-   private TicketType ticketType;
+   private TicketType type;
 
    /* TicketPrice is derived from the ticketType, so no default needed here
     * The price must be calculated and set in the business logic (Service layer)
     */
    @Column(nullable = false)
-   private Double ticketPrice;
+   private Double price;
 
    /* Payment Code (Unique, generated on purchase, null initially)
     * The unique constraint should be applied *only* when the code is set. 
@@ -73,7 +73,7 @@ public class Ticket implements Serializable {
    @Column(nullable = false)
    @Enumerated(EnumType.STRING)
    @Builder.Default
-   TicketStatus ticketStatus = TicketStatus.AVAILABLE;
+   TicketStatus status = TicketStatus.AVAILABLE;
 
    /* Ticket Creation Date (Automatic value on creation)
     * updatable=false ensures it's only set once
@@ -82,11 +82,11 @@ public class Ticket implements Serializable {
    @CreationTimestamp 
    @Temporal(TemporalType.TIMESTAMP)
    @Column(nullable = false, updatable = false) 
-   private LocalDateTime ticketCreationDate;
+   private LocalDateTime creationDate;
 
    @Size(min = 3, max = 100)
    @NotBlank(message = "The ticket needs a description.")
-   private String ticketDescription;
+   private String description;
 
    @ManyToOne(fetch = FetchType.LAZY)
    @JoinColumn(name="user_id")

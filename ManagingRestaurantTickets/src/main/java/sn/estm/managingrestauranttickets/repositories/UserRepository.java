@@ -23,10 +23,10 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     /**
      * Retrieves an Optional containing the User entity with the specified userId.
-     * @param userId the unique identifier of the user to find
+     * @param id the unique identifier of the user to find
      * @return an Optional containing the User if found, or an empty Optional if not found
      */
-    Optional<User> findByUserId(Long userId);
+    Optional<User> findById(Long id);
 
     /**
      * Checks if a user with the specified username exists in the repository.
@@ -37,9 +37,9 @@ public interface UserRepository extends JpaRepository<User, Long> {
 
     /**
      * Checks if there exists at least one user with the specified role ID.
-     * @param roleId the ID of the role to check for
+     * @param id the ID of the role to check for
      * @return {@code true} if at least one user exists with the given role ID, {@code false} otherwise
      */
-    boolean existsAllByRoleRoleId(Long roleId);
+    boolean existsAllByRoleId(Long id);
 }
 

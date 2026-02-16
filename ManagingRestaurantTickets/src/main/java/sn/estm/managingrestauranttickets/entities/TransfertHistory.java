@@ -21,7 +21,7 @@ public class TransfertHistory {
     @Column(unique = true, nullable = false)
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long transferHistoryId;
+    private Long id;
 
     /*@ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "ticket_id")

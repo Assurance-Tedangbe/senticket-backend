@@ -76,7 +76,7 @@ public class UserServiceImpl implements UserService {
                         "Rôle non trouvé avec l'ID: " + roleDto.getRoleId()
                 ));
 
-        log.info("Rôle trouvé: {} (ID: {})", role.getName(), role.getRoleId());
+        log.info("Rôle trouvé: {} (ID: {})", role.getName(), role.getId());
 
         // 2. Convertir UserDTO en entité User
         User user = userMapper.toEntity(userDto);
@@ -109,13 +109,13 @@ public class UserServiceImpl implements UserService {
         // Create Type A tickets
         for (int i = 0; i < creationTicketsRequestDTO.getCountA(); i++) {
             Ticket ticketA = Ticket.builder()
-                    .ticketType(TicketType.A)
-                    .ticketPrice(100.0)
+                    .type(TicketType.A)
+                    .price(100.0)
                     .payementCode("")
-                    .ticketStatus(TicketStatus.AVAILABLE)
+                    .status(TicketStatus.AVAILABLE)
                     .booked(false)
-                    .ticketCreationDate(creationTime)
-                    .ticketDescription("Ticket Type A - " + (i + 1))
+                    .creationDate(creationTime)
+                    .description("Ticket Type A - " + (i + 1))
                     .user(user)
                     .build();
             ticketsToSave.add(ticketA);
@@ -124,13 +124,13 @@ public class UserServiceImpl implements UserService {
         // Create Type B tickets
         for (int i = 0; i < creationTicketsRequestDTO.getCountB(); i++) {
             Ticket ticketB = Ticket.builder()
-                    .ticketType(TicketType.B)
-                    .ticketPrice(150.0)
+                    .type(TicketType.B)
+                    .price(150.0)
                     .payementCode("")
-                    .ticketStatus(TicketStatus.AVAILABLE)
+                    .status(TicketStatus.AVAILABLE)
                     .booked(false)
-                    .ticketCreationDate(creationTime)
-                    .ticketDescription("Ticket Type B - " + (i + 1))
+                    .creationDate(creationTime)
+                    .description("Ticket Type B - " + (i + 1))
                     .user(user)
                     .build();
             ticketsToSave.add(ticketB);
