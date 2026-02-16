@@ -20,6 +20,7 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import sn.estm.managingrestauranttickets.dto.TicketDTO;
+import sn.estm.managingrestauranttickets.dto.customisedto.CancelTransferTicketsRequestDTO;
 import sn.estm.managingrestauranttickets.dto.customisedto.DebitAccountRequestDTO;
 import sn.estm.managingrestauranttickets.dto.customisedto.PurchaseTicketsRequestDTO;
 import sn.estm.managingrestauranttickets.dto.customisedto.TransferTicketsRequestDTO;
@@ -27,6 +28,7 @@ import sn.estm.managingrestauranttickets.enumerations.TicketStatus;
 import sn.estm.managingrestauranttickets.enumerations.TicketType;
 import sn.estm.managingrestauranttickets.services.serviceInterfaces.TicketService;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 
@@ -124,34 +126,19 @@ public class TicketController {
         log.info("Transfer of tickets completed successfully {}", transferTicketsRequestDTO);
     }
 
-   /* //@PostAuthorize("hasAuthority('ADMIN', 'ETUDIANT')")
-    @PutMapping(value = "/cancelTransferTickets")
+    @PutMapping(value = "/cancelTransfer", consumes = "application/json", produces = "application/json")
     @ResponseStatus(HttpStatus.OK)
-    public void  cancelTransferTickets(@RequestBody CancelTransferTicketsRequestDTO
-                                               cancelTransferTicketsRequestDTO) {
+    public void cancelTransferTickets(
+            @Valid @RequestBody CancelTransferTicketsRequestDTO cancelTransferTicketsRequestDTO) {
 
-        log.info("Cancelling transfer ticket(s) with details {}:",
-                cancelTransferTicketsRequestDTO);
+        log.info("Processing cancel transfer request for transaction {}",
+                cancelTransferTicketsRequestDTO.getCancelTransferDTO().getTransactionId());
 
         ticketService.cancelTransferTickets(cancelTransferTicketsRequestDTO);
 
-        log.info("Cancelled transfer tickets completed successfully {}",
-                cancelTransferTicketsRequestDTO);
+        log.info("Transfer cancelled successfully {} at {}", cancelTransferTicketsRequestDTO, LocalDateTime.now());
     }
-
-    //@PostAuthorize("hasAuthority('ADMIN')")
-    @PostMapping(consumes = "application/json", produces = "application/json")
-    public ResponseEntity<List<TicketDTO>> createTicket(@RequestBody CreationTicketsRequestDTO creationTicketsRequestDTO) {
-
-        log.info("Creating tickets with requests: {}", creationTicketsRequestDTO);
-
-        List<TicketDTO> createdTickets = ticketService.createTickets(creationTicketsRequestDTO);
-
-        log.info("Tickets created successfully with IDs: {}", createdTickets);
-
-        return new ResponseEntity<>(createdTickets, HttpStatus.CREATED);
-    }
-
+   /*
     //@PostAuthorize("hasAnyAuthority('ADMIN', 'AGENT', 'ETUDIANT', 'PORTIER')")
     @GetMapping(value = "/{ticketId}", produces = "application/json")
     public ResponseEntity<TicketDTO> getTicketById(@PathVariable Long ticketId) {

@@ -4,10 +4,7 @@ package sn.estm.managingrestauranttickets.services.serviceInterfaces;
 import java.util.List;
 
 import sn.estm.managingrestauranttickets.dto.TicketDTO;
-import sn.estm.managingrestauranttickets.dto.customisedto.DebitAccountRequestDTO;
-import sn.estm.managingrestauranttickets.dto.customisedto.CreationTicketsRequestDTO;
-import sn.estm.managingrestauranttickets.dto.customisedto.PurchaseTicketsRequestDTO;
-import sn.estm.managingrestauranttickets.dto.customisedto.TransferTicketsRequestDTO;
+import sn.estm.managingrestauranttickets.dto.customisedto.*;
 import sn.estm.managingrestauranttickets.enumerations.TicketStatus;
 import sn.estm.managingrestauranttickets.enumerations.TicketType;
 
@@ -26,7 +23,7 @@ public interface TicketService {
 
     void transferTickets(TransferTicketsRequestDTO transferTicketsRequestDTO);
 
-    //void cancelTransferTickets(CancelTransferTicketsRequestDTO cancelTransferTicketsRequestDTO);
+    void cancelTransferTickets(CancelTransferTicketsRequestDTO cancelTransferTicketsRequestDTO);
 
     TicketDTO readTicketById(Long idTicket);
 

@@ -3,10 +3,7 @@ package sn.estm.managingrestauranttickets.services.serviceImpl;
 
 import java.text.MessageFormat;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.UUID;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import org.springframework.security.access.AccessDeniedException;
@@ -609,79 +606,135 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
     }
     // ******** End transfert service *********
 
-/*   @Transactional
-   @Override
-   public void cancelTransferTickets(CancelTransferTicketsRequestDTO cancelTransferTicketsRequestDTO) {
-       List<Long> ticketIdsToCancel = cancelTransferTicketsRequestDTO.getTicketIdsToCancel();
-       Long originalSenderAccountId = cancelTransferTicketsRequestDTO.getOriginalSenderAccountId();
-       Long currentOwnerAccountId = cancelTransferTicketsRequestDTO.getCurrentOwnerAccountId();
+//********* cancelTransferTickets service ***********
+@Transactional
+@Override
+public void cancelTransferTickets(CancelTransferTicketsRequestDTO cancelTransferTicketsRequestDTO) {
 
-       log.info("Attempting to cancel transfer of tickets {} from current owner {} back to original sender {}",
-               ticketIdsToCancel, currentOwnerAccountId, originalSenderAccountId);
+    log.info("Attempting to cancel transfer for transaction {}",
+            cancelTransferTicketsRequestDTO.getCancelTransferDTO().getTransactionId());
 
-       // 1. Input Validation ---
-       if (ticketIdsToCancel == null || ticketIdsToCancel.isEmpty()) {
-           throw new IllegalArgumentException("The list of ticket IDs to cancel cannot be empty.");
-       }
-       if (originalSenderAccountId == null || currentOwnerAccountId == null) {
-           throw new IllegalArgumentException("Both original sender (from) and current owner (to) account IDs must be provided.");
-       }
-       if (originalSenderAccountId.equals(currentOwnerAccountId)) {
-           throw new IllegalArgumentException("Invalid operation: Target and source accounts are the same.");
-       }
+    // 1. Validate input
+    validateCancelRequest(cancelTransferTicketsRequestDTO);
 
-       // 2. Retrieve accounts ---
-       // Target Account (Original Sender, where the tickets will return)
-       Account targetAccount = accountRepository.findById(originalSenderAccountId)
-               .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
-                       "Target account (original sender) not found with ID: {0}", originalSenderAccountId)));
+    // 2. Extract DTOs
+    CancelTransferDTO cancelTransferDTO = cancelTransferTicketsRequestDTO.getCancelTransferDTO();
+    Long transactionId = cancelTransferDTO.getTransactionId();
+    SenderDTO originalSenderDTO = cancelTransferDTO.getOriginalSenderDTO();
+    RecipientDTO currentOwnerDTO = cancelTransferDTO.getCurrentOwnerDTO();
 
-       // Current Owner Account (The account currently holding the tickets)
-        Account currentOwnerAccount = accountRepository.findById(currentOwnerAccountId)
-               .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
-                       "Current owner account not found with ID: {0}", currentOwnerAccountId)));
+    // 3. Retrieve transfer history
+    TransfertHistory transferHistory = transfertHistoryRepository.findById(transactionId)
+            .orElseThrow(() -> new ResourceNotFoundException(
+                    "Transfer history not found with ID: " + transactionId));
 
-       // 3. Fetch Tickets to cancel ---
-       List<Ticket> ticketsToReassign = ticketRepository.findAllById(ticketIdsToCancel);
+    // 4. Validate that the original sender matches the history
+    if (!transferHistory.getSender().getId().equals(originalSenderDTO.getSenderId()) ||
+            !transferHistory.getSender().getUsername().equals(originalSenderDTO.getSenderUsername())) {
+        throw new IllegalArgumentException("Original sender information does not match the transfer record");
+    }
 
-       if (ticketsToReassign.size() != ticketIdsToCancel.size()) {
-           throw new ResourceNotFoundException("One or more tickets to cancel could not be found.");
-       }
+    // 5. Validate that the current owner matches the history recipient
+    if (!transferHistory.getRecipient().getId().equals(currentOwnerDTO.getRecipientId()) ||
+            !transferHistory.getRecipient().getUsername().equals(currentOwnerDTO.getRecipientUsername())) {
+        throw new IllegalArgumentException("Current owner information does not match the transfer record");
+    }
 
-       // --- 4. Validation and Update (Reassignment) ---
-       List<Ticket> ticketsToSave = ticketsToReassign.stream()
-               .peek(ticket -> {
-                   // Check transfer eligibility
-                   if (!ticket.isBooked() || ticket.getTicketStatus() != TicketStatus.BOOKED) {
-                       throw new IllegalStateException(MessageFormat.format(
-                               "Ticket ID {0} is not eligible for transfer cancellation",
-                               ticket.getTicketId()));
-                   }
+    /* // 6. Check that the authenticated user is the original sender
+    User authenticatedUser = getCurrentAuthenticatedUser(); // from security context
+    if (!authenticatedUser.getUserId().equals(originalSenderDTO.getUserId())) {
+        throw new AccessDeniedException("Only the original sender can cancel this transfer");
+    }*/
 
-                   // Security Check: Ensure the ticket is currently owned by the expected account (currentOwnerAccountId)
-                   if (ticket.getAccount() == null || !ticket.getAccount().getAccountId().equals(currentOwnerAccountId)) {
-                       throw new IllegalStateException(MessageFormat.format(
-                               "Ticket ID {0} is currently owned by account ID {1}, not the expected current owner {2}.",
-                               ticket.getTicketId(), ticket.getAccount() != null ? ticket.getAccount().getAccountId() : "N/A", currentOwnerAccountId));
-                   }
+    // 7. Validate that the provided ticket IDs match those in the history
+    List<Long> historyTicketIds = extractTicketIdsFromHistory(transferHistory);
+    List<Long> requestTicketIds = cancelTransferTicketsRequestDTO.getTicketIdsToCancel();
 
-                   if (ticket.getAccount() == null || !ticket.getAccount().getAccountId().equals(currentOwnerAccountId)) {
-                       throw new IllegalStateException(MessageFormat.format(
-                               "Ticket ID {0} is currently owned by account ID {1}, not the expected current owner {2}.",
-                               ticket.getTicketId(), ticket.getAccount() != null ? ticket.getAccount().getAccountId() : "N/A", currentOwnerAccountId));
-                   }
+    Collections.sort(historyTicketIds);
+    Collections.sort(requestTicketIds);
+    if (!historyTicketIds.equals(requestTicketIds)) {
+        throw new IllegalArgumentException("The ticket IDs provided do not match the tickets in the original transfer");
+    }
 
-                   // Update the ticket ownership to the original sender (cancellation/reassignment)
-                   ticket.setUser(targetAccount.getUser());
-               })
-               .collect(Collectors.toList());
+    // 8. Fetch tickets
+    List<Ticket> ticketsToReassign = ticketRepository.findAllById(historyTicketIds);
+    if (ticketsToReassign.size() != historyTicketIds.size()) {
+        throw new ResourceNotFoundException("One or more tickets not found");
+    }
 
-       // --- 5. Batch Save ---
-       ticketRepository.saveAll(ticketsToSave);
+    // 9. Validate each ticket: booked, status BOOKED, and owned by current owner
+    for (Ticket ticket : ticketsToReassign) {
+        if (!ticket.isBooked() || ticket.getStatus() != TicketStatus.BOOKED) {
+            throw new IllegalStateException("Ticket " + ticket.getId() + " is not eligible for cancellation");
+        }
+        if (ticket.getUser() == null || !ticket.getUser().getId().equals(currentOwnerDTO.getRecipientId())) {
+            throw new IllegalStateException("Ticket " + ticket.getId() + " is not owned by the expected current owner");
+        }
+    }
 
-       log.info("Successfully cancelled transfer for {} tickets. Reassigned from account {} back to account {}",
-               ticketsToSave.size(), currentOwnerAccountId, originalSenderAccountId);
-   }*/
+    // 10. Retrieve original sender user and his account (if needed)
+    User originalSender = userRepository.findById(originalSenderDTO.getSenderId())
+            .orElseThrow(() -> new ResourceNotFoundException("Original sender user not found"));
+
+    // 11. Reassign tickets back to original sender
+    for (Ticket ticket : ticketsToReassign) {
+        ticket.setUser(originalSender);
+    }
+    ticketRepository.saveAll(ticketsToReassign);
+
+    // 12. Delete the transfer history record
+    transfertHistoryRepository.delete(transferHistory);
+
+    log.info("Successfully cancelled transfer transaction {} and returned {} tickets to original sender {}",
+            transactionId, ticketsToReassign.size(), originalSender.getUsername());
+}
+
+    private void validateCancelRequest(CancelTransferTicketsRequestDTO request) {
+        if (request == null) {
+            throw new IllegalArgumentException("Cancel request cannot be null");
+        }
+        if (request.getCancelTransferDTO() == null) {
+            throw new IllegalArgumentException("CancelTransferDTO is required");
+        }
+        if (request.getCancelTransferDTO().getTransactionId() == null) {
+            throw new IllegalArgumentException("Transaction ID is required");
+        }
+        if (request.getCancelTransferDTO().getOriginalSenderDTO() == null) {
+            throw new IllegalArgumentException("Original sender information is required");
+        }
+        if (request.getCancelTransferDTO().getCurrentOwnerDTO() == null) {
+            throw new IllegalArgumentException("Current owner information is required");
+        }
+        if (request.getTicketIdsToCancel() == null || request.getTicketIdsToCancel().isEmpty()) {
+            throw new IllegalArgumentException("At least one ticket ID must be provided");
+        }
+    }
+
+    private List<Long> extractTicketIdsFromHistory(TransfertHistory history) {
+        String ticketIdsStr = history.getTicketIdsTransfered();
+        if (ticketIdsStr == null || ticketIdsStr.trim().isEmpty()) {
+            return Collections.emptyList();
+        }
+        // Remove brackets if stored as "[1,2,3]"
+        ticketIdsStr = ticketIdsStr.replace("[", "")
+                .replace("]", "").trim();
+        if (ticketIdsStr.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return Arrays.stream(ticketIdsStr.split(","))
+                .map(String::trim)
+                .map(Long::parseLong)
+                .collect(Collectors.toList());
+    }
+   /*   private User getCurrentAuthenticatedUser() {
+        // Implement based on your security context, e.g.:
+        // Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        // return (User) authentication.getPrincipal();
+        // For simplicity, assume a utility exists.
+        return SecurityUtils.getCurrentUser();
+    }*/
+
+    //********* end of cancelTransferTickets service ***********
 
     // Suppl. methods
     @Override
