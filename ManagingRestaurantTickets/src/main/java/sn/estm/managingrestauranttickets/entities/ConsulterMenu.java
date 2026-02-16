@@ -32,7 +32,7 @@ public class ConsulterMenu implements Serializable {
     @Id
     @Column(unique = true, nullable = false)
     @GeneratedValue(strategy =GenerationType.IDENTITY)
-    private Long consulterMenuId;
+    private Long id;
 
     @Temporal(TemporalType.DATE)
     private LocalDate consultationDate;

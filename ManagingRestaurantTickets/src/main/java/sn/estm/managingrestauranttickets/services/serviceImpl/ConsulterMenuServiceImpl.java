@@ -34,7 +34,7 @@ public class ConsulterMenuServiceImpl implements ConsulterMenuService{
         ConsulterMenu savedConsulterMenu = consulterMenuRepository.save(consulterMenu);
 
         log.info("ConsulterMenu created successfully with ID: {}",
-         savedConsulterMenu.getConsulterMenuId());
+         savedConsulterMenu.getId());
        
         return consulterMenuMapper.toDto(savedConsulterMenu);
     }

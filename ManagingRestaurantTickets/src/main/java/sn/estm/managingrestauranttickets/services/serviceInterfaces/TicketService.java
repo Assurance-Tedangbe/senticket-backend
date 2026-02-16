@@ -26,7 +26,7 @@ public interface TicketService {
 
     void transferTickets(TransferTicketsRequestDTO transferTicketsRequestDTO);
 
-    // void cancelTransferTickets(CancelTransferTicketsRequestDTO cancelTransferTicketsRequestDTO);
+    //void cancelTransferTickets(CancelTransferTicketsRequestDTO cancelTransferTicketsRequestDTO);
 
     TicketDTO readTicketById(Long idTicket);
 

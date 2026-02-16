@@ -23,11 +23,11 @@ public class Role {
   
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "RoleId", unique = true, nullable = false)
-    private Long roleId;
+    @Column(unique = true, nullable = false)
+    private Long id;
 
     @Size(min = 3, max = 50)
-    @Column(name = "RoleName", length = 50, nullable = false, unique = true)
+    @Column(length = 50, nullable = false, unique = true)
     String name;
 
 

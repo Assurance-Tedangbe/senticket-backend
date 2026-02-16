@@ -21,23 +21,23 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
     /**
      * Retrieves list of tickets by user, ticketType, booked, ticketStatus
      * @param user
-     * @param ticketType
+     * @param type
      * @param booked
-     * @param ticketStatus
+     * @param status
      * @return
      */
-    List<Ticket> findByUserAndTicketTypeAndBookedAndTicketStatus(
+    List<Ticket> findByUserAndTypeAndBookedAndStatus(
             User user,
-            TicketType ticketType,
+            TicketType type,
             boolean booked,
-            TicketStatus ticketStatus
+            TicketStatus status
     );
 
     /**
      * Retrieves a list of tickets that match the specified status.
-     * @param ticketstatus the status of the tickets to retrieve
+     * @param status the status of the tickets to retrieve
      */
-    List<Ticket> findByTicketStatus(TicketStatus ticketstatus);
+    List<Ticket> findByStatus(TicketStatus status);
 
     /**
      * Retrieves a list of tickets based on their booked status.
@@ -47,28 +47,28 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
 
     /**
      * Checks if a ticket with the specified status exists in the repository.
-     * @param ticketStatus the status to check for existence
+     * @param status the status to check for existence
      * @return {@code true} if a ticket with the given status exists, {@code false} otherwise
      */
-    boolean existsByTicketStatus(TicketStatus ticketStatus);
+    boolean existsByStatus(TicketStatus status);
 
     /**
-     * @param ticketId the unique identifier of the ticket to find
+     * @param id the unique identifier of the ticket to find
      * @return an Optional containing the Ticket entity with the specified ticket ID if found, or an empty Optional if not found
      */ 
-    Optional<Ticket> findByTicketId(Long ticketId);
+    Optional<Ticket> findById(Long id);
 
     /**
      * Retrieves a list of tickets associated with a specific user's ID.
      * @param userId the unique identifier of the user whose tickets are to be retrieved
      */
-    List<Ticket> findByUserUserId(Long userId);
+    List<Ticket> findByUserId(Long userId);
 
     /**
      * @param userId the unique identifier of the user whose tickets are to be retrieved
-     * @param ticketStatus the status of the tickets to filter by (e.g., "ACTIVE", "USED", etc.)
+     * @param status the status of the tickets to filter by (e.g., "ACTIVE", "USED", etc.)
      * @return a list of tickets objects matching the given user ID and status
      */
-    List<Ticket> findByUserUserIdAndTicketStatus(Long userId, TicketStatus ticketStatus);
+    List<Ticket> findByUserIdAndStatus(Long userId, TicketStatus status);
     
 }

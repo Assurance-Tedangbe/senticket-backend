@@ -128,31 +128,31 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
 
     for (Ticket ticket : tickets) {
         // Check eligibility for purchase: NOT booked AND TicketStatus.AVAILABLE
-        if (ticket.isBooked() || ticket.getTicketStatus() != TicketStatus.AVAILABLE) {
+        if (ticket.isBooked() || ticket.getStatus() != TicketStatus.AVAILABLE) {
             throw new IllegalStateException(MessageFormat.format(
                     "Ticket with ID: {0} is not available for purchase",
-                    ticket.getTicketId()));
+                    ticket.getId()));
         }
 
         // Ensure ticket price is set based on type
-        if (ticket.getTicketPrice() == null) {
-            if (ticket.getTicketType() == TicketType.A) {
-                ticket.setTicketPrice(100.0);
-            } else if (ticket.getTicketType() == TicketType.B) {
-                ticket.setTicketPrice(150.0);
+        if (ticket.getPrice() == null) {
+            if (ticket.getType() == TicketType.A) {
+                ticket.setPrice(100.0);
+            } else if (ticket.getType() == TicketType.B) {
+                ticket.setPrice(150.0);
             } else {
                 throw new IllegalStateException(MessageFormat.format(
-                        "Invalid ticket type for ticket ID: {0}", ticket.getTicketId()));
+                        "Invalid ticket type for ticket ID: {0}", ticket.getId()));
             }
         }
 
-        totalPrice += ticket.getTicketPrice();
+        totalPrice += ticket.getPrice();
         availableTickets.add(ticket);
 
         //Count ticket types
-        if (ticket.getTicketType() == TicketType.A) {
+        if (ticket.getType() == TicketType.A) {
             countAPurchased++;
-        } else if (ticket.getTicketType() == TicketType.B) {
+        } else if (ticket.getType() == TicketType.B) {
             countBPurchased++;
         }
     }
@@ -173,7 +173,7 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
 
     for (Ticket ticket : availableTickets) {
         ticket.setBooked(true);
-        ticket.setTicketStatus(TicketStatus.BOOKED);
+        ticket.setStatus(TicketStatus.BOOKED);
         ticket.setPayementCode(UUID.randomUUID().toString());
         ticket.setUser(user);
 
@@ -200,13 +200,13 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
     // Create Type A tickets
     for (int i = 0; i < creationTicketsRequestDTO.getCountA(); i++) {
         Ticket ticketA = Ticket.builder()
-                .ticketType(TicketType.A)
-                .ticketPrice(100.0)
+                .type(TicketType.A)
+                .price(100.0)
                 .payementCode("")
-                .ticketStatus(TicketStatus.AVAILABLE)
+                .status(TicketStatus.AVAILABLE)
                 .booked(false)
-                .ticketCreationDate(creationTime)
-                .ticketDescription("Ticket Type A - " + (i + 1))
+                .creationDate(creationTime)
+                .description("Ticket Type A - " + (i + 1))
                 .user(user)
                 .build();
         ticketsToSave.add(ticketA);
@@ -215,13 +215,13 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
     // Create Type B tickets
     for (int i = 0; i < creationTicketsRequestDTO.getCountB(); i++) {
         Ticket ticketB = Ticket.builder()
-                .ticketType(TicketType.B)
-                .ticketPrice(150.0)
+                .type(TicketType.B)
+                .price(150.0)
                 .payementCode("")
-                .ticketStatus(TicketStatus.AVAILABLE)
+                .status(TicketStatus.AVAILABLE)
                 .booked(false)
-                .ticketCreationDate(creationTime)
-                .ticketDescription("Ticket Type B - " + (i + 1))
+                .creationDate(creationTime)
+                .description("Ticket Type B - " + (i + 1))
                 .user(user)
                 .build();
         ticketsToSave.add(ticketB);
@@ -356,16 +356,16 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
         // Validate each ticket
         for (Ticket ticket : tickets) {
             // Check ownership
-            if (ticket.getUser() == null || !ticket.getUser().getUserId().equals(student.getUserId())) {
+            if (ticket.getUser() == null || !ticket.getUser().getId().equals(student.getId())) {
                 throw new IllegalStateException(
-                        "Ticket " + ticket.getTicketId() + " does not belong to the specified student");
+                        "Ticket " + ticket.getId() + " does not belong to the specified student");
             }
 
             // Check eligibility for debit (must be booked with BOOKED status)
-            if (!ticket.isBooked() || ticket.getTicketStatus() != TicketStatus.BOOKED) {
+            if (!ticket.isBooked() || ticket.getStatus() != TicketStatus.BOOKED) {
                 throw new IllegalStateException(MessageFormat.format(
                         "Ticket ID {0} is not eligible for debit. Must be booked with BOOKED status. Current: {1}, Booked: {2}",
-                        ticket.getTicketId(), ticket.getTicketStatus(), ticket.isBooked()));
+                        ticket.getId(), ticket.getStatus(), ticket.isBooked()));
             }
         }
     }
@@ -374,7 +374,7 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
         List<Ticket> updatedTickets = new ArrayList<>();
 
         for (Ticket ticket : tickets) {
-            ticket.setTicketStatus(TicketStatus.USED);
+            ticket.setStatus(TicketStatus.USED);
             updatedTickets.add(ticket);
         }
         // Batch save all updated tickets
@@ -413,7 +413,7 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
         }
 
         // 3. Récupérer les tickets selon les critères: user, ticketType, booked & ticketStatus
-        List<Ticket> tickets = ticketRepository.findByUserAndTicketTypeAndBookedAndTicketStatus(
+        List<Ticket> tickets = ticketRepository.findByUserAndTypeAndBookedAndStatus(
                 user,
                 ticketType,
                 true,
@@ -549,7 +549,7 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
     private List<Ticket> findTicketsForTransfer(User sender, TicketType ticketType, int numberOfTickets) {
 
         // Find sender's tickets that are booked, have BOOKED status, and match the ticket type
-        List<Ticket> availableTickets = ticketRepository.findByUserAndTicketTypeAndBookedAndTicketStatus(
+        List<Ticket> availableTickets = ticketRepository.findByUserAndTypeAndBookedAndStatus(
                 sender,
                 ticketType,
                 true,
@@ -578,21 +578,10 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
         log.debug("Transferred {} tickets to user {}", tickets.size(), recipient.getUsername());
 
         log.info("BEGIN BUILDING transfertHistory:");
-        /* List<TransfertHistory> ticketsTransferHistory = new ArrayList<>();
-        for (Ticket transferTicketHistory : tickets){
 
-            TransfertHistory transfertHistory = TransfertHistory.builder()
-                    .ticket(transferTicketHistory)
-                    .sender(sender)
-                    .recipient(recipient)
-                    .build();
-            ticketsTransferHistory.add(transfertHistory);
-            log.info("transferHistory to save {}", transfertHistory);
-            transfertHistoryRepository.saveAll(ticketsTransferHistory);
-        }*/
         List<Long> ticketIdsTransfered = new ArrayList<>();
         for (Ticket ticket : tickets){
-            ticketIdsTransfered.add(ticket.getTicketId());
+            ticketIdsTransfered.add(ticket.getId());
         }
         log.info("ticketIdsTransfered: {} ", ticketIdsTransfered.size());
             TransfertHistory transfertHistory = TransfertHistory.builder()
@@ -603,11 +592,6 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
         transfertHistoryRepository.save(transfertHistory);
         log.info("transferHistory: {} ",transfertHistory );
 
-       /* List<Long> ticketIds = Arrays.stream(transfertHistory
-                        .getTicketIdsTransfered().split(","))
-                .map(String::trim)
-                .map(Long::parseLong)
-                .collect(Collectors.toList()); */
 
         getTicketIds(transfertHistory);
         log.info("result en size {} et en contenu: {}", getTicketIds(transfertHistory).
@@ -722,17 +706,17 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
                 .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
                         "Ticket not found with ID: {0}", ticketDTO.getTicketId())));
 
-        existingTicket.setTicketType(ticketDTO.getTicketType());
-        existingTicket.setTicketPrice(ticketDTO.getTicketPrice());
+        existingTicket.setType(ticketDTO.getTicketType());
+        existingTicket.setPrice(ticketDTO.getTicketPrice());
         existingTicket.setBooked(ticketDTO.isBooked());
-        existingTicket.setTicketStatus(ticketDTO.getTicketStatus());
-        existingTicket.setTicketDescription(ticketDTO.getTicketDescription());
+        existingTicket.setStatus(ticketDTO.getTicketStatus());
+        existingTicket.setDescription(ticketDTO.getTicketDescription());
         existingTicket.setUser(ticketMapper.toEntity(ticketDTO).getUser());
         // existingTicket.setMenu(ticketMapper.toEntity(ticketDTO).getMenu());
 
         Ticket updatedTicket = ticketRepository.save(existingTicket);
 
-        log.info("Ticket updated successfully with ID: {}", updatedTicket.getTicketId());
+        log.info("Ticket updated successfully with ID: {}", updatedTicket.getId());
 
         return ticketMapper.toDto(updatedTicket);
     }
@@ -762,7 +746,7 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
                 .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
                         "Ticket not found with ID: {0}", ticketId)));
 
-        ticket.setTicketStatus(newStatus);
+        ticket.setStatus(newStatus);
 
         ticketRepository.save(ticket);
 
@@ -808,7 +792,7 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
     public List<TicketDTO> readTicketsByStatus(TicketStatus ticketStatus) {
         log.info("Reading tickets with status: {}", ticketStatus);
 
-        List<Ticket> tickets = ticketRepository.findByTicketStatus(ticketStatus);
+        List<Ticket> tickets = ticketRepository.findByStatus(ticketStatus);
 
         return tickets.stream()
                 .map(ticketMapper::toDto)
