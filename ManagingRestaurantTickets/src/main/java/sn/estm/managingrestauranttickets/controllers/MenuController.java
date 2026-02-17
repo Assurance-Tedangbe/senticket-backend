@@ -1,3 +1,4 @@
+/*
 package sn.estm.managingrestauranttickets.controllers;
 
 import org.springframework.http.HttpStatus;
@@ -63,4 +64,4 @@ public class MenuController {
 
         return new ResponseEntity<>(menu, HttpStatus.OK);
     }
-}
+}*/
