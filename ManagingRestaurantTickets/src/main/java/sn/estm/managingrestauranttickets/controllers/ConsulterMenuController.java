@@ -1,3 +1,4 @@
+/*
 package sn.estm.managingrestauranttickets.controllers;
 
 import sn.estm.managingrestauranttickets.dto.ConsulterMenuDTO;
@@ -70,3 +71,4 @@ public class ConsulterMenuController {
     }
 
 }
+*/
