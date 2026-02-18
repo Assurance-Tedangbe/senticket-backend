@@ -4,7 +4,6 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 
 import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -49,27 +48,20 @@ public class Ticket implements Serializable {
    private TicketType type;
 
    /* TicketPrice is derived from the ticketType, so no default needed here
-    * The price must be calculated and set in the business logic (Service layer)
-    */
+    * The price must be calculated and set in the business logic (Service layer) */
    @Column(nullable = false)
    private Double price;
 
    /* Payment Code (Unique, generated on purchase, null initially)
     * The unique constraint should be applied *only* when the code is set. 
-    * It's safer to handle the uniqueness and generation in the service layer
-    */
-  // @Column(unique = true)
+    * It's safer to handle the uniqueness and generation in the service layer */
    private String payementCode;
 
-   /* Booked, Default value false
-    * Use the @Builder.Default annotation for Lombok's @Builder to respect the default
-    */
+   // Use the @Builder.Default annotation for Lombok's @Builder to respect the default
    @Column(nullable = false)
    @Builder.Default
    private boolean booked = false;
 
-   /* TicketStatus (Default value AVAILABLE)
-    */
    @Column(nullable = false)
    @Enumerated(EnumType.STRING)
    @Builder.Default
@@ -77,8 +69,7 @@ public class Ticket implements Serializable {
 
    /* Ticket Creation Date (Automatic value on creation)
     * updatable=false ensures it's only set once
-    * @CreationTimestamp to set the value on insertion
-    */
+    * @CreationTimestamp to set the value on insertion */
    @CreationTimestamp 
    @Temporal(TemporalType.TIMESTAMP)
    @Column(nullable = false, updatable = false) 
@@ -91,8 +82,4 @@ public class Ticket implements Serializable {
    @ManyToOne(fetch = FetchType.LAZY)
    @JoinColumn(name="user_id")
    private User user;
-   
-   /*@ManyToOne(fetch = FetchType.LAZY)
-   @JoinColumn(name="menu_id")
-   private Menu menu;*/
 }

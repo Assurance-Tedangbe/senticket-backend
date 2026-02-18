@@ -738,6 +738,22 @@ public void cancelTransferTickets(CancelTransferTicketsRequestDTO cancelTransfer
 
     // Suppl. methods
     @Override
+    public List<TicketDTO> readTicketsByUserId(Long userId) {
+
+        log.info("Reading tickets for user with ID: {}", userId);
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
+                        "Account not found with ID: {0}", userId)));
+
+        List<Ticket> tickets = ticketRepository.findByUser(user);
+
+        return tickets.stream()
+                .map(ticketMapper::toDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public TicketDTO readTicketById(Long ticketId) {
 
         log.info("Reading ticket by id: {}", ticketId);
@@ -765,7 +781,6 @@ public void cancelTransferTickets(CancelTransferTicketsRequestDTO cancelTransfer
         existingTicket.setStatus(ticketDTO.getTicketStatus());
         existingTicket.setDescription(ticketDTO.getTicketDescription());
         existingTicket.setUser(ticketMapper.toEntity(ticketDTO).getUser());
-        // existingTicket.setMenu(ticketMapper.toEntity(ticketDTO).getMenu());
 
         Ticket updatedTicket = ticketRepository.save(existingTicket);
 
@@ -823,24 +838,6 @@ public void cancelTransferTickets(CancelTransferTicketsRequestDTO cancelTransfer
         log.info("Booked ticket with ID: {}", ticketId);
     }
 
-
-    @Override
-    public void unbookTicket(Long ticketId) {
-
-        log.info("Unbooking ticket with ID: {}", ticketId);
-
-        Ticket ticket = ticketRepository.findById(ticketId)
-                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
-                        "Ticket not found with ID: {0}", ticketId)));
-
-        ticket.setBooked(false);
-
-        ticketRepository.save(ticket);
-
-        log.info("Unbooked ticket with ID: {}", ticketId);
-    }
-
-
     @Override
     public List<TicketDTO> readTicketsByStatus(TicketStatus ticketStatus) {
         log.info("Reading tickets with status: {}", ticketStatus);
@@ -851,70 +848,4 @@ public void cancelTransferTickets(CancelTransferTicketsRequestDTO cancelTransfer
                 .map(ticketMapper::toDto)
                 .collect(Collectors.toList());
     }
-
-
-    @Override
-    public List<TicketDTO> readTicketsByUserId(Long userId) {
-
-        log.info("Reading tickets for user with ID: {}", userId);
-
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
-                        "Account not found with ID: {0}", userId)));
-
-        List<Ticket> tickets = ticketRepository.findByUser(user);
-
-        return tickets.stream()
-                .map(ticketMapper::toDto)
-                .collect(Collectors.toList());
-    }
-
-    /* @Override
-    public List<TicketDTO> readTicketsByAccountId(Long accountId) {
-
-        log.info("Reading tickets for account with ID: {}", accountId);
-
-        Account account = accountRepository.findById(accountId)
-                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
-                    "Account not found with ID: {0}", accountId)));
-
-        List<Ticket> tickets = ticketRepository.findByAccount(account);
-
-        return tickets.stream()
-                .map(ticketMapper::toDto)
-                .collect(Collectors.toList());
-    }
-
-       @Override
-    public List<TicketDTO> readTicketsByMenuIdAndUserId(Long menuId, Long userId) {
-
-        log.info("Reading tickets for menu ID: {} and user ID: {}", menuId, userId);
-
-        List<Ticket> tickets = ticketRepository.findByMenuMenuId(menuId).stream()
-                .filter(ticket -> ticket.getAccount() != null && ticket.getAccount().getUser() != null
-                        && ticket.getAccount().getUser().getUserId().equals(userId))
-                .collect(Collectors.toList());
-
-        return tickets.stream()
-                .map(ticketMapper::toDto)
-                .collect(Collectors.toList());
-    }
-
-   @Override
-    public List<TicketDTO> readTicketsByMenuIdAndUserIdAndStatus(Long menuId, Long userId,
-                                                                 TicketStatus status) {
-        log.info("Reading tickets for menu ID: {}, user ID: {}, and status: {}",
-         menuId, userId, status);
-
-        List<Ticket> tickets = ticketRepository.findByMenuMenuId(menuId).stream()
-                .filter(ticket -> ticket.getAccount() != null && ticket.getAccount().getUser() != null
-                        && ticket.getAccount().getUser().getUserId().equals(userId)
-                        && ticket.getTicketStatus().equals(status))
-                .collect(Collectors.toList());
-
-        return tickets.stream()
-                .map(ticketMapper::toDto)
-                .collect(Collectors.toList());
-    }
-*/
 }
