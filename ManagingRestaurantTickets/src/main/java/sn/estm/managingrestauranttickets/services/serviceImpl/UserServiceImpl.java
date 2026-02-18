@@ -288,7 +288,7 @@ public class UserServiceImpl implements UserService {
         return userMapper.toDto(user);
     }
 
-    @Override
+  /*  @Override
     public void addRoleToUser(Long userId, Long roleId) {
 
         log.info("Adding role {} to user with userId: {}", roleId, userId);
@@ -306,7 +306,7 @@ public class UserServiceImpl implements UserService {
         userRepository.save(user);
 
         log.info("Role {} added to user with userId: {}", roleId, userId);
-    }
+    }*/
 
     @Override
     public void scanCodeQr(UserDTO userDto) {

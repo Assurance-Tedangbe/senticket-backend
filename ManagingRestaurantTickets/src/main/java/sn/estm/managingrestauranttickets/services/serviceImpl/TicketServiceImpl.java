@@ -15,13 +15,35 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import sn.estm.managingrestauranttickets.dto.TicketDTO;
-import sn.estm.managingrestauranttickets.dto.customisedto.*;
-import sn.estm.managingrestauranttickets.entities.*;
+import sn.estm.managingrestauranttickets.dto.customisedto.CreationTicketsRequestDTO;
+import sn.estm.managingrestauranttickets.dto.customisedto.DebitAccountRequestDTO;
+import sn.estm.managingrestauranttickets.dto.customisedto.PurchaseTicketsRequestDTO;
+import sn.estm.managingrestauranttickets.dto.customisedto.TransferTicketsRequestDTO;
+import sn.estm.managingrestauranttickets.dto.customisedto.CancelTransferTicketsRequestDTO;
+import sn.estm.managingrestauranttickets.dto.customisedto.DebitStudentDTO;
+import sn.estm.managingrestauranttickets.dto.customisedto.DebitPorterDTO;
+import sn.estm.managingrestauranttickets.dto.customisedto.SenderDTO;
+import sn.estm.managingrestauranttickets.dto.customisedto.RecipientDTO;
+import sn.estm.managingrestauranttickets.dto.customisedto.CancelTransferDTO;
+
+import sn.estm.managingrestauranttickets.entities.User;
+import sn.estm.managingrestauranttickets.entities.Ticket;
+import sn.estm.managingrestauranttickets.entities.TransfertHistory;
+import sn.estm.managingrestauranttickets.entities.DebitHistory;
+import sn.estm.managingrestauranttickets.entities.PurchaseHistory;
+
 import sn.estm.managingrestauranttickets.enumerations.TicketStatus;
 import sn.estm.managingrestauranttickets.enumerations.TicketType;
+
 import sn.estm.managingrestauranttickets.exceptions.ResourceNotFoundException;
 import sn.estm.managingrestauranttickets.mappers.TicketMapper;
-import sn.estm.managingrestauranttickets.repositories.*;
+
+import sn.estm.managingrestauranttickets.repositories.TicketRepository;
+import sn.estm.managingrestauranttickets.repositories.UserRepository;
+import sn.estm.managingrestauranttickets.repositories.PurchaseHistoryRepository;
+import sn.estm.managingrestauranttickets.repositories.DebitHistoryRepository;
+import sn.estm.managingrestauranttickets.repositories.TransfertHistoryRepository;
+
 import sn.estm.managingrestauranttickets.services.serviceInterfaces.TicketService;
 
 import static java.util.regex.Pattern.matches;
@@ -765,6 +787,20 @@ public void cancelTransferTickets(CancelTransferTicketsRequestDTO cancelTransfer
         return ticketMapper.toDto(ticket);
     }
 
+    /*
+    @Override
+    public void bookTicket(Long ticketId) {
+
+        Ticket ticket = ticketRepository.findById(ticketId)
+                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
+                        "Ticket not found with ID: {0}", ticketId)));
+
+        ticket.setBooked(true);
+
+        ticketRepository.save(ticket);
+
+        log.info("Booked ticket with ID: {}", ticketId);
+    }
 
     @Override
     public TicketDTO updateTicket(TicketDTO ticketDTO) {
@@ -789,11 +825,8 @@ public void cancelTransferTickets(CancelTransferTicketsRequestDTO cancelTransfer
         return ticketMapper.toDto(updatedTicket);
     }
 
-
     @Override
     public void deleteTicket(Long ticketId) {
-
-        log.info("Deleting ticket with ID: {}", ticketId);
 
         if (!ticketRepository.existsById(ticketId)) {
             throw new ResourceNotFoundException(MessageFormat.format(
@@ -808,8 +841,6 @@ public void cancelTransferTickets(CancelTransferTicketsRequestDTO cancelTransfer
     @Override
     public void updateTicketStatus(Long ticketId, TicketStatus newStatus) {
 
-        log.info("Updating ticket status for ticket ID: {} to {}", ticketId, newStatus);
-
         Ticket ticket = ticketRepository.findById(ticketId)
                 .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
                         "Ticket not found with ID: {0}", ticketId)));
@@ -821,23 +852,6 @@ public void cancelTransferTickets(CancelTransferTicketsRequestDTO cancelTransfer
         log.info("Updated ticket status for ticket ID: {} to {}", ticketId, newStatus);
     }
 
-
-    @Override
-    public void bookTicket(Long ticketId) {
-
-        log.info("Booking ticket with ID: {}", ticketId);
-
-        Ticket ticket = ticketRepository.findById(ticketId)
-                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
-                        "Ticket not found with ID: {0}", ticketId)));
-
-        ticket.setBooked(true);
-
-        ticketRepository.save(ticket);
-
-        log.info("Booked ticket with ID: {}", ticketId);
-    }
-
     @Override
     public List<TicketDTO> readTicketsByStatus(TicketStatus ticketStatus) {
         log.info("Reading tickets with status: {}", ticketStatus);
@@ -847,5 +861,5 @@ public void cancelTransferTickets(CancelTransferTicketsRequestDTO cancelTransfer
         return tickets.stream()
                 .map(ticketMapper::toDto)
                 .collect(Collectors.toList());
-    }
+    }*/
 }

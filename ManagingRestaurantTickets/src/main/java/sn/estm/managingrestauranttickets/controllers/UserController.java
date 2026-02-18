@@ -58,7 +58,7 @@ public class UserController {
         return new ResponseEntity<>(user, HttpStatus.OK);
     }*/
 
-/*    // ⭐ Connexion avec réponse détaillée
+     /* // ⭐ Connexion avec réponse détaillée
     @PostMapping(value = "/login", consumes = "application/json", produces = "application/json")
     public ResponseEntity<LoginResponseDTO> login(@RequestBody LoginRequestDTO loginRequest) {
         log.info("Login request for user: {}", loginRequest.getUsername());
@@ -154,7 +154,6 @@ public class UserController {
         return new ResponseEntity<>(users, HttpStatus.OK);
     }
 
-
     //@PostAuthorize("hasAuthority('ADMIN')")
     @PutMapping(value = "/{userId}", consumes = "application/json", produces = "application/json")
     public ResponseEntity<UserDTO> updateUser(@PathVariable Long userId, 
@@ -168,7 +167,6 @@ public class UserController {
        
         return new ResponseEntity<>(updatedUser, HttpStatus.OK);
     }
-
 
     //@PostAuthorize("hasAuthority('ADMIN')")
     @DeleteMapping(value = "/{userId}")
@@ -218,8 +216,7 @@ public class UserController {
         return new ResponseEntity<>(user, HttpStatus.OK);
     }
 
-
-    //@PostAuthorize("hasAuthority('ADMIN')")
+   /* //@PostAuthorize("hasAuthority('ADMIN')")
     @PutMapping(value = "/{userId}/roles/{roleId}")
     @ResponseStatus(HttpStatus.OK)
     public void addRoleToUser(@PathVariable Long userId, @PathVariable Long roleId) {
@@ -229,7 +226,6 @@ public class UserController {
         userService.addRoleToUser(userId, roleId);
        
         log.info("Role with ID: {} added to user with ID: {}", roleId, userId);
-    }
-
+    }*/
 }
 

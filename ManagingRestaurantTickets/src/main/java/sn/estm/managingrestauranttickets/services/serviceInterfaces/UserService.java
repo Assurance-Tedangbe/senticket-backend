@@ -24,9 +24,7 @@ public interface UserService {
 
     UserDTO readUserByUsername(String username);
 
-    void addRoleToUser(Long userId, Long roleId);
-
+    // void addRoleToUser(Long userId, Long roleId);
 
     void scanCodeQr(UserDTO userDto);
-
 }
