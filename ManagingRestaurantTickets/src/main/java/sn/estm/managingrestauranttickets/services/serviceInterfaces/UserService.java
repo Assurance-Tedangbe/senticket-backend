@@ -26,7 +26,6 @@ public interface UserService {
 
     void addRoleToUser(Long userId, Long roleId);
 
-    void removeRoleFromUser(Long userId, Long roleId);
 
     void scanCodeQr(UserDTO userDto);
 

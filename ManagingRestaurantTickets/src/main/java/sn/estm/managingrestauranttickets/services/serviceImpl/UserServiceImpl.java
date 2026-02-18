@@ -308,31 +308,6 @@ public class UserServiceImpl implements UserService {
         log.info("Role {} added to user with userId: {}", roleId, userId);
     }
 
-
-    @Override
-    public void removeRoleFromUser(Long userId, Long roleId) {
-
-        log.info("Removing role {} from user with userId: {}", roleId, userId);
-
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
-                    "User not found with ID: {0}", userId)));        
-
-        Role role = roleRepository.findById(roleId)
-                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
-                    "Role not found with ID: {0}", roleId)));
-
-        if (user.getRole() == null || !user.getRole().equals(role)) {
-            throw new IllegalArgumentException("User does not have the specified role.");
-        }
-
-        user.setRole(null);
-
-        userRepository.save(user);
-
-        log.info("Role {} removed from user with userId: {}", roleId, userId);
-    }
-
     @Override
     public void scanCodeQr(UserDTO userDto) {
         

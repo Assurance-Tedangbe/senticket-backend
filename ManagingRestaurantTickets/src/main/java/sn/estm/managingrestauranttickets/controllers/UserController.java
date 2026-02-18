@@ -231,17 +231,5 @@ public class UserController {
         log.info("Role with ID: {} added to user with ID: {}", roleId, userId);
     }
 
-
-    //@PostAuthorize("hasAuthority('ADMIN')")
-    @DeleteMapping(value = "/{userId}/roles/{roleId}")
-    @ResponseStatus(HttpStatus.OK)
-    public void removeRoleFromUser(@PathVariable Long userId, @PathVariable Long roleId) {
-        
-        log.info("Removing role with ID: {} from user with ID: {}", roleId, userId);
-       
-        userService.removeRoleFromUser(userId, roleId);
-
-       log.info("Role with ID: {} removed from user with ID: {}", roleId, userId);
-    }
 }
 
