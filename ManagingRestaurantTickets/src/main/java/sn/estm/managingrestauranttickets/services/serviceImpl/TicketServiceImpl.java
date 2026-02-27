@@ -484,8 +484,6 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
 
         // 6. Process Ticket Transfer and create history
         TransfertHistory history = processTicketTransfer(ticketsToTransfer, sender, recipient);
-        // 6. Process Ticket Transfer
-       // processTicketTransfer(ticketsToTransfer, sender, recipient);
 
         log.info("Successfully transferred {} tickets of type {} from {} to {}",
                 ticketsToTransfer.size(),
@@ -714,8 +712,9 @@ public void cancelTransferTickets(CancelTransferTicketsRequestDTO cancelTransfer
     }
     ticketRepository.saveAll(ticketsToReassign);
 
-    // 12. Delete the transfer history record
-    transfertHistoryRepository.delete(transferHistory);
+    transferHistory.setCanceled(true);
+    /*// 12. Delete the transfer history record
+    transfertHistoryRepository.delete(transferHistory);*/
 
     log.info("Successfully cancelled transfer transaction {} and returned {} tickets to original sender {}",
             transactionId, ticketsToReassign.size(), originalSender.getUsername());
