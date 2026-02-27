@@ -26,6 +26,7 @@ import sn.estm.managingrestauranttickets.dto.customisedto.SenderDTO;
 import sn.estm.managingrestauranttickets.dto.customisedto.RecipientDTO;
 import sn.estm.managingrestauranttickets.dto.customisedto.CancelTransferDTO;
 
+import sn.estm.managingrestauranttickets.dto.historydto.TransfertHistoryDTO;
 import sn.estm.managingrestauranttickets.entities.User;
 import sn.estm.managingrestauranttickets.entities.Ticket;
 import sn.estm.managingrestauranttickets.entities.TransfertHistory;
@@ -38,6 +39,7 @@ import sn.estm.managingrestauranttickets.enumerations.TicketType;
 import sn.estm.managingrestauranttickets.exceptions.ResourceNotFoundException;
 import sn.estm.managingrestauranttickets.mappers.TicketMapper;
 
+import sn.estm.managingrestauranttickets.mappers.TransfertHistoryMapper;
 import sn.estm.managingrestauranttickets.repositories.TicketRepository;
 import sn.estm.managingrestauranttickets.repositories.UserRepository;
 import sn.estm.managingrestauranttickets.repositories.PurchaseHistoryRepository;
@@ -60,6 +62,7 @@ public class TicketServiceImpl implements TicketService {
     private final PurchaseHistoryRepository purchaseHistoryRepository;
     private final DebitHistoryRepository debitHistoryRepository;
     private final TransfertHistoryRepository transfertHistoryRepository;
+    private final TransfertHistoryMapper transfertHistoryMapper;
    // private final PasswordEncoder passwordEncoder; // For password validation
 
     @Transactional
@@ -452,7 +455,7 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
     // ******* transferTickets service *********
     @Transactional
     @Override
-    public void transferTickets(TransferTicketsRequestDTO transferTicketsRequestDTO) {
+    public TransfertHistoryDTO transferTickets(TransferTicketsRequestDTO transferTicketsRequestDTO) {
         log.info("Processing ticket transfer: Sender {} transferring {} tickets of type {} to Recipient {}",
                 transferTicketsRequestDTO.getSenderDTO().getSenderUsername(),
                 transferTicketsRequestDTO.getNumberOfTicketsToTransfer(),
@@ -479,14 +482,19 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
                 transferTicketsRequestDTO.getNumberOfTicketsToTransfer()
         );
 
+        // 6. Process Ticket Transfer and create history
+        TransfertHistory history = processTicketTransfer(ticketsToTransfer, sender, recipient);
         // 6. Process Ticket Transfer
-        processTicketTransfer(ticketsToTransfer, sender, recipient);
+       // processTicketTransfer(ticketsToTransfer, sender, recipient);
 
         log.info("Successfully transferred {} tickets of type {} from {} to {}",
                 ticketsToTransfer.size(),
                 transferTicketsRequestDTO.getTicketType(),
                 sender.getUsername(),
                 recipient.getUsername());
+
+        // 7. Convert to DTO and return
+        return transfertHistoryMapper.toDto(history);
     }
 
     private void validateTransferRequest(TransferTicketsRequestDTO transferRequest) {
@@ -585,7 +593,7 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
         return availableTickets.subList(0, numberOfTickets);
     }
 
-    private void processTicketTransfer(List<Ticket> tickets, User sender, User recipient) {
+    private TransfertHistory processTicketTransfer(List<Ticket> tickets, User sender, User recipient) {
 
         for (Ticket ticket : tickets) {
             // Update ticket ownership (Reassignment)
@@ -608,13 +616,15 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
                     .sender(sender)
                     .recipient(recipient)
                     .build();
-        transfertHistoryRepository.save(transfertHistory);
+        TransfertHistory savedHistory =  transfertHistoryRepository.save(transfertHistory);
         log.info("transferHistory: {} ",transfertHistory );
 
 
         getTicketIds(transfertHistory);
         log.info("result en size {} et en contenu: {}", getTicketIds(transfertHistory).
        size(), getTicketIds(transfertHistory));
+
+        return savedHistory;
     }
 
     private List<Long> getTicketIds(TransfertHistory transfertHistory){

@@ -24,6 +24,7 @@ import sn.estm.managingrestauranttickets.dto.customisedto.CancelTransferTicketsR
 import sn.estm.managingrestauranttickets.dto.customisedto.DebitAccountRequestDTO;
 import sn.estm.managingrestauranttickets.dto.customisedto.PurchaseTicketsRequestDTO;
 import sn.estm.managingrestauranttickets.dto.customisedto.TransferTicketsRequestDTO;
+import sn.estm.managingrestauranttickets.dto.historydto.TransfertHistoryDTO;
 import sn.estm.managingrestauranttickets.enumerations.TicketStatus;
 import sn.estm.managingrestauranttickets.enumerations.TicketType;
 import sn.estm.managingrestauranttickets.services.serviceInterfaces.TicketService;
@@ -117,13 +118,15 @@ public class TicketController {
 
     @PutMapping(value = "/transferTickets", consumes = "application/json", produces = "application/json")
     @ResponseStatus(HttpStatus.OK)
-    public void transferTickets( @RequestBody TransferTicketsRequestDTO transferTicketsRequestDTO) {
+    public ResponseEntity<TransfertHistoryDTO> transferTickets(@RequestBody TransferTicketsRequestDTO transferTicketsRequestDTO) {
 
         log.info("Processing ticket transfer request {}:", transferTicketsRequestDTO);
 
-        ticketService.transferTickets(transferTicketsRequestDTO);
+        TransfertHistoryDTO historyDTO = ticketService.transferTickets(transferTicketsRequestDTO);
 
         log.info("Transfer of tickets completed successfully {}", transferTicketsRequestDTO);
+
+        return ResponseEntity.ok(historyDTO);
     }
 
     @PutMapping(value = "/cancelTransfer", consumes = "application/json", produces = "application/json")
