@@ -15,13 +15,37 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
 import sn.estm.managingrestauranttickets.dto.TicketDTO;
-import sn.estm.managingrestauranttickets.dto.customisedto.*;
-import sn.estm.managingrestauranttickets.entities.*;
+import sn.estm.managingrestauranttickets.dto.customisedto.CreationTicketsRequestDTO;
+import sn.estm.managingrestauranttickets.dto.customisedto.DebitAccountRequestDTO;
+import sn.estm.managingrestauranttickets.dto.customisedto.PurchaseTicketsRequestDTO;
+import sn.estm.managingrestauranttickets.dto.customisedto.TransferTicketsRequestDTO;
+import sn.estm.managingrestauranttickets.dto.customisedto.CancelTransferTicketsRequestDTO;
+import sn.estm.managingrestauranttickets.dto.customisedto.DebitStudentDTO;
+import sn.estm.managingrestauranttickets.dto.customisedto.DebitPorterDTO;
+import sn.estm.managingrestauranttickets.dto.customisedto.SenderDTO;
+import sn.estm.managingrestauranttickets.dto.customisedto.RecipientDTO;
+import sn.estm.managingrestauranttickets.dto.customisedto.CancelTransferDTO;
+
+import sn.estm.managingrestauranttickets.dto.historydto.TransfertHistoryDTO;
+import sn.estm.managingrestauranttickets.entities.User;
+import sn.estm.managingrestauranttickets.entities.Ticket;
+import sn.estm.managingrestauranttickets.entities.TransfertHistory;
+import sn.estm.managingrestauranttickets.entities.DebitHistory;
+import sn.estm.managingrestauranttickets.entities.PurchaseHistory;
+
 import sn.estm.managingrestauranttickets.enumerations.TicketStatus;
 import sn.estm.managingrestauranttickets.enumerations.TicketType;
+
 import sn.estm.managingrestauranttickets.exceptions.ResourceNotFoundException;
 import sn.estm.managingrestauranttickets.mappers.TicketMapper;
-import sn.estm.managingrestauranttickets.repositories.*;
+
+import sn.estm.managingrestauranttickets.mappers.TransfertHistoryMapper;
+import sn.estm.managingrestauranttickets.repositories.TicketRepository;
+import sn.estm.managingrestauranttickets.repositories.UserRepository;
+import sn.estm.managingrestauranttickets.repositories.PurchaseHistoryRepository;
+import sn.estm.managingrestauranttickets.repositories.DebitHistoryRepository;
+import sn.estm.managingrestauranttickets.repositories.TransfertHistoryRepository;
+
 import sn.estm.managingrestauranttickets.services.serviceInterfaces.TicketService;
 
 import static java.util.regex.Pattern.matches;
@@ -38,6 +62,7 @@ public class TicketServiceImpl implements TicketService {
     private final PurchaseHistoryRepository purchaseHistoryRepository;
     private final DebitHistoryRepository debitHistoryRepository;
     private final TransfertHistoryRepository transfertHistoryRepository;
+    private final TransfertHistoryMapper transfertHistoryMapper;
    // private final PasswordEncoder passwordEncoder; // For password validation
 
     @Transactional
@@ -430,7 +455,7 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
     // ******* transferTickets service *********
     @Transactional
     @Override
-    public void transferTickets(TransferTicketsRequestDTO transferTicketsRequestDTO) {
+    public TransfertHistoryDTO transferTickets(TransferTicketsRequestDTO transferTicketsRequestDTO) {
         log.info("Processing ticket transfer: Sender {} transferring {} tickets of type {} to Recipient {}",
                 transferTicketsRequestDTO.getSenderDTO().getSenderUsername(),
                 transferTicketsRequestDTO.getNumberOfTicketsToTransfer(),
@@ -457,14 +482,17 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
                 transferTicketsRequestDTO.getNumberOfTicketsToTransfer()
         );
 
-        // 6. Process Ticket Transfer
-        processTicketTransfer(ticketsToTransfer, sender, recipient);
+        // 6. Process Ticket Transfer and create history
+        TransfertHistory history = processTicketTransfer(ticketsToTransfer, sender, recipient);
 
         log.info("Successfully transferred {} tickets of type {} from {} to {}",
                 ticketsToTransfer.size(),
                 transferTicketsRequestDTO.getTicketType(),
                 sender.getUsername(),
                 recipient.getUsername());
+
+        // 7. Convert to DTO and return
+        return transfertHistoryMapper.toDto(history);
     }
 
     private void validateTransferRequest(TransferTicketsRequestDTO transferRequest) {
@@ -563,7 +591,7 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
         return availableTickets.subList(0, numberOfTickets);
     }
 
-    private void processTicketTransfer(List<Ticket> tickets, User sender, User recipient) {
+    private TransfertHistory processTicketTransfer(List<Ticket> tickets, User sender, User recipient) {
 
         for (Ticket ticket : tickets) {
             // Update ticket ownership (Reassignment)
@@ -586,13 +614,15 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
                     .sender(sender)
                     .recipient(recipient)
                     .build();
-        transfertHistoryRepository.save(transfertHistory);
+        TransfertHistory savedHistory =  transfertHistoryRepository.save(transfertHistory);
         log.info("transferHistory: {} ",transfertHistory );
 
 
         getTicketIds(transfertHistory);
         log.info("result en size {} et en contenu: {}", getTicketIds(transfertHistory).
        size(), getTicketIds(transfertHistory));
+
+        return savedHistory;
     }
 
     private List<Long> getTicketIds(TransfertHistory transfertHistory){
@@ -682,8 +712,9 @@ public void cancelTransferTickets(CancelTransferTicketsRequestDTO cancelTransfer
     }
     ticketRepository.saveAll(ticketsToReassign);
 
-    // 12. Delete the transfer history record
-    transfertHistoryRepository.delete(transferHistory);
+    transferHistory.setCanceled(true);
+    /*// 12. Delete the transfer history record
+    transfertHistoryRepository.delete(transferHistory);*/
 
     log.info("Successfully cancelled transfer transaction {} and returned {} tickets to original sender {}",
             transactionId, ticketsToReassign.size(), originalSender.getUsername());
@@ -738,6 +769,22 @@ public void cancelTransferTickets(CancelTransferTicketsRequestDTO cancelTransfer
 
     // Suppl. methods
     @Override
+    public List<TicketDTO> readTicketsByUserId(Long userId) {
+
+        log.info("Reading tickets for user with ID: {}", userId);
+
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
+                        "Account not found with ID: {0}", userId)));
+
+        List<Ticket> tickets = ticketRepository.findByUser(user);
+
+        return tickets.stream()
+                .map(ticketMapper::toDto)
+                .collect(Collectors.toList());
+    }
+
+    @Override
     public TicketDTO readTicketById(Long ticketId) {
 
         log.info("Reading ticket by id: {}", ticketId);
@@ -749,6 +796,20 @@ public void cancelTransferTickets(CancelTransferTicketsRequestDTO cancelTransfer
         return ticketMapper.toDto(ticket);
     }
 
+    /*
+    @Override
+    public void bookTicket(Long ticketId) {
+
+        Ticket ticket = ticketRepository.findById(ticketId)
+                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
+                        "Ticket not found with ID: {0}", ticketId)));
+
+        ticket.setBooked(true);
+
+        ticketRepository.save(ticket);
+
+        log.info("Booked ticket with ID: {}", ticketId);
+    }
 
     @Override
     public TicketDTO updateTicket(TicketDTO ticketDTO) {
@@ -765,7 +826,6 @@ public void cancelTransferTickets(CancelTransferTicketsRequestDTO cancelTransfer
         existingTicket.setStatus(ticketDTO.getTicketStatus());
         existingTicket.setDescription(ticketDTO.getTicketDescription());
         existingTicket.setUser(ticketMapper.toEntity(ticketDTO).getUser());
-        // existingTicket.setMenu(ticketMapper.toEntity(ticketDTO).getMenu());
 
         Ticket updatedTicket = ticketRepository.save(existingTicket);
 
@@ -774,11 +834,8 @@ public void cancelTransferTickets(CancelTransferTicketsRequestDTO cancelTransfer
         return ticketMapper.toDto(updatedTicket);
     }
 
-
     @Override
     public void deleteTicket(Long ticketId) {
-
-        log.info("Deleting ticket with ID: {}", ticketId);
 
         if (!ticketRepository.existsById(ticketId)) {
             throw new ResourceNotFoundException(MessageFormat.format(
@@ -793,8 +850,6 @@ public void cancelTransferTickets(CancelTransferTicketsRequestDTO cancelTransfer
     @Override
     public void updateTicketStatus(Long ticketId, TicketStatus newStatus) {
 
-        log.info("Updating ticket status for ticket ID: {} to {}", ticketId, newStatus);
-
         Ticket ticket = ticketRepository.findById(ticketId)
                 .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
                         "Ticket not found with ID: {0}", ticketId)));
@@ -806,41 +861,6 @@ public void cancelTransferTickets(CancelTransferTicketsRequestDTO cancelTransfer
         log.info("Updated ticket status for ticket ID: {} to {}", ticketId, newStatus);
     }
 
-
-    @Override
-    public void bookTicket(Long ticketId) {
-
-        log.info("Booking ticket with ID: {}", ticketId);
-
-        Ticket ticket = ticketRepository.findById(ticketId)
-                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
-                        "Ticket not found with ID: {0}", ticketId)));
-
-        ticket.setBooked(true);
-
-        ticketRepository.save(ticket);
-
-        log.info("Booked ticket with ID: {}", ticketId);
-    }
-
-
-    @Override
-    public void unbookTicket(Long ticketId) {
-
-        log.info("Unbooking ticket with ID: {}", ticketId);
-
-        Ticket ticket = ticketRepository.findById(ticketId)
-                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
-                        "Ticket not found with ID: {0}", ticketId)));
-
-        ticket.setBooked(false);
-
-        ticketRepository.save(ticket);
-
-        log.info("Unbooked ticket with ID: {}", ticketId);
-    }
-
-
     @Override
     public List<TicketDTO> readTicketsByStatus(TicketStatus ticketStatus) {
         log.info("Reading tickets with status: {}", ticketStatus);
@@ -850,71 +870,5 @@ public void cancelTransferTickets(CancelTransferTicketsRequestDTO cancelTransfer
         return tickets.stream()
                 .map(ticketMapper::toDto)
                 .collect(Collectors.toList());
-    }
-
-
-    @Override
-    public List<TicketDTO> readTicketsByUserId(Long userId) {
-
-        log.info("Reading tickets for user with ID: {}", userId);
-
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
-                        "Account not found with ID: {0}", userId)));
-
-        List<Ticket> tickets = ticketRepository.findByUser(user);
-
-        return tickets.stream()
-                .map(ticketMapper::toDto)
-                .collect(Collectors.toList());
-    }
-
-    /* @Override
-    public List<TicketDTO> readTicketsByAccountId(Long accountId) {
-
-        log.info("Reading tickets for account with ID: {}", accountId);
-
-        Account account = accountRepository.findById(accountId)
-                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
-                    "Account not found with ID: {0}", accountId)));
-
-        List<Ticket> tickets = ticketRepository.findByAccount(account);
-
-        return tickets.stream()
-                .map(ticketMapper::toDto)
-                .collect(Collectors.toList());
-    }
-
-       @Override
-    public List<TicketDTO> readTicketsByMenuIdAndUserId(Long menuId, Long userId) {
-
-        log.info("Reading tickets for menu ID: {} and user ID: {}", menuId, userId);
-
-        List<Ticket> tickets = ticketRepository.findByMenuMenuId(menuId).stream()
-                .filter(ticket -> ticket.getAccount() != null && ticket.getAccount().getUser() != null
-                        && ticket.getAccount().getUser().getUserId().equals(userId))
-                .collect(Collectors.toList());
-
-        return tickets.stream()
-                .map(ticketMapper::toDto)
-                .collect(Collectors.toList());
-    }
-
-   @Override
-    public List<TicketDTO> readTicketsByMenuIdAndUserIdAndStatus(Long menuId, Long userId,
-                                                                 TicketStatus status) {
-        log.info("Reading tickets for menu ID: {}, user ID: {}, and status: {}",
-         menuId, userId, status);
-
-        List<Ticket> tickets = ticketRepository.findByMenuMenuId(menuId).stream()
-                .filter(ticket -> ticket.getAccount() != null && ticket.getAccount().getUser() != null
-                        && ticket.getAccount().getUser().getUserId().equals(userId)
-                        && ticket.getTicketStatus().equals(status))
-                .collect(Collectors.toList());
-
-        return tickets.stream()
-                .map(ticketMapper::toDto)
-                .collect(Collectors.toList());
-    }
-*/
+    }*/
 }

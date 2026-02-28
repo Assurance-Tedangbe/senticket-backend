@@ -19,11 +19,11 @@ import sn.estm.managingrestauranttickets.enumerations.TicketType;
 public class TransferTicketsRequestDTO {
 
     @Valid
-    @NotNull(message = "The porter is required")
+    @NotNull(message = "The sender is required")
     private SenderDTO senderDTO;
 
     @Valid
-    @NotNull(message = "The student is required")
+    @NotNull(message = "The recipient is required")
     private RecipientDTO recipientDTO;
 
     @NotNull(message = "Ticket type is required")

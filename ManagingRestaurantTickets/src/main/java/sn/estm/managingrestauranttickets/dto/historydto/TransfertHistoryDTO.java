@@ -1,5 +1,6 @@
 package sn.estm.managingrestauranttickets.dto.historydto;
 
+import jakarta.persistence.Column;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotNull;
 import lombok.AllArgsConstructor;
@@ -35,4 +36,9 @@ public class TransfertHistoryDTO {
 
     @NotNull(message = "transferDate is required.")
     private LocalDateTime transferDate;
+
+    @Column(nullable = false)
+    @NotNull(message = "canceled is required.")
+    private boolean canceled;
+
 }

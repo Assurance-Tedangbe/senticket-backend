@@ -41,6 +41,10 @@ public class TransfertHistory {
 
     private LocalDateTime transferDate;
 
+    @Column(nullable = false)
+    @Builder.Default
+    private boolean canceled = false;
+
     @PrePersist
     protected void onCreate() {
         transferDate = LocalDateTime.now();

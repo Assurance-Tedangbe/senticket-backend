@@ -4,8 +4,12 @@ package sn.estm.managingrestauranttickets.services.serviceInterfaces;
 import java.util.List;
 
 import sn.estm.managingrestauranttickets.dto.TicketDTO;
-import sn.estm.managingrestauranttickets.dto.customisedto.*;
-import sn.estm.managingrestauranttickets.enumerations.TicketStatus;
+import sn.estm.managingrestauranttickets.dto.customisedto.CreationTicketsRequestDTO;
+import sn.estm.managingrestauranttickets.dto.customisedto.DebitAccountRequestDTO;
+import sn.estm.managingrestauranttickets.dto.customisedto.PurchaseTicketsRequestDTO;
+import sn.estm.managingrestauranttickets.dto.customisedto.TransferTicketsRequestDTO;
+import sn.estm.managingrestauranttickets.dto.customisedto.CancelTransferTicketsRequestDTO;
+import sn.estm.managingrestauranttickets.dto.historydto.TransfertHistoryDTO;
 import sn.estm.managingrestauranttickets.enumerations.TicketType;
 
 
@@ -21,11 +25,15 @@ public interface TicketService {
 
     List<TicketDTO> getPurchasedTicketsByUser(Long userId, TicketType ticketType);
 
-    void transferTickets(TransferTicketsRequestDTO transferTicketsRequestDTO);
+    TransfertHistoryDTO transferTickets(TransferTicketsRequestDTO transferTicketsRequestDTO);
 
     void cancelTransferTickets(CancelTransferTicketsRequestDTO cancelTransferTicketsRequestDTO);
 
+    List<TicketDTO> readTicketsByUserId(Long userId);
+
     TicketDTO readTicketById(Long idTicket);
+
+    /* void bookTicket(Long ticketId);
 
     TicketDTO updateTicket(TicketDTO ticketDTO);
 
@@ -33,23 +41,6 @@ public interface TicketService {
 
     void updateTicketStatus(Long ticketId, TicketStatus newStatus);
 
-    void bookTicket(Long ticketId);
+    List<TicketDTO> readTicketsByStatus(TicketStatus status);*/
 
-    void unbookTicket(Long ticketId);
-
-    List<TicketDTO> readTicketsByStatus(TicketStatus status);
-
-    // List<TicketDTO> readTicketsByAccountId(Long accountId);
-
-    List<TicketDTO> readTicketsByUserId(Long userId);
-
-    /**
-     * Retrieves a list of tickets associated with a specific menu and user.
-     * @return a list of {@link TicketDTO} objects matching the specified menu and user
-    List<TicketDTO> readTicketsByMenuIdAndUserId(Long menuId, Long userId);
-     */
-    /**
-     * Retrieves a list of tickets filtered by the specified menu ID, user ID, and ticket status.
-     List<TicketDTO> readTicketsByMenuIdAndUserIdAndStatus(Long menuId, Long userId, TicketStatus status);
-     */
 }

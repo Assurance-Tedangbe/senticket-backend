@@ -24,6 +24,7 @@ import sn.estm.managingrestauranttickets.dto.customisedto.CancelTransferTicketsR
 import sn.estm.managingrestauranttickets.dto.customisedto.DebitAccountRequestDTO;
 import sn.estm.managingrestauranttickets.dto.customisedto.PurchaseTicketsRequestDTO;
 import sn.estm.managingrestauranttickets.dto.customisedto.TransferTicketsRequestDTO;
+import sn.estm.managingrestauranttickets.dto.historydto.TransfertHistoryDTO;
 import sn.estm.managingrestauranttickets.enumerations.TicketStatus;
 import sn.estm.managingrestauranttickets.enumerations.TicketType;
 import sn.estm.managingrestauranttickets.services.serviceInterfaces.TicketService;
@@ -117,13 +118,15 @@ public class TicketController {
 
     @PutMapping(value = "/transferTickets", consumes = "application/json", produces = "application/json")
     @ResponseStatus(HttpStatus.OK)
-    public void transferTickets( @RequestBody TransferTicketsRequestDTO transferTicketsRequestDTO) {
+    public ResponseEntity<TransfertHistoryDTO> transferTickets(@RequestBody TransferTicketsRequestDTO transferTicketsRequestDTO) {
 
         log.info("Processing ticket transfer request {}:", transferTicketsRequestDTO);
 
-        ticketService.transferTickets(transferTicketsRequestDTO);
+        TransfertHistoryDTO historyDTO = ticketService.transferTickets(transferTicketsRequestDTO);
 
         log.info("Transfer of tickets completed successfully {}", transferTicketsRequestDTO);
+
+        return ResponseEntity.ok(historyDTO);
     }
 
     @PutMapping(value = "/cancelTransfer", consumes = "application/json", produces = "application/json")
@@ -201,18 +204,6 @@ public class TicketController {
         log.info("Ticket booked successfully with ID: {}", ticketId);
     }
 
-    //@PostAuthorize("hasAuthority('ADMIN')")
-    @PutMapping(value = "/unbook/{ticketId}")
-    @ResponseStatus(HttpStatus.OK)
-    public void unbookTicket(@PathVariable Long ticketId) {
-
-        log.info("Unbooking ticket with ID: {}", ticketId);
-
-        ticketService.unbookTicket(ticketId);
-
-        log.info("Ticket unbooked successfully with ID: {}", ticketId);
-    }
-
 
     //@PostAuthorize("hasAnyAuthority('ADMIN', 'AGENT', 'ETUDIANT', 'PORTIER')")
     @GetMapping(value = "/ticketStatus/{ticketStatus}", produces = "application/json")
@@ -226,18 +217,6 @@ public class TicketController {
     }
 
     //@PostAuthorize("hasAnyAuthority('ADMIN', 'AGENT', 'ETUDIANT', 'PORTIER')")
-    @GetMapping(value = "/accountId/{accoundId}", produces = "application/json")
-    public ResponseEntity<List<TicketDTO>> readTicketsByAccountId(@PathVariable Long accountId) {
-
-        List<TicketDTO> ticketsByAccountId = ticketService.readTicketsByAccountId(accountId);
-
-         log.info("Fetched tickets by a given accountId: {}", accountId);
-
-        return new ResponseEntity<>(ticketsByAccountId, HttpStatus.OK);
-    }
-
-
-    //@PostAuthorize("hasAnyAuthority('ADMIN', 'AGENT', 'ETUDIANT', 'PORTIER')")
     @GetMapping(value = "/userId/{userId}", produces = "application/json")
     public ResponseEntity<List<TicketDTO>> readTicketsByUserId(@PathVariable Long userId) {
 
@@ -246,34 +225,6 @@ public class TicketController {
         log.info("Fetched tickets by a given userId: {}", userId);
 
         return new ResponseEntity<>(ticketsByUserId, HttpStatus.OK);
-    }
-
-    //@PostAuthorize("hasAnyAuthority('ADMIN', 'AGENT', 'ETUDIANT', 'PORTIER')")
-    @GetMapping(value = "/menuId/{menuId}/userId/{userId}", produces = "application/json")
-    public ResponseEntity<List<TicketDTO>> readTicketsByMenuIdAndUserId(@PathVariable Long menuId,
-                                                                        @PathVariable Long userId) {
-
-        List<TicketDTO> ticketsByMenuIdandUserId = ticketService.
-                                                   readTicketsByMenuIdAndUserId(menuId, userId);
-
-        log.info("Fetched tickets by a given menuId and userId: {}, {}", menuId, userId);
-
-        return new ResponseEntity<>(ticketsByMenuIdandUserId, HttpStatus.OK);
-    }
-
-     //@PostAuthorize("hasAnyAuthority('ADMIN', 'AGENT', 'ETUDIANT', 'PORTIER')")
-    @GetMapping(value = "/menuId/{menuId}/userId/{userId}/status/{ticketStatus}", produces = "application/json")
-    public ResponseEntity<List<TicketDTO>> readTicketsByMenuIdAndUserIdAndStatus(@PathVariable Long menuId,
-                                                                                 @PathVariable Long userId,
-                                                                                 @PathVariable TicketStatus ticketStatus) {
-
-        List<TicketDTO> ticketsByMenuIdandUserIdAndStatus = ticketService.
-                                                 readTicketsByMenuIdAndUserIdAndStatus(
-                                                    menuId, userId, ticketStatus);
-
-        log.info("Fetched tickets by a given menuId, userId and status: {},{},{}", menuId, userId, ticketStatus);
-
-        return new ResponseEntity<>(ticketsByMenuIdandUserIdAndStatus, HttpStatus.OK);
     }
      */
 }
