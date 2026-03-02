@@ -17,7 +17,7 @@ public class CancelTransferDTO {
 
     @Valid
     @NotNull(message = "originalSenderDTO is required")
-    private SenderDTO originalSenderDTO;
+    private OriginalSenderDTO originalSenderDTO;
 
     @Valid
     @NotNull(message = "currentOwnerDTO is required")

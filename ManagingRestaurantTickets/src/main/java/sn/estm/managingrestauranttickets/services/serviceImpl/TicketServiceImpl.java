@@ -25,6 +25,7 @@ import sn.estm.managingrestauranttickets.dto.customisedto.DebitPorterDTO;
 import sn.estm.managingrestauranttickets.dto.customisedto.SenderDTO;
 import sn.estm.managingrestauranttickets.dto.customisedto.RecipientDTO;
 import sn.estm.managingrestauranttickets.dto.customisedto.CancelTransferDTO;
+import sn.estm.managingrestauranttickets.dto.customisedto.OriginalSenderDTO;
 
 import sn.estm.managingrestauranttickets.dto.historydto.TransfertHistoryDTO;
 import sn.estm.managingrestauranttickets.entities.User;
@@ -650,7 +651,7 @@ public void cancelTransferTickets(CancelTransferTicketsRequestDTO cancelTransfer
     // 2. Extract DTOs
     CancelTransferDTO cancelTransferDTO = cancelTransferTicketsRequestDTO.getCancelTransferDTO();
     Long transactionId = cancelTransferDTO.getTransactionId();
-    SenderDTO originalSenderDTO = cancelTransferDTO.getOriginalSenderDTO();
+    OriginalSenderDTO originalSenderDTO = cancelTransferDTO.getOriginalSenderDTO();
     RecipientDTO currentOwnerDTO = cancelTransferDTO.getCurrentOwnerDTO();
 
     // 3. Retrieve transfer history
@@ -765,6 +766,13 @@ public void cancelTransferTickets(CancelTransferTicketsRequestDTO cancelTransfer
         return SecurityUtils.getCurrentUser();
     }*/
 
+    /**
+     * This implementation meets all requirements:
+     * Only the original sender can cancel.
+     * Uses transactionId to identify the specific transfer.
+     * All tickets from that transaction must be cancelled together.
+     * Deletes the transfer history after successful cancellation.
+     */
     //********* end of cancelTransferTickets service ***********
 
     // Suppl. methods
