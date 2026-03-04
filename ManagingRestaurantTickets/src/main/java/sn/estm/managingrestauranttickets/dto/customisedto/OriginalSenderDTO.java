@@ -11,13 +11,10 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 @Builder
-public class SenderDTO {
-
+public class OriginalSenderDTO {
+    @NotNull(message = "senderId is required")
     private Long senderId;
 
     @NotBlank(message = "senderUsername is required")
     private String senderUsername;
-
-    @NotBlank(message = "senderPassword is required")
-    private String senderPassword;
 }
