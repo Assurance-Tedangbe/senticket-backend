@@ -19,7 +19,7 @@ import java.time.LocalDateTime;
 @Builder
 public class DebitHistoryDTO {
 
-    private Long debitHistoryId;
+    private Long id;
 
     @Valid
     @NotNull(message = "tikcketDTO is required")

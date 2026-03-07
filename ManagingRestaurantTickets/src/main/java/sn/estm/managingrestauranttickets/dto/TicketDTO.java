@@ -22,17 +22,17 @@ import sn.estm.managingrestauranttickets.enumerations.TicketType;
 @Builder
 public class TicketDTO {
     
-    private Long ticketId;
+    private Long id;
 
     @NotBlank(message = "The ticket needs a type.")
-    private TicketType ticketType;
+    private TicketType type;
 
     @NotNull(message = "The ticket price is required.")
-    private Double ticketPrice;
+    private Double price;
 
-    @Column(unique = true, nullable = false)
+    /*@Column(unique = true, nullable = false)
     @NotNull(message = "The payment code is required.")
-    private String paymentCode;
+    private String paymentCode;*/
 
     @Column(nullable = false)
     @NotNull(message = "The booked status is required.")
@@ -42,11 +42,11 @@ public class TicketDTO {
     private TicketStatus ticketStatus;
 
     @NotNull(message = "The ticket creation date is required.")
-    private LocalDateTime ticketCreationDate;
+    private LocalDateTime creationDate;
 
     @Size(min = 3, max = 100)
     @NotBlank(message = "The ticket needs a description.")
-    private String ticketDescription;
+    private String description;
 
     @Valid
     @NotNull(message = "The user is required.")

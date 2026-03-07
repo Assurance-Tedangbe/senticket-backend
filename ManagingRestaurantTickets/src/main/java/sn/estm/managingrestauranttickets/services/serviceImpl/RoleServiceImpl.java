@@ -81,9 +81,9 @@ public class RoleServiceImpl implements RoleService {
 
     @Override
     public RoleDTO updateRole(RoleDTO roleDTO) {
-        Role existingRole = roleRepository.findById(roleDTO.getRoleId())
+        Role existingRole = roleRepository.findById(roleDTO.getId())
                 .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
-                    "Role not found with ID: {0}", roleDTO.getRoleId())));
+                    "Role not found with ID: {0}", roleDTO.getId())));
 
         existingRole.setName(roleDTO.getName());
 

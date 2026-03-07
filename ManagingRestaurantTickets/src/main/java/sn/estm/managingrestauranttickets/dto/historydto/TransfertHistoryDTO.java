@@ -18,11 +18,7 @@ import java.time.LocalDateTime;
 @Builder
 public class TransfertHistoryDTO {
 
-    private Long transferHistoryId;
-
-    /*@Valid
-    @NotNull(message = "tikcketDTO is required")
-    private TicketDTO ticketDTO;*/
+    private Long id;
 
     private String ticketIdsTransfered;
 
@@ -41,4 +37,7 @@ public class TransfertHistoryDTO {
     @NotNull(message = "canceled is required.")
     private boolean canceled;
 
+    /*@Valid
+    @NotNull(message = "tikcketDTO is required")
+    private TicketDTO ticketDTO;*/
 }

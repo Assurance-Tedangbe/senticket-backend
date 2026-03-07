@@ -45,35 +45,21 @@ public class UserServiceImpl implements UserService {
     private final TicketMapper ticketMapper;
 
 
-   /* @Override
-    public UserDTO createUser(UserDTO userDto) {
-
-        log.info("Creating user with details: {}", userDto);
-        
-        User user = userMapper.toEntity(userDto);
-        
-        User savedUser = userRepository.save(user);
-
-        log.info("User created successfully with ID: {}", savedUser.getUserId());
-       
-        return userMapper.toDto(savedUser);
-    }*/
     @Transactional
     @Override
     public UserDTO createUser(UserDTO userDto) {
 
         log.info("Creating user with details: {}", userDto);
 
-        // Vérifier que le rôle est fourni
         if (userDto.getRoleDTO() == null) {
             throw new IllegalArgumentException("Le rôle est obligatoire pour créer un utilisateur");
         }
 
         // 1. Vérifier si le rôle existe dans la base de données
         RoleDTO roleDto = userDto.getRoleDTO();
-        Role role = roleRepository.findById(roleDto.getRoleId())
+        Role role = roleRepository.findById(roleDto.getId())
                 .orElseThrow(() -> new RuntimeException(
-                        "Rôle non trouvé avec l'ID: " + roleDto.getRoleId()
+                        "Rôle non trouvé avec l'ID: " + roleDto.getId()
                 ));
 
         log.info("Rôle trouvé: {} (ID: {})", role.getName(), role.getId());
@@ -90,7 +76,7 @@ public class UserServiceImpl implements UserService {
         // 5. Convertir en DTO pour la réponse
         UserDTO savedUserDto = userMapper.toDto(savedUser);
 
-        log.info("User created successfully with ID: {}", savedUserDto.getUserId());
+        log.info("User created successfully with ID: {}", savedUserDto.getId());
 
         log.info("BEGIN BUILDING TICKETS:");
         CreationTicketsRequestDTO creationTicketsRequestDTO = CreationTicketsRequestDTO.builder()
@@ -111,7 +97,7 @@ public class UserServiceImpl implements UserService {
             Ticket ticketA = Ticket.builder()
                     .type(TicketType.A)
                     .price(100.0)
-                    .payementCode("")
+                    //.paymentCode("")
                     .status(TicketStatus.AVAILABLE)
                     .booked(false)
                     .creationDate(creationTime)
@@ -126,7 +112,7 @@ public class UserServiceImpl implements UserService {
             Ticket ticketB = Ticket.builder()
                     .type(TicketType.B)
                     .price(150.0)
-                    .payementCode("")
+                    //.paymentCode("")
                     .status(TicketStatus.AVAILABLE)
                     .booked(false)
                     .creationDate(creationTime)
@@ -221,9 +207,9 @@ public class UserServiceImpl implements UserService {
 
         log.info("Updating user details: {}", userDto);
 
-        User existingUser = userRepository.findById(userDto.getUserId())
+        User existingUser = userRepository.findById(userDto.getId())
                 .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
-                    "User not found with ID: {0}", userDto.getUserId())));
+                    "User not found with ID: {0}", userDto.getId())));
                     
         existingUser.setUsername(userDto.getUsername());
         existingUser.setFirstName(userDto.getFirstName());

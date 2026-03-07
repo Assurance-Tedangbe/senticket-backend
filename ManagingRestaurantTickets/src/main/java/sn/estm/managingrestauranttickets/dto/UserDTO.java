@@ -17,7 +17,7 @@ import lombok.NoArgsConstructor;
 @Builder
 public class UserDTO {
     
-    private Long userId;
+    private Long id;
 
     @NotBlank(message = "Le nom d'utilisateur est obligatoire")
     @Size(min = 3, max = 70, message = "Le nom d'utilisateur doit contenir entre 3 et 70 caractères")

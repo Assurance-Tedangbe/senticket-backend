@@ -48,7 +48,7 @@ public class RoleController {
        
         RoleDTO createdRole = roleService.createRole(roleDTO);
        
-        log.info("Role created successfully with ID: {}", createdRole.getRoleId());
+        log.info("Role created successfully with ID: {}", createdRole.getId());
        
         return new ResponseEntity<>(createdRole, HttpStatus.CREATED);
     }
@@ -61,7 +61,7 @@ public class RoleController {
         // Log pour debug
         System.out.println("Roles count: " + roles.size());
         roles.forEach(role ->
-                System.out.println("Role: id=" + role.getRoleId() + ", name=" + role.getName())
+                System.out.println("Role: id=" + role.getId() + ", name=" + role.getName())
         );
 
         log.info("Fetched roles: {}", roles);
@@ -96,7 +96,7 @@ public class RoleController {
        
         RoleDTO updatedRole = roleService.updateRole(roleDTO);
        
-        log.info("Role updated successfully with ID: {}", updatedRole.getRoleId());
+        log.info("Role updated successfully with ID: {}", updatedRole.getId());
         
         return new ResponseEntity<>(updatedRole, HttpStatus.OK);
     }

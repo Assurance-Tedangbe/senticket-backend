@@ -43,12 +43,85 @@ public class UserController {
        
         UserDTO createdUser = userService.createUser(userDTO);
        
-        log.info("User created successfully with ID: {}", createdUser.getUserId());
+        log.info("User created successfully with ID: {}", createdUser.getId());
        
         return new ResponseEntity<>(createdUser, HttpStatus.CREATED);
     }
 
-   /* @PostMapping(value = "/login", consumes = "application/json", produces = "application/json")
+    //@PostAuthorize("hasAnyAuthority('ADMIN', 'AGENT', 'ETUDIANT', 'PORTIER')")
+    @GetMapping(produces = "application/json")
+    public ResponseEntity<List<UserDTO>> getAllUsers() {
+
+        List<UserDTO> users = userService.readUsers();
+
+        log.info("Fetched users: {}", users);
+
+        return new ResponseEntity<>(users, HttpStatus.OK);
+    }
+
+    //@PostAuthorize("hasAuthority('ADMIN')")
+    @PutMapping(value = "/{userId}", consumes = "application/json", produces = "application/json")
+    public ResponseEntity<UserDTO> updateUser(@PathVariable Long userId, 
+                                              @RequestBody UserDTO userDTO) {
+
+        log.info("Updating user with ID: {} with details: {}", userId, userDTO);
+
+        UserDTO updatedUser = userService.updateUser(userDTO);
+
+        log.info("User updated successfully with ID: {}", updatedUser.getId());
+       
+        return new ResponseEntity<>(updatedUser, HttpStatus.OK);
+    }
+
+    //@PostAuthorize("hasAuthority('ADMIN')")
+    @DeleteMapping(value = "/{userId}")
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    public void deleteUser(@PathVariable Long userId) {
+
+        log.info("Deleting user with ID: {}", userId);
+      
+        userService.deleteUser(userId);
+      
+        log.info("User deleted successfully with ID: {}", userId);
+    }
+
+    //@PostAuthorize("hasAnyAuthority('ADMIN', 'AGENT', 'ETUDIANT', 'PORTIER')")
+    @PutMapping(value = "/password/{userId}", consumes = "application/json")
+    @ResponseStatus(HttpStatus.OK)
+    public void updatePassword(@PathVariable Long userId, @RequestBody String password) {
+
+        log.info("Updating password for user with ID: {}", userId);
+       
+        userService.updatePassword(userId, password);
+       
+        log.info("Password updated successfully for user with ID: {}", userId);
+    }
+
+
+      //@PostAuthorize("hasAnyAuthority('ADMIN', 'AGENT', 'ETUDIANT', 'PORTIER')")
+    @GetMapping(value = "/{userId}", produces = "application/json")
+    public ResponseEntity<UserDTO> getUserById(@PathVariable Long userId) {
+
+        log.info("Fetched user with ID: {}", userId);
+
+        UserDTO user = userService.readUserByUserId(userId);
+       
+
+        return new ResponseEntity<>(user, HttpStatus.OK);
+    }
+
+    //@PostAuthorize("hasAnyAuthority('ADMIN', 'AGENT', 'ETUDIANT', 'PORTIER')")
+    @GetMapping(value = "/username/{username}", produces = "application/json")
+    public ResponseEntity<UserDTO> getUserByUsername(@PathVariable String username) {
+
+        UserDTO user = userService.readUserByUsername(username);
+       
+        log.info("Fetched user with username: {}", username);
+       
+        return new ResponseEntity<>(user, HttpStatus.OK);
+    }
+
+       /* @PostMapping(value = "/login", consumes = "application/json", produces = "application/json")
     public ResponseEntity<UserDTO> login(@RequestBody LoginRequestDTO loginRequest) {
 
         UserDTO user = userService.login(loginRequest.getUsername(), loginRequest.getPassword());
@@ -113,7 +186,7 @@ public class UserController {
             response.put("message", "Erreur lors de la validation");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
         }
-    }*/
+    }
 
     // ⭐ Vérification rapide si l'utilisateur existe
     @GetMapping(value = "/check/{username}", produces = "application/json")
@@ -141,79 +214,6 @@ public class UserController {
     @ExceptionHandler(InvalidCredentialsException.class)
     public ResponseEntity<String> handleInvalidCredentialsException(InvalidCredentialsException ex) {
         return new ResponseEntity<>(ex.getMessage(), HttpStatus.UNAUTHORIZED);
-    }
-
-    //@PostAuthorize("hasAnyAuthority('ADMIN', 'AGENT', 'ETUDIANT', 'PORTIER')")
-    @GetMapping(produces = "application/json")
-    public ResponseEntity<List<UserDTO>> getAllUsers() {
-
-        List<UserDTO> users = userService.readUsers();
-
-        log.info("Fetched users: {}", users);
-
-        return new ResponseEntity<>(users, HttpStatus.OK);
-    }
-
-    //@PostAuthorize("hasAuthority('ADMIN')")
-    @PutMapping(value = "/{userId}", consumes = "application/json", produces = "application/json")
-    public ResponseEntity<UserDTO> updateUser(@PathVariable Long userId, 
-                                              @RequestBody UserDTO userDTO) {
-
-        log.info("Updating user with ID: {} with details: {}", userId, userDTO);
-
-        UserDTO updatedUser = userService.updateUser(userDTO);
-
-        log.info("User updated successfully with ID: {}", updatedUser.getUserId());
-       
-        return new ResponseEntity<>(updatedUser, HttpStatus.OK);
-    }
-
-    //@PostAuthorize("hasAuthority('ADMIN')")
-    @DeleteMapping(value = "/{userId}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteUser(@PathVariable Long userId) {
-
-        log.info("Deleting user with ID: {}", userId);
-      
-        userService.deleteUser(userId);
-      
-        log.info("User deleted successfully with ID: {}", userId);
-    }
-
-    //@PostAuthorize("hasAnyAuthority('ADMIN', 'AGENT', 'ETUDIANT', 'PORTIER')")
-    @PutMapping(value = "/password/{userId}", consumes = "application/json")
-    @ResponseStatus(HttpStatus.OK)
-    public void updatePassword(@PathVariable Long userId, @RequestBody String password) {
-
-        log.info("Updating password for user with ID: {}", userId);
-       
-        userService.updatePassword(userId, password);
-       
-        log.info("Password updated successfully for user with ID: {}", userId);
-    }
-
-
-      //@PostAuthorize("hasAnyAuthority('ADMIN', 'AGENT', 'ETUDIANT', 'PORTIER')")
-    @GetMapping(value = "/{userId}", produces = "application/json")
-    public ResponseEntity<UserDTO> getUserById(@PathVariable Long userId) {
-
-        log.info("Fetched user with ID: {}", userId);
-
-        UserDTO user = userService.readUserByUserId(userId);
-       
-
-        return new ResponseEntity<>(user, HttpStatus.OK);
-    }
-
-    //@PostAuthorize("hasAnyAuthority('ADMIN', 'AGENT', 'ETUDIANT', 'PORTIER')")
-    @GetMapping(value = "/username/{username}", produces = "application/json")
-    public ResponseEntity<UserDTO> getUserByUsername(@PathVariable String username) {
-
-        UserDTO user = userService.readUserByUsername(username);
-       
-        log.info("Fetched user with username: {}", username);
-       
-        return new ResponseEntity<>(user, HttpStatus.OK);
     }
 
    /* //@PostAuthorize("hasAuthority('ADMIN')")

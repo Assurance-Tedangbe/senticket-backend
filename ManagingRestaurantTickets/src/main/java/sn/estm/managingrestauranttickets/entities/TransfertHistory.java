@@ -23,10 +23,6 @@ public class TransfertHistory {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /*@ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "ticket_id")
-    private Ticket ticket;*/
-
     @NotEmpty(message = "At least one ticket ID must be provided")
     @Column(name = "ticket_ids_transfered")
     private String ticketIdsTransfered;
@@ -49,5 +45,9 @@ public class TransfertHistory {
     protected void onCreate() {
         transferDate = LocalDateTime.now();
     }
+
+    /*@ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "ticket_id")
+    private Ticket ticket;*/
 }
 
