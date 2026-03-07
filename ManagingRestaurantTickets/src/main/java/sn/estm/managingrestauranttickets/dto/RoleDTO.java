@@ -13,7 +13,7 @@ import lombok.NoArgsConstructor;
 @Builder
 public class RoleDTO {
     
-    private Long roleId;
+    private Long id;
 
     @NotBlank(message = "Le nom du rôle est obligatoire")
     @Size(min = 3, max = 50, message = "Le nom du rôle doit contenir entre 3 et 100 caractères")
@@ -25,7 +25,6 @@ public class RoleDTO {
      * when adding or accessing users. Instead of using {@code @NotNull}, initializing the collection
      * ensures that it is always non-null, simplifying code that interacts with this field and
      * eliminating the need for null checks.
-     *
      * @Builder.Default
      * private Set<UserDTO> userDTO = new HashSet<>();*/
 }

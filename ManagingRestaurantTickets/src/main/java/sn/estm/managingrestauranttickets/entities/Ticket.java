@@ -55,7 +55,7 @@ public class Ticket implements Serializable {
    /* Payment Code (Unique, generated on purchase, null initially)
     * The unique constraint should be applied *only* when the code is set. 
     * It's safer to handle the uniqueness and generation in the service layer */
-   private String payementCode;
+  // private String paymentCode;
 
    // Use the @Builder.Default annotation for Lombok's @Builder to respect the default
    @Column(nullable = false)

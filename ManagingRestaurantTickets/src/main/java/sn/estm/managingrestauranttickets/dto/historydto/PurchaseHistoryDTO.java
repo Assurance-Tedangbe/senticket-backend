@@ -8,8 +8,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import sn.estm.managingrestauranttickets.dto.TicketDTO;
 import sn.estm.managingrestauranttickets.dto.UserDTO;
-import sn.estm.managingrestauranttickets.dto.customisedto.RecipientDTO;
-import sn.estm.managingrestauranttickets.dto.customisedto.SenderDTO;
+
 
 import java.time.LocalDateTime;
 
@@ -19,7 +18,7 @@ import java.time.LocalDateTime;
 @Builder
 public class PurchaseHistoryDTO {
 
-    private Long purchaseHistoryId;
+    private Long id;
 
     @Valid
     @NotNull(message = "tikcketDTO is required")

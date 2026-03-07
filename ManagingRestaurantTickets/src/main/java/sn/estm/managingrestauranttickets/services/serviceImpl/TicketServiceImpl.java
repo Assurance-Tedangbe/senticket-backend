@@ -197,7 +197,7 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
     for (Ticket ticket : availableTickets) {
         ticket.setBooked(true);
         ticket.setStatus(TicketStatus.BOOKED);
-        ticket.setPayementCode(UUID.randomUUID().toString());
+        //ticket.setPaymentCode(UUID.randomUUID().toString());
         ticket.setUser(user);
 
         //  Ticket savedTicket = ticketRepository.save(ticket);
@@ -225,7 +225,7 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
         Ticket ticketA = Ticket.builder()
                 .type(TicketType.A)
                 .price(100.0)
-                .payementCode("")
+                //.paymentCode("")
                 .status(TicketStatus.AVAILABLE)
                 .booked(false)
                 .creationDate(creationTime)
@@ -240,7 +240,7 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
         Ticket ticketB = Ticket.builder()
                 .type(TicketType.B)
                 .price(150.0)
-                .payementCode("")
+                //.paymentCode("")
                 .status(TicketStatus.AVAILABLE)
                 .booked(false)
                 .creationDate(creationTime)

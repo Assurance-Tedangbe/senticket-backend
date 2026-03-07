@@ -67,7 +67,7 @@ public class AuthenController {
             response.put("success", true);
             response.put("message", "Authentification réussie");
             response.put("user", user);
-            response.put("userId", user.getUserId());
+            response.put("userId", user.getId());
             response.put("role", user.getRoleDTO());
 
             log.info("✅ Validation réussie pour: {}", loginRequest.getUsername());
