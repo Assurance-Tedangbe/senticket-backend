@@ -3,6 +3,7 @@ package sn.estm.managingrestauranttickets.services.serviceImpl;
 
 import lombok.RequiredArgsConstructor;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import org.springframework.transaction.annotation.Transactional;
@@ -14,6 +15,7 @@ import sn.estm.managingrestauranttickets.entities.Ticket;
 import sn.estm.managingrestauranttickets.entities.User;
 import sn.estm.managingrestauranttickets.enumerations.TicketStatus;
 import sn.estm.managingrestauranttickets.enumerations.TicketType;
+import sn.estm.managingrestauranttickets.exceptions.ForbiddenActionException;
 import sn.estm.managingrestauranttickets.exceptions.InvalidCredentialsException;
 import sn.estm.managingrestauranttickets.exceptions.ResourceNotFoundException;
 import sn.estm.managingrestauranttickets.mappers.TicketMapper;
@@ -21,7 +23,6 @@ import sn.estm.managingrestauranttickets.mappers.UserMapper;
 import sn.estm.managingrestauranttickets.repositories.RoleRepository;
 import sn.estm.managingrestauranttickets.repositories.TicketRepository;
 import sn.estm.managingrestauranttickets.repositories.UserRepository;
-import sn.estm.managingrestauranttickets.services.serviceInterfaces.TicketService;
 import sn.estm.managingrestauranttickets.services.serviceInterfaces.UserService;
 
 import java.text.MessageFormat;
@@ -41,7 +42,6 @@ public class UserServiceImpl implements UserService {
     private final UserMapper userMapper;
     private final RoleRepository roleRepository;
     private final TicketRepository ticketRepository;
-    private final TicketService ticketService;
     private final TicketMapper ticketMapper;
 
 
@@ -50,6 +50,12 @@ public class UserServiceImpl implements UserService {
     public UserDTO createUser(UserDTO userDto) {
 
         log.info("Creating user with details: {}", userDto);
+
+        // Checking if resource already exists
+        if (userRepository.existsByUsername(userDto.getUsername())) {
+            throw new ForbiddenActionException(HttpStatus.FORBIDDEN,
+                    "User with username: " + userDto.getUsername() + " already exists");
+        }
 
         // 1. Vérifier si le rôle existe dans la BD
         RoleDTO roleDTO = userDto.getRoleDTO();
@@ -124,12 +130,6 @@ public class UserServiceImpl implements UserService {
         List<Ticket> savedTickets = ticketRepository.saveAll(ticketsToSave);
 
         creationTicketsRequestDTO.setTicketDTO(ticketMapper.toDtoSet(savedTickets));
-
-        log.info("END BUILDING TICKETS:");
-
-        log.info("Creating tickets with details {}", creationTicketsRequestDTO);
-
-      //  ticketService.createTickets(creationTicketsRequestDTO);
 
         log.info("Successfully created tickets {} with requests {}",
                 savedTickets.size(), creationTicketsRequestDTO);
