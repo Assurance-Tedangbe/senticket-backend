@@ -41,5 +41,4 @@ public class UserDTO {
 
     @NotBlank(message = "Le nom est obligatoire")
     private String lastName;
-
 }

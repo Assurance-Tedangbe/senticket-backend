@@ -225,11 +225,9 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
         Ticket ticketA = Ticket.builder()
                 .type(TicketType.A)
                 .price(100.0)
-                //.paymentCode("")
                 .status(TicketStatus.AVAILABLE)
                 .booked(false)
                 .creationDate(creationTime)
-                .description("Ticket Type A - " + (i + 1))
                 .user(user)
                 .build();
         ticketsToSave.add(ticketA);
@@ -240,11 +238,9 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
         Ticket ticketB = Ticket.builder()
                 .type(TicketType.B)
                 .price(150.0)
-                //.paymentCode("")
                 .status(TicketStatus.AVAILABLE)
                 .booked(false)
                 .creationDate(creationTime)
-                .description("Ticket Type B - " + (i + 1))
                 .user(user)
                 .build();
         ticketsToSave.add(ticketB);
@@ -255,7 +251,7 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
 
     creationTicketsRequestDTO.setTicketDTO(ticketMapper.toDtoSet(savedTickets));
 
-    createTickets(creationTicketsRequestDTO);
+    //createTickets(creationTicketsRequestDTO);
 
     log.info("Successfully created tickets {} with requests {}",
             savedTickets.size(), creationTicketsRequestDTO);

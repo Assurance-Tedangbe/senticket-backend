@@ -20,7 +20,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class Role {
-  
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(unique = true, nullable = false)
@@ -29,7 +29,7 @@ public class Role {
     @Size(min = 3, max = 50)
     @Column(length = 50, nullable = false, unique = true)
     String name;
-
+}
 
    /* Genères l'association OneToMany entre Role et User en te basant sur
        l'attribut "role" dans l'entité User. */
@@ -42,4 +42,3 @@ public class Role {
      * qu'une seule fois dans le Set.
      * avec List, le même utilisateur peut être ajouté plusieurs fois.
      */
-}

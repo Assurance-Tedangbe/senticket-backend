@@ -1,5 +1,6 @@
 package sn.estm.managingrestauranttickets.dto;
 import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Size;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -12,13 +13,14 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @Builder
 public class RoleDTO {
-    
+
+    @NotNull(message = "L'ID du rôle est obligatoire")
     private Long id;
 
     @NotBlank(message = "Le nom du rôle est obligatoire")
     @Size(min = 3, max = 50, message = "Le nom du rôle doit contenir entre 3 et 100 caractères")
     private String name;
-    
+}
     /**
      * A set of users associated with this role.
      * The collection is initialized as an empty {@link HashSet} to avoid {@code NullPointerException}
@@ -27,4 +29,3 @@ public class RoleDTO {
      * eliminating the need for null checks.
      * @Builder.Default
      * private Set<UserDTO> userDTO = new HashSet<>();*/
-}

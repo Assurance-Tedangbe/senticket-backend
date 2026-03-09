@@ -30,25 +30,26 @@ public class TicketDTO {
     @NotNull(message = "The ticket price is required.")
     private Double price;
 
-    /*@Column(unique = true, nullable = false)
-    @NotNull(message = "The payment code is required.")
-    private String paymentCode;*/
-
     @Column(nullable = false)
     @NotNull(message = "The booked status is required.")
     private boolean booked;
 
     @NotBlank(message = "The ticket status is required.")
-    private TicketStatus ticketStatus;
+    private TicketStatus status;
 
     @NotNull(message = "The ticket creation date is required.")
     private LocalDateTime creationDate;
-
-    @Size(min = 3, max = 100)
-    @NotBlank(message = "The ticket needs a description.")
-    private String description;
 
     @Valid
     @NotNull(message = "The user is required.")
     private UserDTO userDTO;
 }
+
+    /*
+    @Size(min = 3, max = 100)
+    @NotBlank(message = "The ticket needs a description.")
+    private String description;
+
+    @Column(unique = true, nullable = false)
+    @NotNull(message = "The payment code is required.")
+    private String paymentCode;*/

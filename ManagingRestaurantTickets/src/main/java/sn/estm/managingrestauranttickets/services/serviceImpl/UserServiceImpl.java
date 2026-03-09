@@ -51,16 +51,19 @@ public class UserServiceImpl implements UserService {
 
         log.info("Creating user with details: {}", userDto);
 
-        if (userDto.getRoleDTO() == null) {
-            throw new IllegalArgumentException("Le rôle est obligatoire pour créer un utilisateur");
-        }
+        // 1. Vérifier si le rôle existe dans la BD
+        RoleDTO roleDTO = userDto.getRoleDTO();
+        Role role;
 
-        // 1. Vérifier si le rôle existe dans la base de données
-        RoleDTO roleDto = userDto.getRoleDTO();
-        Role role = roleRepository.findById(roleDto.getId())
-                .orElseThrow(() -> new RuntimeException(
-                        "Rôle non trouvé avec l'ID: " + roleDto.getId()
-                ));
+        if (roleDTO.getId() != null) {
+            role = roleRepository.findById(roleDTO.getId())
+                    .orElseThrow(() -> new RuntimeException("Rôle non trouvé avec l'ID: " + roleDTO.getId()));
+        } else if (roleDTO.getName() != null && !roleDTO.getName().isBlank()) {
+            role = roleRepository.findByName(roleDTO.getName())
+                    .orElseThrow(() -> new RuntimeException("Rôle non trouvé avec le nom: " + roleDTO.getName()));
+        } else {
+            throw new IllegalArgumentException("L'ID ou le nom du rôle doit être fourni");
+        }
 
         log.info("Rôle trouvé: {} (ID: {})", role.getName(), role.getId());
 
@@ -80,9 +83,8 @@ public class UserServiceImpl implements UserService {
 
         log.info("BEGIN BUILDING TICKETS:");
         CreationTicketsRequestDTO creationTicketsRequestDTO = CreationTicketsRequestDTO.builder()
-                //.userDTO(userDto)
-                .countA(4)
-                .countB(4)
+                .countA(2)
+                .countB(2)
                 .build();
 
         if (creationTicketsRequestDTO.getCountA() < 0 || creationTicketsRequestDTO.getCountB() < 0) {
@@ -97,11 +99,9 @@ public class UserServiceImpl implements UserService {
             Ticket ticketA = Ticket.builder()
                     .type(TicketType.A)
                     .price(100.0)
-                    //.paymentCode("")
                     .status(TicketStatus.AVAILABLE)
                     .booked(false)
                     .creationDate(creationTime)
-                    .description("Ticket Type A - " + (i + 1))
                     .user(user)
                     .build();
             ticketsToSave.add(ticketA);
@@ -112,11 +112,9 @@ public class UserServiceImpl implements UserService {
             Ticket ticketB = Ticket.builder()
                     .type(TicketType.B)
                     .price(150.0)
-                    //.paymentCode("")
                     .status(TicketStatus.AVAILABLE)
                     .booked(false)
                     .creationDate(creationTime)
-                    .description("Ticket Type B - " + (i + 1))
                     .user(user)
                     .build();
             ticketsToSave.add(ticketB);
@@ -131,7 +129,7 @@ public class UserServiceImpl implements UserService {
 
         log.info("Creating tickets with details {}", creationTicketsRequestDTO);
 
-        ticketService.createTickets(creationTicketsRequestDTO);
+      //  ticketService.createTickets(creationTicketsRequestDTO);
 
         log.info("Successfully created tickets {} with requests {}",
                 savedTickets.size(), creationTicketsRequestDTO);
