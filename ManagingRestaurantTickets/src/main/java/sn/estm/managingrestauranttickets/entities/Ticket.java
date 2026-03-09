@@ -40,22 +40,17 @@ public class Ticket implements Serializable {
 
    @Column(unique = true, nullable = false)
    @Id
-   @GeneratedValue(strategy =GenerationType.IDENTITY)
+   @GeneratedValue(strategy = GenerationType.IDENTITY)
    private Long id;
-   
+
    @Column(nullable = false)
    @Enumerated(EnumType.STRING)
    private TicketType type;
 
-   /* TicketPrice is derived from the ticketType, so no default needed here
+   /* Price is derived from the type, so no default needed here
     * The price must be calculated and set in the business logic (Service layer) */
    @Column(nullable = false)
    private Double price;
-
-   /* Payment Code (Unique, generated on purchase, null initially)
-    * The unique constraint should be applied *only* when the code is set. 
-    * It's safer to handle the uniqueness and generation in the service layer */
-  // private String paymentCode;
 
    // Use the @Builder.Default annotation for Lombok's @Builder to respect the default
    @Column(nullable = false)
@@ -70,16 +65,21 @@ public class Ticket implements Serializable {
    /* Ticket Creation Date (Automatic value on creation)
     * updatable=false ensures it's only set once
     * @CreationTimestamp to set the value on insertion */
-   @CreationTimestamp 
+   @CreationTimestamp
    @Temporal(TemporalType.TIMESTAMP)
-   @Column(nullable = false, updatable = false) 
+   @Column(nullable = false, updatable = false)
    private LocalDateTime creationDate;
 
-   @Size(min = 3, max = 100)
-   @NotBlank(message = "The ticket needs a description.")
-   private String description;
-
    @ManyToOne(fetch = FetchType.LAZY)
-   @JoinColumn(name="user_id")
+   @JoinColumn(name = "user_id")
    private User user;
 }
+  /* @Size(min = 3, max = 100)
+    @NotBlank(message = "The ticket needs a description.")
+    private String description;
+
+    Payment Code (Unique, generated on purchase, null initially)
+    * The unique constraint should be applied *only* when the code is set.
+    * It's safer to handle the uniqueness and generation in the service layer */
+   // private String paymentCode;
+
