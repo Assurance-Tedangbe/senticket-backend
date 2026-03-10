@@ -44,6 +44,8 @@ public class UserServiceImpl implements UserService {
     private final TicketRepository ticketRepository;
     private final TicketMapper ticketMapper;
 
+    // Si vous utilisez une blacklist de tokens, injectez-la ici
+    // private final TokenBlacklistService blacklistService;
 
     @Transactional
     @Override
@@ -271,6 +273,28 @@ public class UserServiceImpl implements UserService {
                     "User not found with username: {0}", username)));
         return userMapper.toDto(user);
     }
+
+    @Override
+    public void logout(String username) {
+        log.info("Déconnexion de l'utilisateur : {}", username);
+
+        // Option 1 : Ne rien faire côté serveur (c'est le client qui supprime le token)
+        // Cette option est suffisante dans la plupart des cas.
+
+        // Option 2 : Ajouter le token à une blacklist (nécessite de récupérer le token depuis la requête)
+        // String token = extractToken(request);
+        // blacklistService.addToBlacklist(token);
+    }
+
+    /*@Override
+    public String logout(String username) {
+        log.info("Déconnexion de l'utilisateur: {}", username);
+        // Ici vous pourriez, par exemple, invalider un token en le mettant dans une blacklist
+        // Pour l'instant, on se contente de journaliser et de renvoyer un message.
+        return "Déconnexion réussie pour l'utilisateur : " + username;
+    }*/
+
+
 
   /*  @Override
     public void addRoleToUser(Long userId, Long roleId) {

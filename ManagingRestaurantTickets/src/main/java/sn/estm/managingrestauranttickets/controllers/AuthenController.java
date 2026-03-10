@@ -81,4 +81,32 @@ public class AuthenController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED).body(response);
         }
     }
+
+    // endpoint lié au logout service non commenté
+   /* @PostMapping("/logout")
+    public ResponseEntity<String> logout(@RequestHeader("Authorization") String authHeader) {
+        // Extraire le username du token (si nécessaire)
+        String token = authHeader.replace("Bearer ", "");
+        String username = extractUsernameFromToken(token); // méthode utilitaire
+
+        userService.logout(username);
+        return ResponseEntity.ok("Déconnexion réussie");
+    }
+
+    private String extractUsernameFromToken(String token) {
+        // Utilisez votre JwtUtils pour extraire le username
+        return JwtUtils.extractUsername(token);
+    }*/
+
+   /* @PostMapping("/logout")
+    public ResponseEntity<String> logout(@RequestParam(required = false) String username) {
+        // Si vous utilisez Spring Security, vous pouvez récupérer le username depuis le contexte de sécurité
+        // Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        // String username = auth.getName();
+
+        // Pour l'exemple, on passe le username en paramètre ou on le récupère d'une autre manière
+        String responseMessage = userService.logout(username != null ? username : "inconnu");
+        log.info("Logout effectué: {}", responseMessage);
+        return ResponseEntity.ok(responseMessage);
+    }*/
 }

@@ -24,6 +24,8 @@ public interface UserService {
 
     UserDTO readUserByUsername(String username);
 
+    void logout(String username);  // ou void logout(HttpServletRequest request)
+
     // void addRoleToUser(Long userId, Long roleId);
 
     void scanCodeQr(UserDTO userDto);
