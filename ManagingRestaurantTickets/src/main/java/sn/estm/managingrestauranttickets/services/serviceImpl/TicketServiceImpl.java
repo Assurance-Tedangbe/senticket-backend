@@ -667,6 +667,10 @@ public void cancelTransferTickets(CancelTransferTicketsRequestDTO cancelTransfer
         throw new IllegalArgumentException("Current owner information does not match the transfer record");
     }
 
+    if(transferHistory.isCanceled()){
+        throw new IllegalArgumentException("This transaction is already canceled");
+    }
+
     /* // 6. Check that the authenticated user is the original sender
     User authenticatedUser = getCurrentAuthenticatedUser(); // from security context
     if (!authenticatedUser.getUserId().equals(originalSenderDTO.getUserId())) {
@@ -689,17 +693,7 @@ public void cancelTransferTickets(CancelTransferTicketsRequestDTO cancelTransfer
         throw new ResourceNotFoundException("One or more tickets not found");
     }
 
-    // 9. Validate each ticket: booked, status BOOKED, and owned by current owner
-    for (Ticket ticket : ticketsToReassign) {
-        if (!ticket.isBooked() || ticket.getStatus() != TicketStatus.BOOKED) {
-            throw new IllegalStateException("Ticket " + ticket.getId() + " is not eligible for cancellation");
-        }
-        if (ticket.getUser() == null || !ticket.getUser().getId().equals(currentOwnerDTO.getRecipientId())) {
-            throw new IllegalStateException("Ticket " + ticket.getId() + " is not owned by the expected current owner");
-        }
-    }
-
-    // 10. Retrieve original sender user and his account (if needed)
+    // Retrieve original sender user and his account (if needed)
     User originalSender = userRepository.findById(originalSenderDTO.getSenderId())
             .orElseThrow(() -> new ResourceNotFoundException("Original sender user not found"));
 
@@ -710,8 +704,6 @@ public void cancelTransferTickets(CancelTransferTicketsRequestDTO cancelTransfer
     ticketRepository.saveAll(ticketsToReassign);
 
     transferHistory.setCanceled(true);
-    /*// 12. Delete the transfer history record
-    transfertHistoryRepository.delete(transferHistory);*/
 
     log.info("Successfully cancelled transfer transaction {} and returned {} tickets to original sender {}",
             transactionId, ticketsToReassign.size(), originalSender.getUsername());
