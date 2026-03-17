@@ -17,10 +17,10 @@ public interface TransfertHistoryMapper {
     @Mapping(source = "recipient", target = "recipientDTO")
     TransfertHistoryDTO toDto(TransfertHistory transfertHistory);
 
-    TransfertHistory toEntity(TransfertHistoryDTO transfertHistoryDTO);
+   /* TransfertHistory toEntity(TransfertHistoryDTO transfertHistoryDTO);
 
     List<TransfertHistoryDTO> toDtoSet(List<TransfertHistory> transfertHistories);
 
-    Set<TransfertHistory> toEntitySet(Set<TransfertHistoryDTO> transfertHistoryDTOS);
+    Set<TransfertHistory> toEntitySet(Set<TransfertHistoryDTO> transfertHistoryDTOS);*/
 
 }

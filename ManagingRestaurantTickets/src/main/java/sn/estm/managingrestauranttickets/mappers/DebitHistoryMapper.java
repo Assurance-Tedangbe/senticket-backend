@@ -18,9 +18,9 @@ public interface DebitHistoryMapper {
     @Mapping(source = "ticket", target = "ticketDTO")
     DebitHistoryDTO toDto(DebitHistory debitHistory);
 
-    DebitHistory toEntity(DebitHistoryDTO debitHistoryDTO);
+    /* DebitHistory toEntity(DebitHistoryDTO debitHistoryDTO);
 
     List<DebitHistoryDTO> toDtoSet(List<DebitHistory>debitHistories);
 
-    Set<DebitHistory> toEntitySet(Set<DebitHistoryDTO> debitHistoryDTOS);
+    Set<DebitHistory> toEntitySet(Set<DebitHistoryDTO> debitHistoryDTOS);*/
 }

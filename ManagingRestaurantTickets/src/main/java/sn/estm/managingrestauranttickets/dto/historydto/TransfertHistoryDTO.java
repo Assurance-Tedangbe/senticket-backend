@@ -36,8 +36,4 @@ public class TransfertHistoryDTO {
     @Column(nullable = false)
     @NotNull(message = "canceled is required.")
     private boolean canceled;
-
-    /*@Valid
-    @NotNull(message = "tikcketDTO is required")
-    private TicketDTO ticketDTO;*/
 }
