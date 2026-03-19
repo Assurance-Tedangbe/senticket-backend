@@ -85,4 +85,12 @@ public class TransactionHistory {
 
     @Column(name = "transfer_canceled")
     private Boolean transferCanceled; // Indique si le transfert a été annulé
+
+    @PrePersist
+    protected void onCreate() {
+        date = LocalDateTime.now();
+       /* if (status == null) {
+            status = "SUCCESS";
+        }*/
+    }
 }

@@ -27,7 +27,24 @@ public class TrasactionHistoryController {
 
     private final TransactionHistoryService transactionHistoryService;
 
-    @GetMapping("/history")
+    @GetMapping()
+    public ResponseEntity<List<TransactionHistoryDTO>> getTransactionHistory(
+            @RequestParam(value = "transactionType", defaultValue = "ALL") String transactionType,
+            @RequestParam(value = "startDate", required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(value = "endDate", required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+
+        log.info("GET /api/transactions/history with filters: type={}, start={}, end={}",
+                transactionType, startDate, endDate);
+
+        List<TransactionHistoryDTO> transactions = transactionHistoryService
+                .getTransactionHistory(transactionType, startDate, endDate);
+
+        return ResponseEntity.ok(transactions);
+    }
+
+   /* @GetMapping("/history")
     public ResponseEntity<List<TransactionHistoryResponseDTO>> getTransactionHistory(
             @RequestParam(value = "transactionType", defaultValue = "ALL") String transactionType,
             @RequestParam(value = "startDate", required = false)
@@ -44,7 +61,7 @@ public class TrasactionHistoryController {
                 transactionType, startDate, endDate, page, size);
 
         return new ResponseEntity<>(response, HttpStatus.OK);
-    }
+    }*/
 
    /* seconde propose
    @GetMapping()

@@ -6,7 +6,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import sn.estm.managingrestauranttickets.dto.UserDTO;
-import sn.estm.managingrestauranttickets.entities.User;
 import sn.estm.managingrestauranttickets.enumerations.TransactionType;
 import com.fasterxml.jackson.annotation.JsonInclude;
 
@@ -34,12 +33,14 @@ public class TransactionHistoryDTO {
     // Champs communs
     // private User user; // L'utilisateur principal concerné (acheteur, étudiant débité, sender)
 
-    @NotNull(message = "status is required.")
-    private String status; // SUCCESS, FAILED, CANCELLED*/
+   /* @NotNull(message = "status is required.")
+    private String status; */// SUCCESS, FAILED, CANCELLED*/
 
     // Tickets concernés
-    private String ticketIds; // Stocke les ids des tickets concernés comme "1,2,3"
-    private String ticketTypes; // Stocke les types de tickets concernés comme "A,B"
+    private List<Long> ticketIds;
+    private List<String> ticketTypes;
+    /*private String ticketIds; // Stocke les ids des tickets concernés comme "1,2,3"
+    private String ticketTypes; // Stocke les types de tickets concernés comme "A,B"*/
 
     // Champs spécifiques aux ACHATS (PURCHASE)
     private UserDTO purchaserDTO; // L'acheteur des ticket(s)
@@ -60,10 +61,11 @@ public class TransactionHistoryDTO {
             LocalDateTime date,
             Integer ticketsCount,
             UserDTO purchaserDTO,
-            String ticketIds,
-            String ticketTypes
-            /*Double totalAmount,
-            String paymentMethod*/) {
+            List<Long> ticketIds,
+            List<String> ticketTypes
+            /*String ticketIds,
+            String ticketTypes*/
+            /* Double totalAmount */) {
 
         return TransactionHistoryDTO.builder()
                 .id(id)
@@ -82,8 +84,8 @@ public class TransactionHistoryDTO {
             Integer ticketsCount,
             UserDTO student,
             UserDTO porter,
-            String ticketIds,
-            String ticketTypes) {
+            List<Long> ticketIds,
+            List<String> ticketTypes) {
 
         return TransactionHistoryDTO.builder()
                 .id(id)
@@ -103,8 +105,8 @@ public class TransactionHistoryDTO {
             Integer ticketsCount,
             UserDTO sender,
             UserDTO recipient,
-            String ticketIds,
-            String ticketTypes,
+            List<Long> ticketIds,
+            List<String> ticketTypes,
             Boolean canceled) {
 
         return TransactionHistoryDTO.builder()
