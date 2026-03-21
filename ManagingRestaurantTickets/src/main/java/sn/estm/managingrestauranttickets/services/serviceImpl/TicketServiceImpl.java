@@ -48,6 +48,7 @@ import sn.estm.managingrestauranttickets.repositories.DebitHistoryRepository;
 import sn.estm.managingrestauranttickets.repositories.TransfertHistoryRepository;
 
 import sn.estm.managingrestauranttickets.services.serviceInterfaces.TicketService;
+import sn.estm.managingrestauranttickets.services.serviceInterfaces.TransactionHistoryService;
 
 import static java.util.regex.Pattern.matches;
 
@@ -64,6 +65,8 @@ public class TicketServiceImpl implements TicketService {
     private final DebitHistoryRepository debitHistoryRepository;
     private final TransfertHistoryRepository transfertHistoryRepository;
     private final TransfertHistoryMapper transfertHistoryMapper;
+    private final TransactionHistoryService transactionHistoryService;
+
    // private final PasswordEncoder passwordEncoder; // For password validation
 
     @Transactional
@@ -179,16 +182,6 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
             countBPurchased++;
         }
     }
-   /* // Validate account balance
-    Double balance = account.getBalance();
-    if (balance == null || balance < totalPrice) {
-        throw new IllegalStateException(MessageFormat.format(
-                "Insufficient funds for totalPrice{} and balance {}", totalPrice, balance));
-    }
-
-    // Deduct total price from account
-    account.setBalance(balance - totalPrice);
-    Account savedAccount = accountRepository.save(account);*/
 
     // Update each purchase ticket
     List<Ticket> purchasedTickets;
@@ -197,10 +190,7 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
     for (Ticket ticket : availableTickets) {
         ticket.setBooked(true);
         ticket.setStatus(TicketStatus.BOOKED);
-        //ticket.setPaymentCode(UUID.randomUUID().toString());
         ticket.setUser(user);
-
-        //  Ticket savedTicket = ticketRepository.save(ticket);
 
         //collect purchased tickets
         inPurchasingTickets.add(ticket);
@@ -257,6 +247,10 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
             savedTickets.size(), creationTicketsRequestDTO);
 }
     log.info("BEGIN BUILDING PurchaseHistory:");
+
+    // Après avoir validé et traité le transfert
+    transactionHistoryService.recordPurchase( user, purchasedTickets);
+
     List<PurchaseHistory> ticketsPurchaseHistory = new ArrayList<>();
     for (Ticket ticketHistory : purchasedTickets){
 
@@ -402,6 +396,10 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
         log.debug("Batch updated {} tickets to USED status", updatedTickets);
 
         log.info("BEGIN BUILDING debitHistory:");
+
+        // Après avoir validé et traité le débit
+        transactionHistoryService.recordDebit(porter, student, tickets);
+
         List<DebitHistory> ticketsPurchaseHistory = new ArrayList<>();
         for (Ticket debitTicketHistory : updatedTickets){
 
@@ -600,6 +598,9 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
         log.debug("Transferred {} tickets to user {}", tickets.size(), recipient.getUsername());
 
         log.info("BEGIN BUILDING transfertHistory:");
+
+        // Après avoir validé et traité le transfert
+        transactionHistoryService.recordTransfer(sender, recipient, tickets);
 
         List<Long> ticketIdsTransfered = new ArrayList<>();
         for (Ticket ticket : tickets){

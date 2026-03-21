@@ -4,12 +4,7 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
-import sn.estm.managingrestauranttickets.dto.historydto.TransactionHistoryDTO;
-import sn.estm.managingrestauranttickets.entities.Ticket;
 import sn.estm.managingrestauranttickets.entities.TransactionHistory;
-import sn.estm.managingrestauranttickets.entities.User;
-import sn.estm.managingrestauranttickets.enumerations.TicketStatus;
-import sn.estm.managingrestauranttickets.enumerations.TicketType;
 import sn.estm.managingrestauranttickets.enumerations.TransactionType;
 
 import java.time.LocalDateTime;
@@ -54,7 +49,7 @@ public interface TransactionHistoryRepository extends JpaRepository<TransactionH
      * @param endDate date de fin
      * @return liste des transactions
      */
-    List<TransactionHistory> findByTransactionDateBetweenOrderByTransactionDateDesc(
+    List<TransactionHistory> findByDateBetweenOrderByDateDesc(
             LocalDateTime startDate,
             LocalDateTime endDate
     );

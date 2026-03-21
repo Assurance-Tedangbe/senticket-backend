@@ -14,7 +14,6 @@ import sn.estm.managingrestauranttickets.entities.TransactionHistory;
 import sn.estm.managingrestauranttickets.entities.User;
 import sn.estm.managingrestauranttickets.enumerations.TransactionType;
 import sn.estm.managingrestauranttickets.exceptions.ResourceNotFoundException;
-import sn.estm.managingrestauranttickets.mappers.TransactionHistoryMapper;
 import sn.estm.managingrestauranttickets.repositories.TransactionHistoryRepository;
 import sn.estm.managingrestauranttickets.services.serviceInterfaces.TransactionHistoryService;
 
@@ -33,11 +32,65 @@ import java.util.stream.Collectors;
 public class TransactionHistoryServiceImpl implements TransactionHistoryService {
 
     private final TransactionHistoryRepository transactionHistoryRepository;
-    private final TransactionHistoryMapper transactionHistoryMapper;
 
     @Override
-    public List<TransactionHistoryResponseDTO> readTransactionHistory(String transactionType, LocalDateTime startDate, LocalDateTime endDate, int page, int size) {
-        return List.of();
+    public TransactionHistoryResponseDTO readTransactionHistory(
+            String transactionType,
+            LocalDate startDate,
+            LocalDate endDate,
+            int page,
+            int size) {
+
+        log.info("Fetching transaction history with filters: type={}, start={}, end={}, page={}, size={}",
+                transactionType, startDate, endDate, page, size);
+
+        // Définir les dates par défaut si non fournies
+        LocalDateTime startDateTime = (startDate != null)
+                ? startDate.atStartOfDay()
+                : LocalDateTime.of(2000, 1, 1, 0, 0);
+
+        LocalDateTime endDateTime = (endDate != null)
+                ? endDate.atTime(LocalTime.MAX)
+                : LocalDateTime.now();
+
+        // Créer la pagination avec tri par date décroissante
+        Pageable pageable = PageRequest.of(page, size, Sort.by("date").descending());
+
+        Page<TransactionHistory> transactionPage;
+
+        // Si le type est "ALL" ou null, on ne filtre pas par type
+        if (transactionType == null || transactionType.equalsIgnoreCase("ALL")) {
+            transactionPage = transactionHistoryRepository
+                    .findByDateBetweenOrderByDateDesc(startDateTime, endDateTime, pageable);
+        } else {
+            try {
+                TransactionType type = TransactionType.valueOf(transactionType.toUpperCase());
+                transactionPage = transactionHistoryRepository
+                        .findByTransactionTypeAndDateBetween(type, startDateTime, endDateTime, pageable);
+            } catch (IllegalArgumentException e) {
+                log.warn("Invalid transaction type: {}, returning all transactions", transactionType);
+                transactionPage = transactionHistoryRepository
+                        .findByDateBetweenOrderByDateDesc(startDateTime, endDateTime, pageable);
+            }
+        }
+
+        // Convertir les entités en DTOs
+        List<TransactionHistoryDTO> content = transactionPage.getContent().stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());
+
+        // Construire la réponse paginée
+        return TransactionHistoryResponseDTO.builder()
+                .content(content)
+                .totalElements(transactionPage.getTotalElements())
+                .totalPages(transactionPage.getTotalPages())
+                .currentPage(transactionPage.getNumber())
+                .pageSize(transactionPage.getSize())
+                .first(transactionPage.isFirst())
+                .last(transactionPage.isLast())
+                .hasNext(transactionPage.hasNext())
+                .hasPrevious(transactionPage.hasPrevious())
+                .build();
     }
 
     @Override
@@ -87,6 +140,15 @@ public class TransactionHistoryServiceImpl implements TransactionHistoryService 
         switch (history.getTransactionType()) {
             case PURCHASE:
                 return convertPurchaseToDTO(history);
+                /* // ceci peut remplacer   return convertPurchaseToDTO(history);
+                return TransactionHistoryDTO.fromPurchase(
+                history.getId(),
+                history.getTransactionDate(),
+                history.getTicketsCount(),
+                convertToUserDTO(history.getUser()),
+                parseTicketIds(history.getTicketIds()),
+                parseTicketTypes(history.getTicketTypes()),
+            );  */
             case DEBIT:
                 return convertDebitToDTO(history);
             case TRANSFER:
@@ -106,6 +168,14 @@ public class TransactionHistoryServiceImpl implements TransactionHistoryService 
                 .ticketIds(parseTicketIds(history.getTicketIds()))
                 .ticketTypes(parseTicketTypes(history.getTicketTypes()))
                 .build();
+        /* return TransactionHistoryDTO.fromPurchase(
+                history.getId(),
+                history.getTransactionDate(),
+                history.getTicketsCount(),
+                convertToUserDTO(history.getUser()),
+                parseTicketIds(history.getTicketIds()),
+                parseTicketTypes(history.getTicketTypes()),
+            ); */
     }
 
     private TransactionHistoryDTO convertDebitToDTO(TransactionHistory history) {
@@ -177,8 +247,7 @@ public class TransactionHistoryServiceImpl implements TransactionHistoryService 
     // Méthodes utilitaires pour enregistrer les transactions
 
     @Transactional
-    public TransactionHistory recordPurchase(User purchaseUser, List<Ticket> tickets,
-                                             Double totalAmount, String paymentMethod) {
+    public TransactionHistory recordPurchase(User purchaseUser, List<Ticket> tickets ) {
         String ticketIds = tickets.stream()
                 .map(t -> t.getId().toString())
                 .collect(Collectors.joining(","));
@@ -196,7 +265,9 @@ public class TransactionHistoryServiceImpl implements TransactionHistoryService 
                 .ticketTypes(ticketTypes)
                 .build();
 
+        log.info("Recorded purchase transaction for user: {}, tickets: {}", purchaseUser.getUsername(), tickets.size());
         return transactionHistoryRepository.save(history);
+
     }
 
     @Transactional
@@ -219,6 +290,8 @@ public class TransactionHistoryServiceImpl implements TransactionHistoryService 
                 .ticketTypes(ticketTypes)
                 .build();
 
+        log.info("Recorded debit transaction by porter: {} for student: {}, tickets: {}",
+                porter.getUsername(), student.getUsername(), tickets.size());
         return transactionHistoryRepository.save(history);
     }
 
@@ -243,6 +316,8 @@ public class TransactionHistoryServiceImpl implements TransactionHistoryService 
                 .transferCanceled(false)
                 .build();
 
+        log.info("Recorded transfer transaction from: {} to: {}, tickets: {}",
+                sender.getUsername(), recipient.getUsername(), tickets.size());
         return transactionHistoryRepository.save(history);
     }
 
@@ -258,4 +333,5 @@ public class TransactionHistoryServiceImpl implements TransactionHistoryService 
         history.setTransferCanceled(true);
         transactionHistoryRepository.save(history);
     }
+    // end sans pagination
 }

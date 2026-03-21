@@ -27,6 +27,7 @@ public class TrasactionHistoryController {
 
     private final TransactionHistoryService transactionHistoryService;
 
+    // without pagination
     @GetMapping()
     public ResponseEntity<List<TransactionHistoryDTO>> getTransactionHistory(
             @RequestParam(value = "transactionType", defaultValue = "ALL") String transactionType,
