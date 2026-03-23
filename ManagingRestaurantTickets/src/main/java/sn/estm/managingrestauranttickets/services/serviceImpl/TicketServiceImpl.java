@@ -41,11 +41,7 @@ import sn.estm.managingrestauranttickets.exceptions.ResourceNotFoundException;
 import sn.estm.managingrestauranttickets.mappers.TicketMapper;
 
 import sn.estm.managingrestauranttickets.mappers.TransfertHistoryMapper;
-import sn.estm.managingrestauranttickets.repositories.TicketRepository;
-import sn.estm.managingrestauranttickets.repositories.UserRepository;
-import sn.estm.managingrestauranttickets.repositories.PurchaseHistoryRepository;
-import sn.estm.managingrestauranttickets.repositories.DebitHistoryRepository;
-import sn.estm.managingrestauranttickets.repositories.TransfertHistoryRepository;
+import sn.estm.managingrestauranttickets.repositories.*;
 
 import sn.estm.managingrestauranttickets.services.serviceInterfaces.TicketService;
 import sn.estm.managingrestauranttickets.services.serviceInterfaces.TransactionHistoryService;
@@ -66,6 +62,7 @@ public class TicketServiceImpl implements TicketService {
     private final TransfertHistoryRepository transfertHistoryRepository;
     private final TransfertHistoryMapper transfertHistoryMapper;
     private final TransactionHistoryService transactionHistoryService;
+    private final TransactionHistoryRepository transactionHistoryRepository;
 
    // private final PasswordEncoder passwordEncoder; // For password validation
 
@@ -246,12 +243,12 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
     log.info("Successfully created tickets {} with requests {}",
             savedTickets.size(), creationTicketsRequestDTO);
 }
-    log.info("BEGIN BUILDING PurchaseHistory:");
+    log.info("RECORD PURCHASE TRANSACTION:");
 
-    // Après avoir validé et traité le transfert
+    // Après avoir validé et traité l'achat, enregistrement dans l'historique unifié
     transactionHistoryService.recordPurchase( user, purchasedTickets);
 
-    List<PurchaseHistory> ticketsPurchaseHistory = new ArrayList<>();
+     List<PurchaseHistory> ticketsPurchaseHistory = new ArrayList<>();
     for (Ticket ticketHistory : purchasedTickets){
 
         PurchaseHistory purchaseHistory = PurchaseHistory.builder()
@@ -260,8 +257,9 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
                 .build();
         ticketsPurchaseHistory.add(purchaseHistory);
         log.info("purchaseHistoryDTO to save {}", purchaseHistory );
-        purchaseHistoryRepository.saveAll(ticketsPurchaseHistory);
     }
+    purchaseHistoryRepository.saveAll(ticketsPurchaseHistory);
+
     // return purchased tickets as DTOs
     return purchasedTickets.stream()
             .map(ticketMapper::toDto)
@@ -395,12 +393,12 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
 
         log.debug("Batch updated {} tickets to USED status", updatedTickets);
 
-        log.info("BEGIN BUILDING debitHistory:");
+        log.info("RECORD DEBIT TRANSACTION:");
 
-        // Après avoir validé et traité le débit
-        transactionHistoryService.recordDebit(porter, student, tickets);
+        // Après avoir validé et traité le débit, enregistrement dans l'historique unifié
+        transactionHistoryService.recordDebit(porter, student, updatedTickets);
 
-        List<DebitHistory> ticketsPurchaseHistory = new ArrayList<>();
+         List<DebitHistory> ticketsPurchaseHistory = new ArrayList<>();
         for (Ticket debitTicketHistory : updatedTickets){
 
             DebitHistory debitHistory = DebitHistory.builder()
@@ -410,8 +408,8 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
                     .build();
             ticketsPurchaseHistory.add(debitHistory);
             log.info("debitHistory to save {}", debitHistory );
-            debitHistoryRepository.saveAll(ticketsPurchaseHistory);
         }
+        debitHistoryRepository.saveAll(ticketsPurchaseHistory);
     }
 
     @Override
@@ -597,9 +595,9 @@ public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTickets
 
         log.debug("Transferred {} tickets to user {}", tickets.size(), recipient.getUsername());
 
-        log.info("BEGIN BUILDING transfertHistory:");
+        log.info("RECORD TRANSFER TRANSACTION:");
 
-        // Après avoir validé et traité le transfert
+        // Après avoir validé et traité le transfert, enregistrement dans l'historique unifié
         transactionHistoryService.recordTransfer(sender, recipient, tickets);
 
         List<Long> ticketIdsTransfered = new ArrayList<>();
@@ -705,6 +703,25 @@ public void cancelTransferTickets(CancelTransferTicketsRequestDTO cancelTransfer
     ticketRepository.saveAll(ticketsToReassign);
 
     transferHistory.setCanceled(true);
+    transfertHistoryRepository.save(transferHistory);
+
+    // Mettre à jour l'historique unifié
+    // Chercher la transaction unifiée correspondante par date et tickets
+    LocalDateTime transferDate = transferHistory.getTransferDate();
+    List<Long> ticketIds = extractTicketIdsFromHistory(transferHistory);
+    String ticketIdsStr = ticketIds.stream()
+            .map(String::valueOf)
+            .collect(Collectors.joining(","));
+
+    // Récupérer la transaction unifiée et l'annuler
+    transactionHistoryRepository
+            .findByTicketIdsContainingAndDateBetween(ticketIdsStr,
+                    transferDate.minusMinutes(1),
+                    transferDate.plusMinutes(1))
+            .ifPresent(unifiedHistory -> {
+                transactionHistoryService.cancelTransfer(unifiedHistory.getId());
+                log.info("Cancelled unified transaction with ID: {}", unifiedHistory.getId());
+            });
 
     log.info("Successfully cancelled transfer transaction {} and returned {} tickets to original sender {}",
             transactionId, ticketsToReassign.size(), originalSender.getUsername());

@@ -1,5 +1,7 @@
 package sn.estm.managingrestauranttickets.services.serviceImpl;
 
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -25,6 +27,9 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 
 @Slf4j
 @Service
@@ -34,7 +39,7 @@ public class TransactionHistoryServiceImpl implements TransactionHistoryService 
     private final TransactionHistoryRepository transactionHistoryRepository;
 
     @Override
-    public TransactionHistoryResponseDTO readTransactionHistory(
+    public TransactionHistoryResponseDTO getTransactionHistory(
             String transactionType,
             LocalDate startDate,
             LocalDate endDate,
@@ -47,11 +52,13 @@ public class TransactionHistoryServiceImpl implements TransactionHistoryService 
         // Définir les dates par défaut si non fournies
         LocalDateTime startDateTime = (startDate != null)
                 ? startDate.atStartOfDay()
-                : LocalDateTime.of(2000, 1, 1, 0, 0);
+                : LocalDateTime.of(2000, 1, 1, 0, 0); // Date très ancienne par défaut
 
         LocalDateTime endDateTime = (endDate != null)
                 ? endDate.atTime(LocalTime.MAX)
-                : LocalDateTime.now();
+                : LocalDateTime.now(); // Date courante par défaut
+
+       // List<TransactionHistory> transactions;
 
         // Créer la pagination avec tri par date décroissante
         Pageable pageable = PageRequest.of(page, size, Sort.by("date").descending());
@@ -63,6 +70,7 @@ public class TransactionHistoryServiceImpl implements TransactionHistoryService 
             transactionPage = transactionHistoryRepository
                     .findByDateBetweenOrderByDateDesc(startDateTime, endDateTime, pageable);
         } else {
+            // Convertir le string en enum TransactionType
             try {
                 TransactionType type = TransactionType.valueOf(transactionType.toUpperCase());
                 transactionPage = transactionHistoryRepository
@@ -73,6 +81,11 @@ public class TransactionHistoryServiceImpl implements TransactionHistoryService 
                         .findByDateBetweenOrderByDateDesc(startDateTime, endDateTime, pageable);
             }
         }
+
+       /* // Convertir les entités en DTOs
+        return transactions.stream()
+                .map(this::convertToDTO)
+                .collect(Collectors.toList());*/
 
         // Convertir les entités en DTOs
         List<TransactionHistoryDTO> content = transactionPage.getContent().stream()
@@ -91,49 +104,6 @@ public class TransactionHistoryServiceImpl implements TransactionHistoryService 
                 .hasNext(transactionPage.hasNext())
                 .hasPrevious(transactionPage.hasPrevious())
                 .build();
-    }
-
-    @Override
-    public List<TransactionHistoryDTO> getTransactionHistory(
-            String transactionType,
-            LocalDate startDate,
-            LocalDate endDate) {
-
-        log.info("Fetching transaction history with filters: type={}, start={}, end={}",
-                transactionType, startDate, endDate);
-
-        // Définir les dates par défaut si non fournies
-        LocalDateTime startDateTime = (startDate != null)
-                ? startDate.atStartOfDay()
-                : LocalDateTime.of(2000, 1, 1, 0, 0); // Date très ancienne par défaut
-
-        LocalDateTime endDateTime = (endDate != null)
-                ? endDate.atTime(LocalTime.MAX)
-                : LocalDateTime.now(); // Date courante par défaut
-
-        List<TransactionHistory> transactions;
-
-        // Si le type est "ALL" ou null, on ne filtre pas par type
-        if (transactionType == null || transactionType.equalsIgnoreCase("ALL")) {
-            transactions = transactionHistoryRepository
-                    .findByTransactionDateBetweenOrderByTransactionDateDesc(startDateTime, endDateTime);
-        } else {
-            // Convertir le string en enum TransactionType
-            try {
-                TransactionType type = TransactionType.valueOf(transactionType.toUpperCase());
-                transactions = transactionHistoryRepository
-                        .findByTransactionTypeAndDateBetween(type, startDateTime, endDateTime);
-            } catch (IllegalArgumentException e) {
-                log.warn("Invalid transaction type: {}, returning all transactions", transactionType);
-                transactions = transactionHistoryRepository
-                        .findByTransactionDateBetweenOrderByTransactionDateDesc(startDateTime, endDateTime);
-            }
-        }
-
-        // Convertir les entités en DTOs
-        return transactions.stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());
     }
 
     private TransactionHistoryDTO convertToDTO(TransactionHistory history) {
@@ -333,5 +303,4 @@ public class TransactionHistoryServiceImpl implements TransactionHistoryService 
         history.setTransferCanceled(true);
         transactionHistoryRepository.save(history);
     }
-    // end sans pagination
 }

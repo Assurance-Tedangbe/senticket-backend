@@ -13,7 +13,7 @@ import java.util.List;
 @Builder
 public class TransactionHistoryResponseDTO { // DTO de réponse paginée
 
-    private List<TransactionHistoryDTO> content;      // Liste des transactions
+    private List<TransactionHistoryDTO> content;       // Liste des transactions
     private long totalElements;                        // Nombre total d'éléments
     private int totalPages;                            // Nombre total de pages
     private int currentPage;                           // Page actuelle (0-indexé)
