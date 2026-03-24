@@ -8,8 +8,6 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import sn.estm.managingrestauranttickets.dto.TicketDTO;
 import sn.estm.managingrestauranttickets.dto.UserDTO;
-import sn.estm.managingrestauranttickets.dto.customisedto.DebitPorterDTO;
-import sn.estm.managingrestauranttickets.dto.customisedto.DebitStudentDTO;
 
 import java.time.LocalDateTime;
 

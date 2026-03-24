@@ -6,7 +6,6 @@ import jakarta.persistence.Column;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
-import jakarta.validation.constraints.Size;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -45,11 +44,3 @@ public class TicketDTO {
     private UserDTO userDTO;
 }
 
-    /*
-    @Size(min = 3, max = 100)
-    @NotBlank(message = "The ticket needs a description.")
-    private String description;
-
-    @Column(unique = true, nullable = false)
-    @NotNull(message = "The payment code is required.")
-    private String paymentCode;*/

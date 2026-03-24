@@ -24,7 +24,7 @@ import sn.estm.managingrestauranttickets.dto.customisedto.CancelTransferTicketsR
 import sn.estm.managingrestauranttickets.dto.customisedto.DebitAccountRequestDTO;
 import sn.estm.managingrestauranttickets.dto.customisedto.PurchaseTicketsRequestDTO;
 import sn.estm.managingrestauranttickets.dto.customisedto.TransferTicketsRequestDTO;
-import sn.estm.managingrestauranttickets.dto.historydto.TransfertHistoryDTO;
+import sn.estm.managingrestauranttickets.dto.historydto.TransactionHistoryDTO;
 import sn.estm.managingrestauranttickets.enumerations.TicketStatus;
 import sn.estm.managingrestauranttickets.enumerations.TicketType;
 import sn.estm.managingrestauranttickets.services.serviceInterfaces.TicketService;
@@ -48,7 +48,7 @@ public class TicketController {
 
         List<TicketDTO> tickets = ticketService.readTickets();
 
-         log.info("Fetched tickets: {}", tickets);
+        log.info("Fetched tickets: {}", tickets);
 
         return new ResponseEntity<>(tickets, HttpStatus.OK);
     }
@@ -118,11 +118,11 @@ public class TicketController {
 
     @PutMapping(value = "/transferTickets", consumes = "application/json", produces = "application/json")
     @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity<TransfertHistoryDTO> transferTickets(@RequestBody TransferTicketsRequestDTO transferTicketsRequestDTO) {
+    public ResponseEntity<TransactionHistoryDTO> transferTickets(@RequestBody TransferTicketsRequestDTO transferTicketsRequestDTO) {
 
         log.info("Processing ticket transfer request {}:", transferTicketsRequestDTO);
 
-        TransfertHistoryDTO historyDTO = ticketService.transferTickets(transferTicketsRequestDTO);
+        TransactionHistoryDTO historyDTO = ticketService.transferTickets(transferTicketsRequestDTO);
 
         log.info("Transfer of tickets completed successfully {}", transferTicketsRequestDTO);
 
@@ -141,6 +141,7 @@ public class TicketController {
 
         log.info("Transfer cancelled successfully {} at {}", cancelTransferTicketsRequestDTO, LocalDateTime.now());
     }
+}
    /*
     //@PostAuthorize("hasAnyAuthority('ADMIN', 'AGENT', 'ETUDIANT', 'PORTIER')")
     @GetMapping(value = "/{ticketId}", produces = "application/json")
@@ -152,58 +153,6 @@ public class TicketController {
 
         return new ResponseEntity<>(ticket, HttpStatus.OK);
     }
-
-    //@PostAuthorize("hasAuthority('ADMIN')")
-    @PutMapping(value = "/{ticketId}", consumes = "application/json", produces = "application/json")
-    public ResponseEntity<TicketDTO> updateTicket(@PathVariable Long ticketId,
-                                                  @RequestBody TicketDTO ticketDTO) {
-
-        log.info("Updating ticket with ID: {} with details: {}", ticketId, ticketDTO);
-
-        TicketDTO updatedTicket = ticketService.updateTicket(ticketDTO);
-
-        log.info("Ticket updated successfully with ID: {}", updatedTicket.getTicketId());
-
-        return new ResponseEntity<>(updatedTicket, HttpStatus.OK);
-    }
-
-    //@PostAuthorize("hasAuthority('ADMIN')")
-    @DeleteMapping(value = "/{ticketId}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void deleteTicket(@PathVariable Long ticketId) {
-
-        log.info("Deleting ticket with ID: {}", ticketId);
-
-        ticketService.deleteTicket(ticketId);
-
-        log.info("Ticket deleted successfully with ID: {}", ticketId);
-    }
-
-     //@PostAuthorize("hasAnyAuthority('ADMIN', 'AGENT', 'ETUDIANT', 'PORTIER')")
-    @PutMapping(value = "/ticketStatus/{ticketId}", consumes = "application/json")
-    @ResponseStatus(HttpStatus.OK)
-    public void updateTicketStatus(@PathVariable Long ticketId,
-                                   @RequestBody TicketStatus ticketStatus) {
-
-        log.info("Updating ticket status for ticket with ID: {}", ticketId);
-
-        ticketService.updateTicketStatus(ticketId, ticketStatus);
-
-        log.info("TicketStatus updated successfully for ticket with ID: {}", ticketId);
-    }
-
-    //@PostAuthorize("hasAuthority('ADMIN')")
-    @PutMapping(value = "/book/{ticketId}")
-    @ResponseStatus(HttpStatus.OK)
-    public void bookTicket(@PathVariable Long ticketId) {
-
-        log.info("Booking ticket with ID: {}", ticketId);
-
-        ticketService.bookTicket(ticketId);
-
-        log.info("Ticket booked successfully with ID: {}", ticketId);
-    }
-
 
     //@PostAuthorize("hasAnyAuthority('ADMIN', 'AGENT', 'ETUDIANT', 'PORTIER')")
     @GetMapping(value = "/ticketStatus/{ticketStatus}", produces = "application/json")
@@ -227,4 +176,3 @@ public class TicketController {
         return new ResponseEntity<>(ticketsByUserId, HttpStatus.OK);
     }
      */
-}

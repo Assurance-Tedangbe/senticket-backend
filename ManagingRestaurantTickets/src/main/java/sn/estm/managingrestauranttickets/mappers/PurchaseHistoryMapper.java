@@ -17,9 +17,9 @@ public interface PurchaseHistoryMapper {
     @Mapping(source = "ticket", target = "ticketDTO")
     PurchaseHistoryDTO toDto(PurchaseHistory purchaseHistory);
 
-    PurchaseHistory toEntity(PurchaseHistoryDTO purchaseHistoryDTO);
+    /* PurchaseHistory toEntity(PurchaseHistoryDTO purchaseHistoryDTO);
 
     List<PurchaseHistoryDTO> toDtoSet(List<PurchaseHistory> purchaseHistories);
 
-    Set<PurchaseHistory> toEntitySet(Set<PurchaseHistoryDTO> purchaseHistoryDTOS);
+    Set<PurchaseHistory> toEntitySet(Set<PurchaseHistoryDTO> purchaseHistoryDTOS);*/
 }
