@@ -18,8 +18,6 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import jakarta.persistence.Temporal;
 import jakarta.persistence.TemporalType;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.Size;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;
@@ -74,12 +72,5 @@ public class Ticket implements Serializable {
    @JoinColumn(name = "user_id")
    private User user;
 }
-  /* @Size(min = 3, max = 100)
-    @NotBlank(message = "The ticket needs a description.")
-    private String description;
 
-    Payment Code (Unique, generated on purchase, null initially)
-    * The unique constraint should be applied *only* when the code is set.
-    * It's safer to handle the uniqueness and generation in the service layer */
-   // private String paymentCode;
 

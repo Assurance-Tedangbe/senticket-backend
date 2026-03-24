@@ -43,14 +43,6 @@ public class TransactionHistory {
     @Column(nullable = false)
     private LocalDateTime date;
 
-    // Champs communs
-    /* @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
-    private User user;*/ // L'utilisateur principal concerné (acheteur, étudiant débité, sender)
-
-    /* @Column(nullable = false)
-    private String status; // SUCCESS, FAILED, CANCELLED*/
-
     // Champs optionnels pour les tickets (peut être une liste d'IDs ou une relation)
     @Column(name = "ticket_ids")
     private String ticketIds; // Stocke les ids des tickets concernés comme "1,2,3"
@@ -62,8 +54,6 @@ public class TransactionHistory {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "purchaser_id")
     private User purchaser; // L'acheteur des ticket(s)
-
-    /* private Double totalAmount; // Montant total de l'achat*/
 
     // Champs spécifiques aux DÉBITS (DEBIT)
     @ManyToOne(fetch = FetchType.LAZY)
@@ -89,8 +79,5 @@ public class TransactionHistory {
     @PrePersist
     protected void onCreate() {
         date = LocalDateTime.now();
-       /* if (status == null) {
-            status = "SUCCESS";
-        }*/
     }
 }

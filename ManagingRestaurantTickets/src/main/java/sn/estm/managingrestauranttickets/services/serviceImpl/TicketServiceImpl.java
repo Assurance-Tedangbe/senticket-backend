@@ -70,8 +70,6 @@ public class TicketServiceImpl implements TicketService {
     @Override
     public List<TicketDTO> createTickets(CreationTicketsRequestDTO creationTicketsRequestDTO) {
 
-        //private static final double price_a = 100.0;
-
         log.info(" Creating tickets with requests {}", creationTicketsRequestDTO);
 
         if (creationTicketsRequestDTO.getCountA() < 0 || creationTicketsRequestDTO.getCountB() < 0) {

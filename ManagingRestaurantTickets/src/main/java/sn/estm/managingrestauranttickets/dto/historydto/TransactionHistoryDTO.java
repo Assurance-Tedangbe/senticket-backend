@@ -30,21 +30,12 @@ public class TransactionHistoryDTO {
     @NotNull(message = "transferDate is required.")
     private LocalDateTime date;
 
-    // Champs communs
-    // private User user; // L'utilisateur principal concerné (acheteur, étudiant débité, sender)
-
-   /* @NotNull(message = "status is required.")
-    private String status; */// SUCCESS, FAILED, CANCELLED*/
-
     // Tickets concernés
     private List<Long> ticketIds;
     private List<String> ticketTypes;
-    /*private String ticketIds; // Stocke les ids des tickets concernés comme "1,2,3"
-    private String ticketTypes; // Stocke les types de tickets concernés comme "A,B"*/
 
     // Champs spécifiques aux ACHATS (PURCHASE)
     private UserDTO purchaserDTO; // L'acheteur des ticket(s)
-    /* private Double totalAmount; // Montant total de l'achat*/
 
     // Champs spécifiques aux DÉBITS (DEBIT)
     private UserDTO porterDTO; // Le portier qui a effectué le débit
@@ -56,16 +47,13 @@ public class TransactionHistoryDTO {
     private Boolean transferCanceled;
 
     // Méthodes utilitaires pour construire les DTOs selon le type
-    public static TransactionHistoryDTO fromPurchase(
+   /* public static TransactionHistoryDTO fromPurchase(
             Long id,
             LocalDateTime date,
             Integer ticketsCount,
             UserDTO purchaserDTO,
             List<Long> ticketIds,
-            List<String> ticketTypes
-            /*String ticketIds,
-            String ticketTypes*/
-            /* Double totalAmount */) {
+            List<String> ticketTypes) {
 
         return TransactionHistoryDTO.builder()
                 .id(id)
@@ -120,5 +108,5 @@ public class TransactionHistoryDTO {
                 .ticketTypes(ticketTypes)
                 .transferCanceled(canceled)
                 .build();
-    }
+    }*/
 }

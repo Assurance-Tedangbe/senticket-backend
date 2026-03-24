@@ -16,6 +16,7 @@ import sn.estm.managingrestauranttickets.entities.TransactionHistory;
 import sn.estm.managingrestauranttickets.entities.User;
 import sn.estm.managingrestauranttickets.enumerations.TransactionType;
 import sn.estm.managingrestauranttickets.exceptions.ResourceNotFoundException;
+import sn.estm.managingrestauranttickets.mappers.TransactionHistoryMapper;
 import sn.estm.managingrestauranttickets.repositories.TransactionHistoryRepository;
 import sn.estm.managingrestauranttickets.services.serviceInterfaces.TransactionHistoryService;
 
@@ -37,6 +38,8 @@ import org.springframework.data.domain.Pageable;
 public class TransactionHistoryServiceImpl implements TransactionHistoryService {
 
     private final TransactionHistoryRepository transactionHistoryRepository;
+    private final TransactionHistoryMapper transactionHistoryMapper;
+
 
     @Override
     public TransactionHistoryResponseDTO getTransactionHistory(
@@ -89,7 +92,8 @@ public class TransactionHistoryServiceImpl implements TransactionHistoryService 
 
         // Convertir les entités en DTOs
         List<TransactionHistoryDTO> content = transactionPage.getContent().stream()
-                .map(this::convertToDTO)
+                //.map(this::convertToDTO)
+                .map(transactionHistoryMapper::toDto)  // Utilisation du mapper
                 .collect(Collectors.toList());
 
         // Construire la réponse paginée
@@ -106,11 +110,11 @@ public class TransactionHistoryServiceImpl implements TransactionHistoryService 
                 .build();
     }
 
-    private TransactionHistoryDTO convertToDTO(TransactionHistory history) {
+  /*  private TransactionHistoryDTO convertToDTO(TransactionHistory history) {
         switch (history.getTransactionType()) {
             case PURCHASE:
                 return convertPurchaseToDTO(history);
-                /* // ceci peut remplacer   return convertPurchaseToDTO(history);
+                *//* // ceci peut remplacer   return convertPurchaseToDTO(history);
                 return TransactionHistoryDTO.fromPurchase(
                 history.getId(),
                 history.getTransactionDate(),
@@ -118,7 +122,7 @@ public class TransactionHistoryServiceImpl implements TransactionHistoryService 
                 convertToUserDTO(history.getUser()),
                 parseTicketIds(history.getTicketIds()),
                 parseTicketTypes(history.getTicketTypes()),
-            );  */
+            );  *//*
             case DEBIT:
                 return convertDebitToDTO(history);
             case TRANSFER:
@@ -138,14 +142,14 @@ public class TransactionHistoryServiceImpl implements TransactionHistoryService 
                 .ticketIds(parseTicketIds(history.getTicketIds()))
                 .ticketTypes(parseTicketTypes(history.getTicketTypes()))
                 .build();
-        /* return TransactionHistoryDTO.fromPurchase(
+        *//* return TransactionHistoryDTO.fromPurchase(
                 history.getId(),
                 history.getTransactionDate(),
                 history.getTicketsCount(),
                 convertToUserDTO(history.getUser()),
                 parseTicketIds(history.getTicketIds()),
                 parseTicketTypes(history.getTicketTypes()),
-            ); */
+            ); *//*
     }
 
     private TransactionHistoryDTO convertDebitToDTO(TransactionHistory history) {
@@ -212,7 +216,7 @@ public class TransactionHistoryServiceImpl implements TransactionHistoryService 
         return Arrays.stream(ticketTypesStr.split(","))
                 .map(String::trim)
                 .collect(Collectors.toList());
-    }
+    }*/
 
     // Méthodes utilitaires pour enregistrer les transactions
 

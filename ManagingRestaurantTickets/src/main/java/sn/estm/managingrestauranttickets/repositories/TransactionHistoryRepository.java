@@ -49,17 +49,3 @@ public interface TransactionHistoryRepository extends JpaRepository<TransactionH
             @Param("endDate") LocalDateTime endDate);
 }
 
-   /* @Query("SELECT t FROM TransactionHistory t WHERE " +
-            "(:transactionType IS NULL OR t.transactionType = :transactionType) " +
-            "AND t.transactionDate BETWEEN :startDate AND :endDate " +
-            "ORDER BY t.transactionDate DESC")
-    List<TransactionHistory> findByTransactionTypeAndDateBetween(
-            @Param("transactionType") TransactionType transactionType,
-            @Param("startDate") LocalDateTime startDate,
-            @Param("endDate") LocalDateTime endDate
-    );
-
-    List<TransactionHistory> findByDateBetweenOrderByDateDesc(
-            LocalDateTime startDate,
-            LocalDateTime endDate
-    );*/

@@ -1,3 +1,4 @@
+/*
 package sn.estm.managingrestauranttickets.services;
 
 import lombok.RequiredArgsConstructor;
@@ -110,3 +111,4 @@ public class DataMigrationService {
     }
 }
 
+*/
