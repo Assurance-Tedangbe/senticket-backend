@@ -30,5 +30,4 @@ public interface TransactionHistoryService {
     TransactionHistory recordDebit(User porter, User student, List<Ticket> tickets);
     TransactionHistory recordTransfer(User sender, User recipient, List<Ticket> tickets);
 
-    void cancelTransfer(Long transactionId);
 }

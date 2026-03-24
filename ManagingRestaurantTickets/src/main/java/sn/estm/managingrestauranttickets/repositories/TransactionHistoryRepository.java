@@ -40,12 +40,5 @@ public interface TransactionHistoryRepository extends JpaRepository<TransactionH
             LocalDateTime startDate,
             LocalDateTime endDate,
             Pageable pageable);
-
-    @Query("SELECT t FROM TransactionHistory t WHERE t.ticketIds LIKE %:ticketIds% " +
-            "AND t.date BETWEEN :startDate AND :endDate")
-    Optional<TransactionHistory> findByTicketIdsContainingAndDateBetween(
-            @Param("ticketIds") String ticketIds,
-            @Param("startDate") LocalDateTime startDate,
-            @Param("endDate") LocalDateTime endDate);
 }
 

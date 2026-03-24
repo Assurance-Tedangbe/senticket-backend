@@ -6,16 +6,13 @@ import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import sn.estm.managingrestauranttickets.dto.RoleDTO;
-import sn.estm.managingrestauranttickets.dto.UserDTO;
+
 import sn.estm.managingrestauranttickets.dto.historydto.TransactionHistoryDTO;
 import sn.estm.managingrestauranttickets.dto.historydto.TransactionHistoryResponseDTO;
-import sn.estm.managingrestauranttickets.entities.Role;
 import sn.estm.managingrestauranttickets.entities.Ticket;
 import sn.estm.managingrestauranttickets.entities.TransactionHistory;
 import sn.estm.managingrestauranttickets.entities.User;
 import sn.estm.managingrestauranttickets.enumerations.TransactionType;
-import sn.estm.managingrestauranttickets.exceptions.ResourceNotFoundException;
 import sn.estm.managingrestauranttickets.mappers.TransactionHistoryMapper;
 import sn.estm.managingrestauranttickets.repositories.TransactionHistoryRepository;
 import sn.estm.managingrestauranttickets.services.serviceInterfaces.TransactionHistoryService;
@@ -23,8 +20,7 @@ import sn.estm.managingrestauranttickets.services.serviceInterfaces.TransactionH
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.util.Arrays;
-import java.util.Collections;
+
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -61,8 +57,6 @@ public class TransactionHistoryServiceImpl implements TransactionHistoryService 
                 ? endDate.atTime(LocalTime.MAX)
                 : LocalDateTime.now(); // Date courante par défaut
 
-       // List<TransactionHistory> transactions;
-
         // Créer la pagination avec tri par date décroissante
         Pageable pageable = PageRequest.of(page, size, Sort.by("date").descending());
 
@@ -85,15 +79,9 @@ public class TransactionHistoryServiceImpl implements TransactionHistoryService 
             }
         }
 
-       /* // Convertir les entités en DTOs
-        return transactions.stream()
-                .map(this::convertToDTO)
-                .collect(Collectors.toList());*/
-
         // Convertir les entités en DTOs
         List<TransactionHistoryDTO> content = transactionPage.getContent().stream()
-                //.map(this::convertToDTO)
-                .map(transactionHistoryMapper::toDto)  // Utilisation du mapper
+                .map(transactionHistoryMapper::toDto)
                 .collect(Collectors.toList());
 
         // Construire la réponse paginée
@@ -109,114 +97,6 @@ public class TransactionHistoryServiceImpl implements TransactionHistoryService 
                 .hasPrevious(transactionPage.hasPrevious())
                 .build();
     }
-
-  /*  private TransactionHistoryDTO convertToDTO(TransactionHistory history) {
-        switch (history.getTransactionType()) {
-            case PURCHASE:
-                return convertPurchaseToDTO(history);
-                *//* // ceci peut remplacer   return convertPurchaseToDTO(history);
-                return TransactionHistoryDTO.fromPurchase(
-                history.getId(),
-                history.getTransactionDate(),
-                history.getTicketsCount(),
-                convertToUserDTO(history.getUser()),
-                parseTicketIds(history.getTicketIds()),
-                parseTicketTypes(history.getTicketTypes()),
-            );  *//*
-            case DEBIT:
-                return convertDebitToDTO(history);
-            case TRANSFER:
-                return convertTransferToDTO(history);
-            default:
-                throw new IllegalArgumentException("Unknown transaction type: " + history.getTransactionType());
-        }
-    }
-
-    private TransactionHistoryDTO convertPurchaseToDTO(TransactionHistory history) {
-        return TransactionHistoryDTO.builder()
-                .id(history.getId())
-                .transactionType(history.getTransactionType())
-                .date(history.getDate())
-                .ticketsCount(history.getTicketsCount())
-                .purchaserDTO(convertToUserDTO(history.getPurchaser()))
-                .ticketIds(parseTicketIds(history.getTicketIds()))
-                .ticketTypes(parseTicketTypes(history.getTicketTypes()))
-                .build();
-        *//* return TransactionHistoryDTO.fromPurchase(
-                history.getId(),
-                history.getTransactionDate(),
-                history.getTicketsCount(),
-                convertToUserDTO(history.getUser()),
-                parseTicketIds(history.getTicketIds()),
-                parseTicketTypes(history.getTicketTypes()),
-            ); *//*
-    }
-
-    private TransactionHistoryDTO convertDebitToDTO(TransactionHistory history) {
-        return TransactionHistoryDTO.builder()
-                .id(history.getId())
-                .transactionType(history.getTransactionType())
-                .date(history.getDate())
-                .ticketsCount(history.getTicketsCount())
-                .studentDTO(convertToUserDTO(history.getStudent()))
-                .porterDTO(convertToUserDTO(history.getPorter()))
-                .ticketIds(parseTicketIds(history.getTicketIds()))
-                .ticketTypes(parseTicketTypes(history.getTicketTypes()))
-                .build();
-    }
-
-    private TransactionHistoryDTO convertTransferToDTO(TransactionHistory history) {
-        return TransactionHistoryDTO.builder()
-                .id(history.getId())
-                .transactionType(history.getTransactionType())
-                .date(history.getDate())
-                .ticketsCount(history.getTicketsCount())
-                .senderDTO(convertToUserDTO(history.getSender()))
-                .recipientDTO(convertToUserDTO(history.getRecipient()))
-                .ticketIds(parseTicketIds(history.getTicketIds()))
-                .ticketTypes(parseTicketTypes(history.getTicketTypes()))
-                .transferCanceled(history.getTransferCanceled())
-                .build();
-    }
-
-    private UserDTO convertToUserDTO(User user) {
-        if (user == null) return null;
-        return UserDTO.builder()
-                .id(user.getId())
-                .username(user.getUsername())
-                .email(user.getEmail())
-                .firstName(user.getFirstName())
-                .lastName(user.getLastName())
-                .roleDTO(convertToRoleDTO(user.getRole()))
-                .build();
-    }
-
-    private RoleDTO convertToRoleDTO(Role role) {
-        if (role == null) return null;
-        return RoleDTO.builder()
-                .id(role.getId())
-                .name(role.getName())
-                .build();
-    }
-
-    private List<Long> parseTicketIds(String ticketIdsStr) {
-        if (ticketIdsStr == null || ticketIdsStr.trim().isEmpty()) {
-            return Collections.emptyList();
-        }
-        return Arrays.stream(ticketIdsStr.split(","))
-                .map(String::trim)
-                .map(Long::parseLong)
-                .collect(Collectors.toList());
-    }
-
-    private List<String> parseTicketTypes(String ticketTypesStr) {
-        if (ticketTypesStr == null || ticketTypesStr.trim().isEmpty()) {
-            return Collections.emptyList();
-        }
-        return Arrays.stream(ticketTypesStr.split(","))
-                .map(String::trim)
-                .collect(Collectors.toList());
-    }*/
 
     // Méthodes utilitaires pour enregistrer les transactions
 
@@ -241,7 +121,6 @@ public class TransactionHistoryServiceImpl implements TransactionHistoryService 
 
         log.info("Recorded purchase transaction for user: {}, tickets: {}", purchaseUser.getUsername(), tickets.size());
         return transactionHistoryRepository.save(history);
-
     }
 
     @Transactional
@@ -293,18 +172,5 @@ public class TransactionHistoryServiceImpl implements TransactionHistoryService 
         log.info("Recorded transfer transaction from: {} to: {}, tickets: {}",
                 sender.getUsername(), recipient.getUsername(), tickets.size());
         return transactionHistoryRepository.save(history);
-    }
-
-    @Transactional
-    public void cancelTransfer(Long transactionId) {
-        TransactionHistory history = transactionHistoryRepository.findById(transactionId)
-                .orElseThrow(() -> new ResourceNotFoundException("Transaction not found: " + transactionId));
-
-        if (history.getTransactionType() != TransactionType.TRANSFER) {
-            throw new IllegalStateException("Only transfer transactions can be cancelled");
-        }
-
-        history.setTransferCanceled(true);
-        transactionHistoryRepository.save(history);
     }
 }
