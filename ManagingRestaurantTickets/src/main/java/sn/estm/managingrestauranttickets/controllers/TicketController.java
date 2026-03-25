@@ -25,6 +25,7 @@ import sn.estm.managingrestauranttickets.dto.customisedto.DebitAccountRequestDTO
 import sn.estm.managingrestauranttickets.dto.customisedto.PurchaseTicketsRequestDTO;
 import sn.estm.managingrestauranttickets.dto.customisedto.TransferTicketsRequestDTO;
 import sn.estm.managingrestauranttickets.dto.historydto.TransactionHistoryDTO;
+import sn.estm.managingrestauranttickets.dto.statisticsDTO.TicketStatisticsDTO;
 import sn.estm.managingrestauranttickets.enumerations.TicketStatus;
 import sn.estm.managingrestauranttickets.enumerations.TicketType;
 import sn.estm.managingrestauranttickets.services.serviceInterfaces.TicketService;
@@ -140,6 +141,23 @@ public class TicketController {
         ticketService.cancelTransferTickets(cancelTransferTicketsRequestDTO);
 
         log.info("Transfer cancelled successfully {} at {}", cancelTransferTicketsRequestDTO, LocalDateTime.now());
+    }
+
+    /**
+     * Endpoint pour récupérer les statistiques des tickets
+     * @param userId (optionnel) - ID de l'utilisateur pour les stats spécifiques
+     * @return TicketStatisticsDTO contenant toutes les statistiques
+     */
+    @GetMapping("/statistics")
+    @ResponseStatus(HttpStatus.OK)
+    public ResponseEntity<TicketStatisticsDTO> getTicketStatistics(
+            @RequestParam(value = "userId", required = false) Long userId) {
+
+        log.info("GET statistics with userId: {}", userId);
+
+        TicketStatisticsDTO statistics = ticketService.getTicketStatistics(userId);
+
+        return ResponseEntity.ok(statistics);
     }
 }
    /*

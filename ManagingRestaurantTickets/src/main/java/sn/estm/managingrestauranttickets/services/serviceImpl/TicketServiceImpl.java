@@ -28,6 +28,7 @@ import sn.estm.managingrestauranttickets.dto.customisedto.CancelTransferDTO;
 import sn.estm.managingrestauranttickets.dto.customisedto.OriginalSenderDTO;
 
 import sn.estm.managingrestauranttickets.dto.historydto.TransactionHistoryDTO;
+import sn.estm.managingrestauranttickets.dto.statisticsDTO.TicketStatisticsDTO;
 import sn.estm.managingrestauranttickets.entities.TransactionHistory;
 import sn.estm.managingrestauranttickets.entities.User;
 import sn.estm.managingrestauranttickets.entities.Ticket;
@@ -702,6 +703,92 @@ public class TicketServiceImpl implements TicketService {
     }*/
 
     //********* end of cancelTransferTickets service ***********
+
+    // statistics
+    @Override
+    public TicketStatisticsDTO getTicketStatistics(Long userId) {
+        log.info("Fetching ticket statistics for userId: {}", userId);
+
+        // 1. Récupérer tous les utilisateurs ayant le rôle ETUDIANT
+        List<User> students = userRepository.findByRoleName("ETUDIANT");
+
+        // 2. Construire les statistiques par utilisateur
+        Map<String, TicketStatisticsDTO.UserTicketStats> userStatsMap = new LinkedHashMap<>();
+
+        for (User student : students) {
+            // Tickets achetés par l'utilisateur (booked=true et status=BOOKED)
+            List<Ticket> purchasedTickets = ticketRepository.findByUserAndBookedAndStatus(
+                    student, true, TicketStatus.BOOKED);
+
+            // Tickets débités pour cet utilisateur (status=USED)
+            List<Ticket> debitedTickets = ticketRepository.findByUserAndStatus(
+                    student, TicketStatus.USED);
+
+            TicketStatisticsDTO.UserTicketStats stats = TicketStatisticsDTO.UserTicketStats.builder()
+                    .userId(student.getId())
+                    .username(student.getUsername())
+                   // .firstName(student.getFirstName())
+                   // .lastName(student.getLastName())
+                    .purchasedTicketsCount(purchasedTickets.size())
+                    .debitedTicketsCount(debitedTickets.size())
+                    .totalTicketsCount(purchasedTickets.size() + debitedTickets.size())
+                    .build();
+
+            userStatsMap.put(student.getUsername(), stats);
+        }
+
+        // Si un userId spécifique est fourni, filtrer les statistiques
+        if (userId != null) {
+            User specificUser = userRepository.findById(userId)
+                    .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + userId));
+
+            // Ne garder que les statistiques de cet utilisateur
+            Map<String, TicketStatisticsDTO.UserTicketStats> filteredStats = new LinkedHashMap<>();
+            if (userStatsMap.containsKey(specificUser.getUsername())) {
+                filteredStats.put(specificUser.getUsername(), userStatsMap.get(specificUser.getUsername()));
+            }
+            userStatsMap = filteredStats;
+        }
+
+        // 3. Statistiques globales
+        // Total des tickets achetés (tous utilisateurs confondus)
+        List<Ticket> allPurchasedTickets = ticketRepository.findByBookedAndStatus(true, TicketStatus.BOOKED);
+        long totalPurchasedTickets = allPurchasedTickets.size();
+
+        // Total des tickets débités (tous utilisateurs confondus)
+        List<Ticket> allDebitedTickets = ticketRepository.findByStatus(TicketStatus.USED);
+        long totalDebitedTickets = allDebitedTickets.size();
+
+        TicketStatisticsDTO.GlobalTicketStats globalStats = TicketStatisticsDTO.GlobalTicketStats.builder()
+                .totalPurchasedTickets(totalPurchasedTickets)
+                .totalDebitedTickets(totalDebitedTickets)
+                .totalTicketsProcessed(totalPurchasedTickets + totalDebitedTickets)
+                .build();
+
+        // 4. Statistiques des tickets disponibles (status = AVAILABLE)
+        List<Ticket> availableTickets = ticketRepository.findByStatus(TicketStatus.AVAILABLE);
+
+        long typeATicketsAvailable = availableTickets.stream()
+                .filter(t -> t.getType() == TicketType.A)
+                .count();
+
+        long typeBTicketsAvailable = availableTickets.stream()
+                .filter(t -> t.getType() == TicketType.B)
+                .count();
+
+        TicketStatisticsDTO.AvailableTicketsStats availableStats = TicketStatisticsDTO.AvailableTicketsStats.builder()
+                .typeATicketsAvailable((int) typeATicketsAvailable)
+                .typeBTicketsAvailable((int) typeBTicketsAvailable)
+                .totalTicketsAvailable((int) availableTickets.size())
+                .build();
+
+        // 5. Construire la réponse finale
+        return TicketStatisticsDTO.builder()
+                .userStats(userStatsMap)
+                .globalStats(globalStats)
+                .availableStats(availableStats)
+                .build();
+    }
 
     // Suppl. methods
     @Override

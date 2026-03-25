@@ -8,6 +8,8 @@ package sn.estm.managingrestauranttickets.repositories;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 import sn.estm.managingrestauranttickets.entities.User;
+
+import java.util.List;
 import java.util.Optional;
 
 @Repository
@@ -41,5 +43,7 @@ public interface UserRepository extends JpaRepository<User, Long> {
      * @return {@code true} if at least one user exists with the given role ID, {@code false} otherwise
      */
     boolean existsAllByRoleId(Long id);
+
+    List<User> findByRoleName(String roleName);
 }
 

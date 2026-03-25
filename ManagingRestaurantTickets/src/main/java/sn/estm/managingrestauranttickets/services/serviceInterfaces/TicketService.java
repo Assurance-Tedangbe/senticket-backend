@@ -10,6 +10,7 @@ import sn.estm.managingrestauranttickets.dto.customisedto.PurchaseTicketsRequest
 import sn.estm.managingrestauranttickets.dto.customisedto.TransferTicketsRequestDTO;
 import sn.estm.managingrestauranttickets.dto.customisedto.CancelTransferTicketsRequestDTO;
 import sn.estm.managingrestauranttickets.dto.historydto.TransactionHistoryDTO;
+import sn.estm.managingrestauranttickets.dto.statisticsDTO.TicketStatisticsDTO;
 import sn.estm.managingrestauranttickets.enumerations.TicketType;
 
 
@@ -28,6 +29,13 @@ public interface TicketService {
     TransactionHistoryDTO transferTickets(TransferTicketsRequestDTO transferTicketsRequestDTO);
 
     void cancelTransferTickets(CancelTransferTicketsRequestDTO cancelTransferTicketsRequestDTO);
+
+    /**
+     * Récupère les statistiques des tickets
+     * @param userId (optionnel) - ID de l'utilisateur pour les stats spécifiques
+     * @return TicketStatisticsDTO contenant toutes les statistiques
+     */
+    TicketStatisticsDTO getTicketStatistics(Long userId);
 
     List<TicketDTO> readTicketsByUserId(Long userId);
 
