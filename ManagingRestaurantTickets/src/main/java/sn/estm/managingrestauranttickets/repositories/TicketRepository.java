@@ -32,13 +32,36 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
             TicketStatus status
     );
 
+    /**
+     * Retrieves a user's tickets by status and ticketStatus
+     * @param user The owner user
+     * @param booked Booking status (true = reserved)
+     * @param status Ticket status (BOOKED, USED, AVAILABLE)
+     * @return List of tickets matching the criteria
+     */
     List<Ticket> findByUserAndBookedAndStatus(User user, boolean booked, TicketStatus status);
+
+    /**
+     * Retrieves a user's tickets by ticket status
+     * @param user The owner user
+     * @param status Ticket status (BOOKED, USED, AVAILABLE)
+     * @return List of tickets matching the criteria
+     */
     List<Ticket> findByUserAndStatus(User user, TicketStatus status);
+
+    /**
+     * Retrieves all tickets by booking status and ticket status
+     * Used for overall statistics(statistiques globales)
+     * @param booked Booking status (true)
+     * @param status Ticket status (BOOKED, USED, AVAILABLE)
+     * @return List of tickets matching the criteria
+     */
     List<Ticket> findByBookedAndStatus(boolean booked, TicketStatus status);
 
     /**
-     * Retrieves a list of tickets that match the specified status.
-     * @param status the status of the tickets to retrieve
+     * Retrieves all tickets by ticket status
+     * @param status Ticket status (BOOKED, USED, AVAILABLE)
+     * @return List of tickets matching the status
      */
     List<Ticket> findByStatus(TicketStatus status);
 

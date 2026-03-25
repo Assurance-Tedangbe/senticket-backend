@@ -705,88 +705,120 @@ public class TicketServiceImpl implements TicketService {
     //********* end of cancelTransferTickets service ***********
 
     // statistics
+    /**
+     * Service pour récupérer les statistiques des tickets
+     * Retourne toutes les statistiques demandées : par utilisateur, globales, disponibles
+     * @param userId (optionnel) - Si fourni, retourne les stats uniquement pour cet utilisateur
+     * @return TicketStatisticsDTO contenant toutes les statistiques
+     */
     @Override
     public TicketStatisticsDTO getTicketStatistics(Long userId) {
         log.info("Fetching ticket statistics for userId: {}", userId);
 
-        // 1. Récupérer tous les utilisateurs ayant le rôle ETUDIANT
+        // ==================== 1. Récupérer les utilisateurs étudiants ====================
+        // On récupère tous les utilisateurs ayant le rôle ETUDIANT
         List<User> students = userRepository.findByRoleName("ETUDIANT");
+        log.debug("Found {} students", students.size());
 
-        // 2. Construire les statistiques par utilisateur
+        // ==================== 2. Construire les statistiques par utilisateur ====================
+        // Map pour stocker les statistiques de chaque étudiant (clé = username)
         Map<String, TicketStatisticsDTO.UserTicketStats> userStatsMap = new LinkedHashMap<>();
 
         for (User student : students) {
-            // Tickets achetés par l'utilisateur (booked=true et status=BOOKED)
+            // 2.1 Récupérer les tickets achetés par l'utilisateur
+            // Critères: booked=true ET status=BOOKED
             List<Ticket> purchasedTickets = ticketRepository.findByUserAndBookedAndStatus(
                     student, true, TicketStatus.BOOKED);
+            log.debug("Student {} has {} purchased tickets", student.getUsername(), purchasedTickets.size());
 
-            // Tickets débités pour cet utilisateur (status=USED)
+            // 2.2 Récupérer les tickets débités pour cet utilisateur
+            // Critères: status=USED
             List<Ticket> debitedTickets = ticketRepository.findByUserAndStatus(
                     student, TicketStatus.USED);
+            log.debug("Student {} has {} debited tickets", student.getUsername(), debitedTickets.size());
 
+            // 2.3 Construire les statistiques pour cet étudiant
             TicketStatisticsDTO.UserTicketStats stats = TicketStatisticsDTO.UserTicketStats.builder()
                     .userId(student.getId())
                     .username(student.getUsername())
-                   // .firstName(student.getFirstName())
-                   // .lastName(student.getLastName())
-                    .purchasedTicketsCount(purchasedTickets.size())
-                    .debitedTicketsCount(debitedTickets.size())
-                    .totalTicketsCount(purchasedTickets.size() + debitedTickets.size())
+                    .firstName(student.getFirstName())
+                    .lastName(student.getLastName())
+                    .purchasedTicketsCount(purchasedTickets.size())   // Nombre de tickets achetés
+                    .debitedTicketsCount(debitedTickets.size())       // Nombre de tickets débités
+                    .totalTicketsCount(purchasedTickets.size() + debitedTickets.size()) // Total
                     .build();
 
             userStatsMap.put(student.getUsername(), stats);
         }
 
-        // Si un userId spécifique est fourni, filtrer les statistiques
+        // ==================== 3. Filtrer par utilisateur spécifique si userId fourni ====================
+        // Si un userId est passé en paramètre, on ne garde que les stats de cet utilisateur
         if (userId != null) {
             User specificUser = userRepository.findById(userId)
                     .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + userId));
 
-            // Ne garder que les statistiques de cet utilisateur
+            // Créer une nouvelle map filtrée
             Map<String, TicketStatisticsDTO.UserTicketStats> filteredStats = new LinkedHashMap<>();
             if (userStatsMap.containsKey(specificUser.getUsername())) {
                 filteredStats.put(specificUser.getUsername(), userStatsMap.get(specificUser.getUsername()));
+                log.info("Filtered statistics for user: {}", specificUser.getUsername());
+            } else {
+                log.warn("User {} is not a student or has no tickets", specificUser.getUsername());
             }
             userStatsMap = filteredStats;
         }
 
-        // 3. Statistiques globales
-        // Total des tickets achetés (tous utilisateurs confondus)
+        // ==================== 4. Calculer les statistiques globales ====================
+        // 4.1 Total des tickets achetés (tous utilisateurs confondus)
+        // Critères: booked=true ET status=BOOKED
         List<Ticket> allPurchasedTickets = ticketRepository.findByBookedAndStatus(true, TicketStatus.BOOKED);
         long totalPurchasedTickets = allPurchasedTickets.size();
+        log.debug("Total purchased tickets (all users): {}", totalPurchasedTickets);
 
-        // Total des tickets débités (tous utilisateurs confondus)
+        // 4.2 Total des tickets débités (tous utilisateurs confondus)
+        // Critères: status=USED
         List<Ticket> allDebitedTickets = ticketRepository.findByStatus(TicketStatus.USED);
         long totalDebitedTickets = allDebitedTickets.size();
+        log.debug("Total debited tickets (all users): {}", totalDebitedTickets);
 
+        // 4.3 Construction des statistiques globales
         TicketStatisticsDTO.GlobalTicketStats globalStats = TicketStatisticsDTO.GlobalTicketStats.builder()
-                .totalPurchasedTickets(totalPurchasedTickets)
-                .totalDebitedTickets(totalDebitedTickets)
-                .totalTicketsProcessed(totalPurchasedTickets + totalDebitedTickets)
+                .totalPurchasedTickets(totalPurchasedTickets)                    // Total achetés
+                .totalDebitedTickets(totalDebitedTickets)                        // Total débités
+                .totalTicketsProcessed(totalPurchasedTickets + totalDebitedTickets) // Total traité
                 .build();
 
-        // 4. Statistiques des tickets disponibles (status = AVAILABLE)
+        // ==================== 5. Calculer les statistiques des tickets disponibles ====================
+        // Tickets disponibles = status = AVAILABLE (ni achetés, ni débités)
         List<Ticket> availableTickets = ticketRepository.findByStatus(TicketStatus.AVAILABLE);
 
+        // 5.1 Compter les tickets Type A disponibles
         long typeATicketsAvailable = availableTickets.stream()
                 .filter(t -> t.getType() == TicketType.A)
                 .count();
+        log.debug("Available Type A tickets: {}", typeATicketsAvailable);
 
+        // 5.2 Compter les tickets Type B disponibles
         long typeBTicketsAvailable = availableTickets.stream()
                 .filter(t -> t.getType() == TicketType.B)
                 .count();
+        log.debug("Available Type B tickets: {}", typeBTicketsAvailable);
 
+        // 5.3 Construction des statistiques des tickets disponibles
         TicketStatisticsDTO.AvailableTicketsStats availableStats = TicketStatisticsDTO.AvailableTicketsStats.builder()
-                .typeATicketsAvailable((int) typeATicketsAvailable)
-                .typeBTicketsAvailable((int) typeBTicketsAvailable)
-                .totalTicketsAvailable((int) availableTickets.size())
+                .typeATicketsAvailable((int) typeATicketsAvailable)     // Type A disponibles
+                .typeBTicketsAvailable((int) typeBTicketsAvailable)     // Type B disponibles
+                .totalTicketsAvailable(availableTickets.size())         // Total disponibles
                 .build();
 
-        // 5. Construire la réponse finale
+        // ==================== 6. Construire la réponse finale ====================
+        log.info("Statistics built successfully: {} users, {} global, {} available",
+                userStatsMap.size(), totalPurchasedTickets + totalDebitedTickets, availableTickets.size());
+
         return TicketStatisticsDTO.builder()
-                .userStats(userStatsMap)
-                .globalStats(globalStats)
-                .availableStats(availableStats)
+                .userStats(userStatsMap)      // Statistiques par utilisateur
+                .globalStats(globalStats)     // Statistiques globales
+                .availableStats(availableStats) // Statistiques des tickets disponibles
                 .build();
     }
 

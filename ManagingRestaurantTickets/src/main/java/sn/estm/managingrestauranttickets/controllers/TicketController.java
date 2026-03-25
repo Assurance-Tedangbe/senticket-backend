@@ -143,10 +143,16 @@ public class TicketController {
         log.info("Transfer cancelled successfully {} at {}", cancelTransferTicketsRequestDTO, LocalDateTime.now());
     }
 
+
     /**
      * Endpoint pour récupérer les statistiques des tickets
-     * @param userId (optionnel) - ID de l'utilisateur pour les stats spécifiques
-     * @return TicketStatisticsDTO contenant toutes les statistiques
+     * Paramètre optionnel:
+     * - userId: ID de l'utilisateur pour filtrer les statistiques (optionnel)
+     *
+     * Réponse: TicketStatisticsDTO contenant:
+     * - Statistiques par utilisateur (tickets achetés/débités/total)
+     * - Statistiques globales (tous utilisateurs confondus)
+     * - Statistiques des tickets disponibles (Type A, Type B, Total)
      */
     @GetMapping("/statistics")
     @ResponseStatus(HttpStatus.OK)
@@ -157,6 +163,7 @@ public class TicketController {
 
         TicketStatisticsDTO statistics = ticketService.getTicketStatistics(userId);
 
+        log.info("Statistics retrieved successfully");
         return ResponseEntity.ok(statistics);
     }
 }
