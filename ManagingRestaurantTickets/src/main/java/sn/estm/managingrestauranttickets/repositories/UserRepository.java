@@ -44,6 +44,12 @@ public interface UserRepository extends JpaRepository<User, Long> {
      */
     boolean existsAllByRoleId(Long id);
 
+    /**
+     * Retrieves all users with a specific role
+     * Used to get the list of students
+     * @param roleName Role name
+     * @return List of users with this role
+     */
     List<User> findByRoleName(String roleName);
 }
 
