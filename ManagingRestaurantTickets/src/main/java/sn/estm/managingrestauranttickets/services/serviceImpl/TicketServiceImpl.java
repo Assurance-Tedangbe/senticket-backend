@@ -32,7 +32,6 @@ import sn.estm.managingrestauranttickets.dto.statisticsDTO.TicketStatisticsDTO;
 import sn.estm.managingrestauranttickets.entities.TransactionHistory;
 import sn.estm.managingrestauranttickets.entities.User;
 import sn.estm.managingrestauranttickets.entities.Ticket;
-import sn.estm.managingrestauranttickets.entities.TransfertHistory;
 
 import sn.estm.managingrestauranttickets.enumerations.TicketStatus;
 import sn.estm.managingrestauranttickets.enumerations.TicketType;
@@ -42,7 +41,6 @@ import sn.estm.managingrestauranttickets.exceptions.ResourceNotFoundException;
 import sn.estm.managingrestauranttickets.mappers.TicketMapper;
 
 import sn.estm.managingrestauranttickets.mappers.TransactionHistoryMapper;
-import sn.estm.managingrestauranttickets.mappers.TransfertHistoryMapper;
 import sn.estm.managingrestauranttickets.repositories.*;
 
 import sn.estm.managingrestauranttickets.services.serviceInterfaces.TicketService;
@@ -704,7 +702,6 @@ public class TicketServiceImpl implements TicketService {
 
     //********* end of cancelTransferTickets service ***********
 
-    // statistics
     /**
      * Service pour récupérer les statistiques des tickets
      * Retourne toutes les statistiques demandées : par utilisateur, globales, disponibles
@@ -715,12 +712,11 @@ public class TicketServiceImpl implements TicketService {
     public TicketStatisticsDTO getTicketStatistics(Long userId) {
         log.info("Fetching ticket statistics for userId: {}", userId);
 
-        // ==================== 1. Récupérer les utilisateurs étudiants ====================
-        // On récupère tous les utilisateurs ayant le rôle ETUDIANT
+        // 1. Récupérer tous les utilisateurs ayant le rôle ETUDIANT
         List<User> students = userRepository.findByRoleName("ETUDIANT");
         log.debug("Found {} students", students.size());
 
-        // ==================== 2. Construire les statistiques par utilisateur ====================
+        // 2. Construire les statistiques par utilisateur
         // Map pour stocker les statistiques de chaque étudiant (clé = username)
         Map<String, TicketStatisticsDTO.UserTicketStats> userStatsMap = new LinkedHashMap<>();
 
@@ -821,79 +817,5 @@ public class TicketServiceImpl implements TicketService {
                 .availableStats(availableStats) // Statistiques des tickets disponibles
                 .build();
     }
-
-    // Suppl. methods
-    @Override
-    public List<TicketDTO> readTicketsByUserId(Long userId) {
-
-        log.info("Reading tickets for user with ID: {}", userId);
-
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
-                        "Account not found with ID: {0}", userId)));
-
-        List<Ticket> tickets = ticketRepository.findByUser(user);
-
-        return tickets.stream()
-                .map(ticketMapper::toDto)
-                .collect(Collectors.toList());
-    }
-
-    @Override
-    public TicketDTO readTicketById(Long ticketId) {
-
-        log.info("Reading ticket by id: {}", ticketId);
-
-        Ticket ticket = ticketRepository.findById(ticketId)
-                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
-                        "Ticket not found with ID: {0}", ticketId)));
-
-        return ticketMapper.toDto(ticket);
-    }
 }
-    /*
-    @Override
-    public void bookTicket(Long ticketId) {
 
-        Ticket ticket = ticketRepository.findById(ticketId)
-                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
-                        "Ticket not found with ID: {0}", ticketId)));
-        ticket.setBooked(true);
-        ticketRepository.save(ticket);
-    }
-
-    @Override
-    public TicketDTO updateTicket(TicketDTO ticketDTO) {
-
-        Ticket existingTicket = ticketRepository.findById(ticketDTO.getTicketId())
-                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
-                        "Ticket not found with ID: {0}", ticketDTO.getTicketId())));
-
-        existingTicket.setType(ticketDTO.getTicketType());
-        existingTicket.setPrice(ticketDTO.getTicketPrice());
-        existingTicket.setBooked(ticketDTO.isBooked());
-        existingTicket.setStatus(ticketDTO.getTicketStatus());
-        existingTicket.setDescription(ticketDTO.getTicketDescription());
-        existingTicket.setUser(ticketMapper.toEntity(ticketDTO).getUser());
-        Ticket updatedTicket = ticketRepository.save(existingTicket);
-        return ticketMapper.toDto(updatedTicket);
-    }
-
-    @Override
-    public void updateTicketStatus(Long ticketId, TicketStatus newStatus) {
-
-        Ticket ticket = ticketRepository.findById(ticketId)
-                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
-                        "Ticket not found with ID: {0}", ticketId)));
-        ticket.setStatus(newStatus);
-        ticketRepository.save(ticket);
-    }
-
-    @Override
-    public List<TicketDTO> readTicketsByStatus(TicketStatus ticketStatus) {
-
-        List<Ticket> tickets = ticketRepository.findByStatus(ticketStatus);
-        return tickets.stream()
-                .map(ticketMapper::toDto)
-                .collect(Collectors.toList());
-    }*/
