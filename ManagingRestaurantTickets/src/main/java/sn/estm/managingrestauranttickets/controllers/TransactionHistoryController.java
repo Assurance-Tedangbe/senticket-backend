@@ -41,4 +41,25 @@ public class TransactionHistoryController {
 
         return ResponseEntity.ok(response);
     }
+
+    /// Récupère l'historique des transactions pour un utilisateur spécifique
+    @GetMapping("/user")
+    public ResponseEntity<TransactionHistoryResponseDTO> getTransactionHistoryForUser(
+            @RequestParam(value = "userId") Long userId,
+            @RequestParam(value = "transactionType", defaultValue = "ALL") String transactionType,
+            @RequestParam(value = "startDate", required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(value = "endDate", required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "20") int size) {
+
+        log.info("GET transactions history for user ID: {} with filters: type={}, start={}, end={}, page={}, size={}",
+                userId, transactionType, startDate, endDate, page, size);
+
+        TransactionHistoryResponseDTO response = transactionHistoryService
+                .getTransactionHistoryForUser(userId, transactionType, startDate, endDate, page, size);
+
+        return ResponseEntity.ok(response);
+    }
 }

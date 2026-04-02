@@ -98,7 +98,7 @@ public class TransactionHistoryServiceImpl implements TransactionHistoryService 
                 .build();
     }
 
-    // Méthodes utilitaires pour enregistrer les transactions
+    /// Méthodes utilitaires pour enregistrer les transactions
 
     @Transactional
     public TransactionHistory recordPurchase(User purchaseUser, List<Ticket> tickets ) {
@@ -172,5 +172,74 @@ public class TransactionHistoryServiceImpl implements TransactionHistoryService 
         log.info("Recorded transfer transaction from: {} to: {}, tickets: {}",
                 sender.getUsername(), recipient.getUsername(), tickets.size());
         return transactionHistoryRepository.save(history);
+    }
+
+    /**
+     *  Récupère l'historique des transactions pour un utilisateur spécifique
+     * Cette méthode filtre les transactions où l'utilisateur est impliqué selon son rôle :
+     * - Pour un ÉTUDIANT : transactions où il est purchaser, student, sender ou recipient
+     * - Pour un PORTIER : transactions de type DEBIT
+     * - Pour un ADMIN : peut voir toutes les transactions
+     */
+    @Override
+    public TransactionHistoryResponseDTO getTransactionHistoryForUser(
+            Long userId,
+            String transactionType,
+            LocalDate startDate,
+            LocalDate endDate,
+            int page,
+            int size) {
+
+        log.info("Fetching transaction history for user ID: {} with filters: type={}, start={}, end={}, page={}, size={}",
+                userId, transactionType, startDate, endDate, page, size);
+
+        // Définir les dates par défaut si non fournies
+        LocalDateTime startDateTime = (startDate != null)
+                ? startDate.atStartOfDay()
+                : LocalDateTime.of(2000, 1, 1, 0, 0);
+
+        LocalDateTime endDateTime = (endDate != null)
+                ? endDate.atTime(LocalTime.MAX)
+                : LocalDateTime.now();
+
+        // Créer la pagination avec tri par date décroissante
+        Pageable pageable = PageRequest.of(page, size, Sort.by("date").descending());
+
+        Page<TransactionHistory> transactionPage;
+
+        // Si le type est "ALL" ou null, on ne filtre pas par type
+        if (transactionType == null || transactionType.equalsIgnoreCase("ALL")) {
+            transactionPage = transactionHistoryRepository
+                    .findByUserIdAndDateBetween(userId, startDateTime, endDateTime, pageable);
+        } else {
+            try {
+                TransactionType type = TransactionType.valueOf(transactionType.toUpperCase());
+                transactionPage = transactionHistoryRepository
+                        .findByUserIdAndTransactionTypeAndDateBetween(
+                                userId, type, startDateTime, endDateTime, pageable);
+            } catch (IllegalArgumentException e) {
+                log.warn("Invalid transaction type: {}, returning all transactions for user", transactionType);
+                transactionPage = transactionHistoryRepository
+                        .findByUserIdAndDateBetween(userId, startDateTime, endDateTime, pageable);
+            }
+        }
+
+        // Convertir les entités en DTOs
+        List<TransactionHistoryDTO> content = transactionPage.getContent().stream()
+                .map(transactionHistoryMapper::toDto)
+                .collect(Collectors.toList());
+
+        // Construire la réponse paginée
+        return TransactionHistoryResponseDTO.builder()
+                .content(content)
+                .totalElements(transactionPage.getTotalElements())
+                .totalPages(transactionPage.getTotalPages())
+                .currentPage(transactionPage.getNumber())
+                .pageSize(transactionPage.getSize())
+                .first(transactionPage.isFirst())
+                .last(transactionPage.isLast())
+                .hasNext(transactionPage.hasNext())
+                .hasPrevious(transactionPage.hasPrevious())
+                .build();
     }
 }
