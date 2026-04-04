@@ -608,12 +608,6 @@ public class TicketServiceImpl implements TicketService {
             throw new IllegalArgumentException("Current owner information does not match the transaction record");
         }
 
-        /* // 6. Check that the authenticated user is the original sender
-        User authenticatedUser = getCurrentAuthenticatedUser(); // from security context
-        if (!authenticatedUser.getUserId().equals(originalSenderDTO.getUserId())) {
-        throw new AccessDeniedException("Only the original sender can cancel this transfer");
-        }*/
-
         // 8. Extract ticket IDs from transaction and validate them
         List<Long> historyTicketIds = extractTicketIdsFromTransaction(transactionHistory);
         List<Long> requestTicketIds = cancelTransferTicketsRequestDTO.getTicketIdsToCancel();
@@ -692,13 +686,6 @@ public class TicketServiceImpl implements TicketService {
                 .map(Long::parseLong)
                 .collect(Collectors.toList());
     }
-   /*   private User getCurrentAuthenticatedUser() {
-        // Implement based on your security context, e.g.:
-        // Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        // return (User) authentication.getPrincipal();
-        // For simplicity, assume a utility exists.
-        return SecurityUtils.getCurrentUser();
-    }*/
 
     //********* end of cancelTransferTickets service ***********
 
