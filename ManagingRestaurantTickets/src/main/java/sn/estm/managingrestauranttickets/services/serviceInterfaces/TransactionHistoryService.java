@@ -1,6 +1,8 @@
 package sn.estm.managingrestauranttickets.services.serviceInterfaces;
 
+import sn.estm.managingrestauranttickets.dto.historydto.TransactionHistoryDTO;
 import sn.estm.managingrestauranttickets.dto.historydto.TransactionHistoryResponseDTO;
+import sn.estm.managingrestauranttickets.dto.historydto.TransfertHistoryDTO;
 import sn.estm.managingrestauranttickets.entities.Ticket;
 import sn.estm.managingrestauranttickets.entities.TransactionHistory;
 import sn.estm.managingrestauranttickets.entities.User;
@@ -48,4 +50,6 @@ public interface TransactionHistoryService {
             int page,
             int size
     );
+
+    TransactionHistoryDTO readTransactionHistoryById(Long id);
 }

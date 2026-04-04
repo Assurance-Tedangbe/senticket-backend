@@ -4,12 +4,12 @@ import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
+import sn.estm.managingrestauranttickets.dto.historydto.TransactionHistoryDTO;
 import sn.estm.managingrestauranttickets.dto.historydto.TransactionHistoryResponseDTO;
+import sn.estm.managingrestauranttickets.dto.historydto.TransfertHistoryDTO;
 import sn.estm.managingrestauranttickets.services.serviceInterfaces.TransactionHistoryService;
 
 import java.time.LocalDate;
@@ -61,5 +61,17 @@ public class TransactionHistoryController {
                 .getTransactionHistoryForUser(userId, transactionType, startDate, endDate, page, size);
 
         return ResponseEntity.ok(response);
+    }
+
+    @GetMapping(value = "/{id}", produces = "application/json")
+    public ResponseEntity<TransactionHistoryDTO> getTransactionHistoryById(@PathVariable Long id) {
+
+        log.info("Fetched TransferHistory with ID: {}", id);
+
+        TransactionHistoryDTO transactionHistoryDTO = transactionHistoryService
+                .readTransactionHistoryById(id);
+
+
+        return new ResponseEntity<>(transactionHistoryDTO, HttpStatus.OK);
     }
 }

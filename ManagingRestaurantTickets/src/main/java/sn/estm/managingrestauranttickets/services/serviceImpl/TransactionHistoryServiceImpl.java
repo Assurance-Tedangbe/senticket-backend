@@ -11,12 +11,15 @@ import sn.estm.managingrestauranttickets.dto.historydto.TransactionHistoryDTO;
 import sn.estm.managingrestauranttickets.dto.historydto.TransactionHistoryResponseDTO;
 import sn.estm.managingrestauranttickets.entities.Ticket;
 import sn.estm.managingrestauranttickets.entities.TransactionHistory;
+import sn.estm.managingrestauranttickets.entities.TransfertHistory;
 import sn.estm.managingrestauranttickets.entities.User;
 import sn.estm.managingrestauranttickets.enumerations.TransactionType;
+import sn.estm.managingrestauranttickets.exceptions.ResourceNotFoundException;
 import sn.estm.managingrestauranttickets.mappers.TransactionHistoryMapper;
 import sn.estm.managingrestauranttickets.repositories.TransactionHistoryRepository;
 import sn.estm.managingrestauranttickets.services.serviceInterfaces.TransactionHistoryService;
 
+import java.text.MessageFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -241,5 +244,16 @@ public class TransactionHistoryServiceImpl implements TransactionHistoryService 
                 .hasNext(transactionPage.hasNext())
                 .hasPrevious(transactionPage.hasPrevious())
                 .build();
+    }
+
+    @Override
+    public TransactionHistoryDTO readTransactionHistoryById(Long id) {
+        log.info("Reading TransactionHistory by Id: {}", id);
+
+        TransactionHistory transactionHistory = transactionHistoryRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
+                        "TransferHistory not found with ID: {0}", id)));
+
+        return transactionHistoryMapper.toDto(transactionHistory);
     }
 }
