@@ -1,3 +1,4 @@
+/*
 package sn.estm.managingrestauranttickets.services;
 
 import lombok.AccessLevel;
@@ -18,11 +19,13 @@ import java.util.Collection;
 
 import static org.hibernate.query.sqm.tree.SqmNode.log;
 
+*/
 /**
  * This service will load user details from the database or any data source.
  * In other words, it allows Spring Security to authenticate a user by fetching
  * their credentials and roles (authorities).
- */
+ *//*
+
 @Service
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
@@ -30,14 +33,16 @@ public class CustomUserDetailsService implements UserDetailsService {
 
     final UserService userService;
 
-    /**
+    */
+/**
      * Takes the username of the user trying to log in and returns a UserDetails
      * object(which contains user information like username, password, and authorities.)
      * If the user is not found, it throws a UsernameNotFoundException
      * @param username
      * @return
      * @throws UsernameNotFoundException
-     */
+     *//*
+
     @Override
     public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
 
@@ -54,3 +59,4 @@ public class CustomUserDetailsService implements UserDetailsService {
         return  new User(userDTO.getUsername(), userDTO.getPassword(), authorities);
     }
 }
+*/

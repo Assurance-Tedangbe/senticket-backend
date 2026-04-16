@@ -1,3 +1,4 @@
+/*
 package sn.estm.managingrestauranttickets.controllers;
 
 import lombok.AccessLevel;
@@ -21,42 +22,57 @@ import sn.estm.managingrestauranttickets.services.JwtService;
 @RequiredArgsConstructor
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class AuthController {
-    /**
+    */
+/**
      * This controller will provide an endpoint to authenticate and generate the JWT token
-     */
+     *//*
+
 
     final AuthenticationManager authenticationManager;
     final JwtService jwtService;
     final CustomUserDetailsService userDetailsService;
 
-    /**
+    */
+/**
      * this method aims to authenticate the user and return a JWT token
      * It handles a login request by verifying the user's credentials using Spring Security,
      * and if the credentials are valid, generate  a JWT token and returns it in a structured
      * JSON response so the user can use the token for accessing protected resources
      * @param authRequest
      * @return
-     */
+     *//*
+
     @PostMapping("/login")
     public ResponseEntity<?> login(
             @RequestBody AuthRequest authRequest) {
-        /* Takes a JSON payload with username and password from the client */
+        */
+/* Takes a JSON payload with username and password from the client *//*
 
-        /* Verifies the credentials using Spring Security.
-           If invalid, it throws an exception automatically */
+
+        */
+/* Verifies the credentials using Spring Security.
+           If invalid, it throws an exception automatically *//*
+
         authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(authRequest.getUsername(),
                         authRequest.getPassword())
         );
 
-        /* Loads full user details (roles, permissions, etc.) by username  */
+        */
+/* Loads full user details (roles, permissions, etc.) by username  *//*
+
         final UserDetails user = userDetailsService.loadUserByUsername(authRequest.getUsername());
 
-        /* Generates a JWT using the user’s username  */
+        */
+/* Generates a JWT using the user’s username  *//*
+
         final String token = jwtService.generateToken(user);
 
-        /* Returns a 200 OK response with a JSON body */
+        */
+/* Returns a 200 OK response with a JSON body *//*
+
         return ResponseEntity.ok(new AuthResponse(token));
     }
 
 }
+*/
