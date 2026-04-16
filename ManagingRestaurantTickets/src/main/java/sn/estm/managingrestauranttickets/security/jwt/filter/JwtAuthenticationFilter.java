@@ -1,3 +1,4 @@
+/*
 package sn.estm.managingrestauranttickets.security.jwt.filter;
 
 import com.auth0.jwt.JWT;
@@ -28,7 +29,8 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
         this.authenticationManager = authenticationManager;
     }
 
-    /**
+    */
+/**
      * This method executes when the user enters their username and password.
      * It gets the parameters from the request.
      * Then stores them in the UsernamePasswordAuthenticationToken object.
@@ -39,7 +41,8 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
      * @param response
      * @return
      * @throws AuthenticationException
-     */
+     *//*
+
     @Override
     public Authentication attemptAuthentication(HttpServletRequest request, HttpServletResponse response) throws AuthenticationException {
         String username = request.getParameter("username");
@@ -52,7 +55,8 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
         return authenticationManager.authenticate(authenticationToken);
     }
 
-    /**
+    */
+/**
      * When Spring Security calls successfulAuthentication, it passes an Authentication parameter
      * containing the authentication result. Now, we declare a Spring User object
      * that will be used to get the authenticated user(getPrincipal())
@@ -66,7 +70,8 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
      * @param authResult
      * @throws IOException
      * @throws ServletException
-     */
+     *//*
+
     @Override
     protected void successfulAuthentication(HttpServletRequest request, HttpServletResponse response,
                                             FilterChain chain, Authentication authResult) throws IOException, ServletException {
@@ -80,7 +85,7 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
                 .withClaim("roles", user.getAuthorities().stream().map(ga-> ga.getAuthority()).collect(Collectors.toList()))
                 .sign(algo1);
 
-       // response.setHeader("Authorization",jwtAccessToken);
+        // response.setHeader("Authorization",jwtAccessToken);
 
         String jwtRefreshToken= JWT.create()
                 .withSubject(user.getUsername())
@@ -93,8 +98,9 @@ public class JwtAuthenticationFilter extends UsernamePasswordAuthenticationFilte
         response.setContentType("application/json"); //indicate to the client that the response body content contains json data
         new ObjectMapper().writeValue(response.getOutputStream(),idToken); //send the object in json format in the response body
 
-       super.successfulAuthentication(request, response, chain, authResult);
+        super.successfulAuthentication(request, response, chain, authResult);
     }
 
 
 }
+*/

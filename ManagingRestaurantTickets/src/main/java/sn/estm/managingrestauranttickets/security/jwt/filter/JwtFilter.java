@@ -1,3 +1,4 @@
+/*
 package sn.estm.managingrestauranttickets.security.jwt.filter;
 
 import com.auth0.jwt.JWT;
@@ -29,28 +30,34 @@ import java.util.Collection;
 @Component
 @FieldDefaults(level = AccessLevel.PRIVATE)
 public class JwtFilter extends OncePerRequestFilter {
-    /**
+    */
+/**
      * It checks incoming HTTP requests for a JWT token,
      * extracts and validates it from the Authorization header, and if valid,
      * sets the authenticated user in Spring Security’s context so the rest of
      * the application knows the user is authenticated.
-     */
+     *//*
 
-    /* OncePerRequestFilter ensures this filter runs once per HTTP request */
+
+    */
+/* OncePerRequestFilter ensures this filter runs once per HTTP request *//*
+
 
     @Autowired
     JwtService jwtService;
     @Autowired
     CustomUserDetailsService userDetailsService;
 
-    /**
+    */
+/**
      * This method contains the actual filtering logic that runs for every request
      * @param request
      * @param response
      * @param filterChain
      * @throws ServletException
      * @throws IOException
-     */
+     *//*
+
     @Override
     protected void doFilterInternal(HttpServletRequest request,
                                     HttpServletResponse response,
@@ -60,19 +67,23 @@ public class JwtFilter extends OncePerRequestFilter {
             filterChain.doFilter(request, response);
         }
         else {
-            /* Retrieves the Authorization header  */
+            */
+/* Retrieves the Authorization header  *//*
+
             final String authorizationHeader = request.getHeader("Authorization");
 
-           // String username = null;
-          //  String jwt = null;
+            // String username = null;
+            //  String jwt = null;
 
-        /* Verifies that the header exists and starts with "Bearer ".
-           Extracts the token and retrieves the username from it   */
+        */
+/* Verifies that the header exists and starts with "Bearer ".
+           Extracts the token and retrieves the username from it   *//*
+
             if (authorizationHeader != null && authorizationHeader.startsWith("Bearer ")) {
                 //from resource 68,72-88,
                 try {
-                   String jwt = authorizationHeader.substring(7);
-                   String username = jwtService.extractUsername(jwt);
+                    String jwt = authorizationHeader.substring(7);
+                    String username = jwtService.extractUsername(jwt);
 
                     Algorithm algorithm=Algorithm.HMAC256("mysecret1234");
                     JWTVerifier jwtVerifier= JWT.require(algorithm).build();
@@ -93,38 +104,67 @@ public class JwtFilter extends OncePerRequestFilter {
                 }
             }
 
-  /*     from generation
-     *//* Continues only if: a username was extracted from the token.
+            */
+/*     from generation
+             *//*
+*/
+/* Continues only if: a username was extracted from the token.
            The user is not already authenticated (prevents redundant authentication) *//*
+*/
+/*
             if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
 
-                *//* Loads full user details from your database or custom auth service  *//*
+                *//*
+*/
+/* Loads full user details from your database or custom auth service  *//*
+*/
+/*
                 UserDetails userDetails = this.userDetailsService.loadUserByUsername(username);
 
-            *//* Verifies the token's validation:
+            *//*
+*/
+/* Verifies the token's validation:
                correct signature, not expired, matches the username  *//*
+*/
+/*
                 if (jwtService.validateToken(jwt, userDetails)) {
 
-                    *//* Creates an Authentication object for Spring Security  *//*
+                    *//*
+*/
+/* Creates an Authentication object for Spring Security  *//*
+*/
+/*
                     UsernamePasswordAuthenticationToken authToken =
                             new UsernamePasswordAuthenticationToken(userDetails,
                                     null,
                                     userDetails.getAuthorities());
 
-                    *//* Adds extra request info (e.g. IP address).   *//*
+                    *//*
+*/
+/* Adds extra request info (e.g. IP address).   *//*
+*/
+/*
                     authToken.setDetails(new WebAuthenticationDetailsSource().buildDetails(request));
 
-                *//* Stores the Authentication in the SecurityContext,
+                *//*
+*/
+/* Stores the Authentication in the SecurityContext,
                    This tells Spring: "This user is now authenticated for this request*//*
+*/
+/*
                     SecurityContextHolder.getContext().setAuthentication(authToken);
 
                 }
-            }*/
+            }*//*
+
             else{
-                /* Continues the filter chain — passing the request to the next filter or controller  */
+                */
+/* Continues the filter chain — passing the request to the next filter or controller  *//*
+
                 filterChain.doFilter(request, response);
             }
         }
 
     }
 }
+*/
