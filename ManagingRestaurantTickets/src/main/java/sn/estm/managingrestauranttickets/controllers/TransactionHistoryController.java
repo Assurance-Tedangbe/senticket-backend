@@ -4,11 +4,10 @@ import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.*;
+import sn.estm.managingrestauranttickets.dto.historydto.TransactionHistoryDTO;
 import sn.estm.managingrestauranttickets.dto.historydto.TransactionHistoryResponseDTO;
 import sn.estm.managingrestauranttickets.services.serviceInterfaces.TransactionHistoryService;
 
@@ -40,5 +39,38 @@ public class TransactionHistoryController {
                 .getTransactionHistory(transactionType, startDate, endDate, page, size);
 
         return ResponseEntity.ok(response);
+    }
+
+    /// Récupère l'historique des transactions pour un utilisateur spécifique
+    @GetMapping("/user")
+    public ResponseEntity<TransactionHistoryResponseDTO> getTransactionHistoryForUser(
+            @RequestParam(value = "userId") Long userId,
+            @RequestParam(value = "transactionType", defaultValue = "ALL") String transactionType,
+            @RequestParam(value = "startDate", required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(value = "endDate", required = false)
+            @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "20") int size) {
+
+        log.info("GET transactions history for user ID: {} with filters: type={}, start={}, end={}, page={}, size={}",
+                userId, transactionType, startDate, endDate, page, size);
+
+        TransactionHistoryResponseDTO response = transactionHistoryService
+                .getTransactionHistoryForUser(userId, transactionType, startDate, endDate, page, size);
+
+        return ResponseEntity.ok(response);
+    }
+
+    @GetMapping(value = "/{id}", produces = "application/json")
+    public ResponseEntity<TransactionHistoryDTO> getTransactionHistoryById(@PathVariable Long id) {
+
+        log.info("Fetched TransferHistory with ID: {}", id);
+
+        TransactionHistoryDTO transactionHistoryDTO = transactionHistoryService
+                .readTransactionHistoryById(id);
+
+
+        return new ResponseEntity<>(transactionHistoryDTO, HttpStatus.OK);
     }
 }

@@ -36,19 +36,4 @@ public interface TicketService {
      * @return TicketStatisticsDTO contenant toutes les statistiques
      */
     TicketStatisticsDTO getTicketStatistics(Long userId);
-
-    List<TicketDTO> readTicketsByUserId(Long userId);
-
-    TicketDTO readTicketById(Long idTicket);
-
-    /* void bookTicket(Long ticketId);
-
-    TicketDTO updateTicket(TicketDTO ticketDTO);
-
-    void deleteTicket(Long idTicket);
-
-    void updateTicketStatus(Long ticketId, TicketStatus newStatus);
-
-    List<TicketDTO> readTicketsByStatus(TicketStatus status);*/
-
 }
