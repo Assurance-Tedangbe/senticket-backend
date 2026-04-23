@@ -1,6 +1,13 @@
+/*
 package sn.estm.managingrestauranttickets.entities;
 
-import jakarta.persistence.*;
+import jakarta.persistence.Entity;
+import jakarta.persistence.Table;
+import jakarta.persistence.Column;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.PreUpdate;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -35,10 +42,13 @@ public class Payment {
     private LocalDateTime createdAt = LocalDateTime.now();
     private LocalDateTime updatedAt;
 
-    /* PreUpdate marks the method to be executed automatically
-     just before an existing entity is updated in the dbb */
+    */
+/* PreUpdate marks the method to be executed automatically
+     just before an existing entity is updated in the dbb *//*
+
     @PreUpdate
     public void onUpdate() {
         this.updatedAt = LocalDateTime.now();
     }
 }
+*/

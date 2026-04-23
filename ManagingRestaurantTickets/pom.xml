@@ -124,14 +124,23 @@
             <scope>runtime</scope>
         </dependency>
 
+        <!-- For payment api Paydunya: 1st dep-->
+        <!-- For JSON manipulation -->
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-databind</artifactId>
         </dependency>
+        <!-- For payment api Paydunya: 2nd dep-->
         <!-- Pour le hachage SHA-512 de la MasterKey (vérification IPN) -->
         <dependency>
             <groupId>commons-codec</groupId>
             <artifactId>commons-codec</artifactId>
+        </dependency>
+        <!-- For payment api Paydunya: 3rd dep-->
+        <dependency>
+            <groupId>com.squareup.okhttp3</groupId>
+            <artifactId>okhttp</artifactId>
+            <version>4.12.0</version>
         </dependency>
     </dependencies>
 
