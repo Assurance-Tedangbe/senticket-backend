@@ -10,8 +10,6 @@ public interface UserService {
 
     UserDTO authenticate(String username, String password);
 
-    boolean validateCredentials(String username, String password);
-
     List<UserDTO> readUsers();
 
     UserDTO updateUser(UserDTO userDto);
@@ -23,6 +21,8 @@ public interface UserService {
     UserDTO readUserByUserId(Long userId);
 
     UserDTO readUserByUsername(String username);
+
+    //  boolean validateCredentials(String username, String password);
 
     void logout(String username);  // ou void logout(HttpServletRequest request)
 

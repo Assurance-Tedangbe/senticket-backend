@@ -132,10 +132,10 @@
         </dependency>
         <!-- For payment api Paydunya: 2nd dep-->
         <!-- Pour le hachage SHA-512 de la MasterKey (vérification IPN) -->
-        <dependency>
+      <!--  <dependency>
             <groupId>commons-codec</groupId>
             <artifactId>commons-codec</artifactId>
-        </dependency>
+        </dependency>-->
         <!-- For payment api Paydunya: 3rd dep-->
         <dependency>
             <groupId>com.squareup.okhttp3</groupId>

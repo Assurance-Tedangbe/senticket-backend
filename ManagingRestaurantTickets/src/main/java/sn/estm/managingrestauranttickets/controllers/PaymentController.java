@@ -6,9 +6,14 @@ import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import sn.estm.managingrestauranttickets.dto.paymentdtos.PaymentInitiationDTO;
 import sn.estm.managingrestauranttickets.services.serviceInterfaces.PaymentService;
-import sn.estm.managingrestauranttickets.dto.paymentdtos.PaymentRequestDTO;
 import sn.estm.managingrestauranttickets.dto.paymentdtos.PaymentResponseDTO;
 import java.util.Map;
 
@@ -21,41 +26,35 @@ public class PaymentController {
     private final PaymentService paymentService;
 
     /**
-     * Endpoint pour initialiser un paiement
+     * Endpoint pour initier un paiement
      * Appelé par l'application Flutter quand l'utilisateur clique sur "Payer"
      *
      * POST /api/payments/initiate
-     * @param request DTO contenant les informations du panier
-     * @return PaymentResponseDTO avec l'URL de paiement
+     * Body: PaymentInitiationDTO
+     * Response: PaymentResponseDTO avec l'URL PayDunya
      */
     @PostMapping("/initiate")
     public ResponseEntity<PaymentResponseDTO> initiatePayment(
-            @Valid @RequestBody PaymentRequestDTO request) {
-
-        log.info("POST /api/payments/initiate - Utilisateur: {}", request.getUserId());
-
-        PaymentResponseDTO response = paymentService.initiatePayment(request);
-
-        return ResponseEntity.ok(response);
+            @Valid @RequestBody PaymentInitiationDTO request) {
+        log.info("POST /api/payments/initiate - User: {}", request.getUserId());
+        return ResponseEntity.ok(paymentService.initiatePayment(request));
     }
 
     /**
-     * Callback de retour après paiement réussi
-     * PayDunya redirige l'utilisateur vers cette URL
+     * Callback de retour après paiement réussi (PAR - Paiement Avec Redirection)
+     * PayDunya redirige l'utilisateur vers cette URL avec le token en paramètre
      *
      * GET /api/payments/return?token=xxx
-     * @param token Identifiant de la transaction PayDunya
      */
     @GetMapping("/return")
     public ResponseEntity<?> paymentReturn(@RequestParam("token") String token) {
         log.info("GET /api/payments/return - Transaction: {}", token);
 
         // Traiter le paiement réussi
-        paymentService.processSuccessfulPayment(token);
+        paymentService.confirmPayment(token);
 
         // Rediriger vers l'application mobile via deep linking
         String redirectUrl = "senticket://payment/success?transactionId=" + token;
-
         return ResponseEntity.status(302)
                 .header("Location", redirectUrl)
                 .build();
@@ -72,18 +71,112 @@ public class PaymentController {
         log.info("GET /api/payments/cancel - Transaction: {}", token);
 
         String redirectUrl = "senticket://payment/cancel?transactionId=" + token;
-
         return ResponseEntity.status(302)
                 .header("Location", redirectUrl)
                 .build();
     }
 
     /**
+     * Webhook pour les notifications IPN (Instant Payment Notification)
+     * PayDunya envoie une requête POST sur cette URL automatiquement
+     *
+     * POST /api/payments/webhook
+     */
+    @PostMapping("/webhook")
+    public ResponseEntity<?> webhook(@RequestBody Map<String, Object> payload) {
+        log.info("POST /api/payments/webhook");
+
+        @SuppressWarnings("unchecked")
+        Map<String, Object> data = (Map<String, Object>) payload.get("data");
+
+        if (data != null) {
+            String token = (String) data.get("token");
+            String status = (String) data.get("status");
+
+            log.info("Webhook - Transaction: {}, Statut: {}", token, status);
+
+            if ("completed".equals(status)) {
+                paymentService.confirmPayment(token);
+            }
+        }
+
+        // Toujours retourner 200 OK pour que PayDunya arrête d'envoyer la notification
+        return ResponseEntity.ok().build();
+    }
+}
+
+/*@Slf4j
+@RestController
+@RequestMapping("/api/payments")
+@RequiredArgsConstructor
+public class PaymentController {
+
+    private final PaymentService paymentService;
+
+    *//**
+     * Endpoint pour initialiser un paiement
+     * Appelé par l'application Flutter quand l'utilisateur clique sur "Payer"
+     *
+     * POST /api/payments/initiate
+     * @param request DTO contenant les informations du panier
+     * @return PaymentResponseDTO avec l'URL de paiement
+     *//*
+    @PostMapping("/initiate")
+    public ResponseEntity<PaymentResponseDTO> initiatePayment(
+            @Valid @RequestBody PaymentRequestDTO request) {
+
+        log.info("POST /api/payments/initiate - Utilisateur: {}", request.getUserId());
+
+        PaymentResponseDTO response = paymentService.initiatePayment(request);
+
+        return ResponseEntity.ok(response);
+    }
+
+    *//**
+     * Callback de retour après paiement réussi
+     * PayDunya redirige l'utilisateur vers cette URL
+     *
+     * GET /api/payments/return?token=xxx
+     * @param token Identifiant de la transaction PayDunya
+     *//*
+    @GetMapping("/return")
+    public ResponseEntity<?> paymentReturn(@RequestParam("token") String token) {
+        log.info("GET /api/payments/return - Transaction: {}", token);
+
+        // Traiter le paiement réussi
+        paymentService.processSuccessfulPayment(token);
+
+        // Rediriger vers l'application mobile via deep linking
+        String redirectUrl = "senticket://payment/success?transactionId=" + token;
+
+        return ResponseEntity.status(302)
+                .header("Location", redirectUrl)
+                .build();
+    }
+
+    *//**
+     * Callback d'annulation de paiement
+     * PayDunya redirige l'utilisateur vers cette URL s'il annule
+     *
+     * GET /api/payments/cancel?token=xxx
+     *//*
+    @GetMapping("/cancel")
+    public ResponseEntity<?> paymentCancel(@RequestParam("token") String token) {
+        log.info("GET /api/payments/cancel - Transaction: {}", token);
+
+        String redirectUrl = "senticket://payment/cancel?transactionId=" + token;
+
+        return ResponseEntity.status(302)
+                .header("Location", redirectUrl)
+                .build();
+    }
+
+    *//**
      * Webhook pour les notifications automatiques
      * PayDunya appelle cette URL automatiquement quand le statut change
      *
      * POST /api/payments/webhook
-     */
+     *//*
     @PostMapping("/webhook")
     public ResponseEntity<?> webhook(@RequestBody Map<String, Object> payload) {
         log.info("POST /api/payments/webhook - Payload: {}", payload);
@@ -98,11 +191,11 @@ public class PaymentController {
         return ResponseEntity.ok().build();
     }
 
-    /**
+    *//**
      * Endpoint pour vérifier le statut d'un paiement
      *
      * GET /api/payments/status/{transactionId}
-     */
+     *//*
     @GetMapping("/status/{transactionId}")
     public ResponseEntity<Map<String, String>> getPaymentStatus(
             @PathVariable String transactionId) {
@@ -111,27 +204,10 @@ public class PaymentController {
 
         return ResponseEntity.ok(Map.of("status", status));
     }
-}
+}*/
 
 /*
-package sn.estm.managingrestauranttickets.controllers;
-
-import lombok.Data;
-import lombok.RequiredArgsConstructor;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.codec.digest.DigestUtils;
-import org.springframework.web.bind.annotation.*;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import sn.estm.managingrestauranttickets.dto.paymentdtos.PaydunyaConfirmResponse;
-import sn.estm.managingrestauranttickets.dto.paymentdtos.PaydunyaInvoiceResponse;
-import sn.estm.managingrestauranttickets.dto.paymentdtos.PaymentRequest;
-import sn.estm.managingrestauranttickets.entities.Payment;
-import sn.estm.managingrestauranttickets.repositories.PaymentRepository;
-import sn.estm.managingrestauranttickets.paydunyaconfig.PaydunyaConfig;
-import sn.estm.managingrestauranttickets.services.PaydunyaService;
-
-import java.util.Map;
 
 @Slf4j
 @Data

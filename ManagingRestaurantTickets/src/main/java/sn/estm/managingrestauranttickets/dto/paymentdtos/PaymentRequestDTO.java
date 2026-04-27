@@ -1,3 +1,4 @@
+/*
 // DTO reçu du frontend pour initier un paiement
 // Contient les informations du panier et du client
 
@@ -17,27 +18,41 @@ import java.util.List;
 @AllArgsConstructor
 public class PaymentRequestDTO {
 
-    /** Identifiant de l'utilisateur qui effectue le paiement */
+    */
+/** Identifiant de l'utilisateur qui effectue le paiement *//*
+
     @NotNull(message = "L'ID utilisateur est requis")
     private Long userId;
 
-    /** Montant total à payer */
+    */
+/** Montant total à payer *//*
+
     @NotNull(message = "Le montant est requis")
     @Positive(message = "Le montant doit être positif")
     private Double amount;
 
-    /** Description de la commande */
+    */
+/** Description de la commande *//*
+
     private String description;
 
-    /** Liste des articles achetés */
+    */
+/** Liste des articles achetés *//*
+
     private List<PaymentItemDTO> items;
 
-    /** Nom du client (optionnel) */
+    */
+/** Nom du client (optionnel) *//*
+
     private String customerName;
 
-    /** Email du client (optionnel) */
+    */
+/** Email du client (optionnel) *//*
+
     private String customerEmail;
 
-    /** Téléphone du client (optionnel) */
+    */
+/** Téléphone du client (optionnel) *//*
+
     private String customerPhone;
-}
+}*/

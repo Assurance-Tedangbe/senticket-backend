@@ -25,23 +25,29 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class PendingPayment {
 
-    /** Identifiant unique du paiement temporaire */
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    /** Identifiant de la transaction PayDunya (unique) */
+    /** Identifiant unique de la transaction PayDunya (token) */
     @Column(unique = true, nullable = false)
     private String transactionId;
 
     /** ID de l'utilisateur qui a initié le paiement */
     private Long userId;
 
-    /** Montant du paiement */
-    private Double amount;
+    /** IDs des tickets sélectionnés (stockés sous forme "1,2,3") */
+    @Column(length = 500)
+    private String ticketIds;
 
-    /** Description de la commande */
-    private String description;
+    /** Nombre de tickets Type A à régénérer après achat */
+    private Integer countA;
+
+    /** Nombre de tickets Type B à régénérer après achat */
+    private Integer countB;
+
+    /** Montant total du paiement */
+    private Double amount;
 
     /** Statut: PENDING, COMPLETED, CANCELLED, FAILED */
     private String status;
@@ -52,22 +58,90 @@ public class PendingPayment {
     /** Date de dernière mise à jour */
     private LocalDateTime updatedAt;
 
-    /**
-     * Méthode appelée automatiquement avant la persistance
-     * Initialise la date de création et le statut
-     */
     @PrePersist
     protected void onCreate() {
         createdAt = LocalDateTime.now();
         status = "PENDING";
     }
 
-    /**
-     * Méthode appelée automatiquement avant la mise à jour
-     * Met à jour la date de modification
-     */
     @PreUpdate
     protected void onUpdate() {
         updatedAt = LocalDateTime.now();
     }
 }
+/*
+
+@Entity
+@Table(name = "pending_payments")
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class PendingPayment {
+
+    */
+/** Identifiant unique du paiement temporaire *//*
+
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    */
+/** Identifiant de la transaction PayDunya (unique) *//*
+
+    @Column(unique = true, nullable = false)
+    private String transactionId;
+
+    */
+/** ID de l'utilisateur qui a initié le paiement *//*
+
+    private Long userId;
+
+    */
+/** Montant du paiement *//*
+
+    private Double amount;
+
+    */
+/** Description de la commande *//*
+
+    private String description;
+
+    */
+/** Statut: PENDING, COMPLETED, CANCELLED, FAILED *//*
+
+    private String status;
+
+    */
+/** Date de création de l'enregistrement *//*
+
+    private LocalDateTime createdAt;
+
+    */
+/** Date de dernière mise à jour *//*
+
+    private LocalDateTime updatedAt;
+
+    */
+/**
+     * Méthode appelée automatiquement avant la persistance
+     * Initialise la date de création et le statut
+     *//*
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+        status = "PENDING";
+    }
+
+    */
+/**
+     * Méthode appelée automatiquement avant la mise à jour
+     * Met à jour la date de modification
+     *//*
+
+    @PreUpdate
+    protected void onUpdate() {
+        updatedAt = LocalDateTime.now();
+    }
+}*/

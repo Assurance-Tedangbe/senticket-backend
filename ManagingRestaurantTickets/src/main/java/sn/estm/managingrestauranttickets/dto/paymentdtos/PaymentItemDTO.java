@@ -1,3 +1,4 @@
+/*
 // Représente un article dans le panier d'achat
 
 package sn.estm.managingrestauranttickets.dto.paymentdtos;
@@ -17,4 +18,4 @@ public class PaymentItemDTO {
     private Double price;       // Prix unitaire
     private Integer quantity;   // Quantité
     private String description; // Description du produit
-}
+}*/
