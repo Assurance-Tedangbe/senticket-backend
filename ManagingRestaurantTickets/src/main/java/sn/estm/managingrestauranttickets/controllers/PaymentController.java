@@ -5,6 +5,7 @@ package sn.estm.managingrestauranttickets.controllers;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -12,6 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import sn.estm.managingrestauranttickets.dto.UserDTO;
 import sn.estm.managingrestauranttickets.dto.paymentdtos.PaymentInitiationDTO;
 import sn.estm.managingrestauranttickets.services.serviceInterfaces.PaymentService;
 import sn.estm.managingrestauranttickets.dto.paymentdtos.PaymentResponseDTO;
@@ -37,7 +39,10 @@ public class PaymentController {
     public ResponseEntity<PaymentResponseDTO> initiatePayment(
             @Valid @RequestBody PaymentInitiationDTO request) {
         log.info("POST /api/payments/initiate - User: {}", request.getUserId());
-        return ResponseEntity.ok(paymentService.initiatePayment(request));
+        PaymentResponseDTO paymentResponseDTO = paymentService.initiatePayment(request);
+        log.info("Payment initiation response: {}", paymentResponseDTO);
+        return new ResponseEntity<>(paymentResponseDTO, HttpStatus.OK);
+        //return ResponseEntity.ok(paymentService.initiatePayment(request));
     }
 
     /**

@@ -38,6 +38,7 @@ public class PayDunyaConfig {
      * Retourne l'URL de base de l'API PayDunya selon le mode
      */
     public String getApiUrl() {
+        // Pour le sandbox (test)
         return "test".equals(mode)
                 ? "https://sandbox.paydunya.com/api/v1"
                 : "https://app.paydunya.com/api/v1";

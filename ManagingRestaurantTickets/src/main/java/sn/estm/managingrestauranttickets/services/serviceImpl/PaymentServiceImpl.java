@@ -20,13 +20,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import okhttp3.*;
 import org.springframework.transaction.annotation.Transactional;
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import sn.estm.managingrestauranttickets.services.serviceInterfaces.TicketService;
 
-import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -52,6 +49,121 @@ public class PaymentServiceImpl implements PaymentService {
                 .build();
     }
 
+    @Override
+    public PaymentResponseDTO initiatePayment(PaymentInitiationDTO request) {
+        log.info("=== INITIATION PAIEMENT SENTICKET ===");
+        log.info("User ID: {}, Montant: {} FCFA", request.getUserId(), request.getTotalAmount());
+
+        try {
+            // 1. Sauvegarde du panier
+            String ticketIdsStr = request.getSelectedTicketIds().stream()
+                    .map(String::valueOf)
+                    .collect(Collectors.joining(","));
+
+            PendingPayment pending = PendingPayment.builder()
+                    .transactionId(generateTempId())
+                    .userId(request.getUserId())
+                    .ticketIds(ticketIdsStr)
+                    .countA(request.getCountA())
+                    .countB(request.getCountB())
+                    .amount(request.getTotalAmount())
+                    .build();
+            pending = pendingPaymentRepository.save(pending);
+            log.info("Panier sauvegardé avec ID: {}", pending.getId());
+
+            // 2. Construction de la facture PayDunya - FORMAT CORRECT
+            Map<String, Object> invoice = new HashMap<>();
+
+            // Montant total (OBLIGATOIRE)
+            invoice.put("total_amount", request.getTotalAmount());
+
+            // Description (OBLIGATOIRE)
+            invoice.put("description", "Achat de tickets Senticket");
+
+            // Référence interne (optionnelle mais recommandée)
+            invoice.put("invoice_id", pending.getId().toString());
+
+            // 3. Ajout des articles - FORMAT CORRECT
+            // Attention: PayDunya attend une Map avec des clés spécifiques
+            List<Map<String, Object>> itemsList = new ArrayList<>();
+
+            if (request.getCountA() > 0) {
+                Map<String, Object> itemA = new HashMap<>();
+                itemA.put("name", "Ticket Type A");
+                itemA.put("quantity", request.getCountA());
+                itemA.put("unit_price", 100.0);
+                itemA.put("total_price", request.getCountA() * 100.0);
+                itemA.put("description", "Ticket pour petit-déjeuner");
+                itemsList.add(itemA);
+            }
+
+            if (request.getCountB() > 0) {
+                Map<String, Object> itemB = new HashMap<>();
+                itemB.put("name", "Ticket Type B");
+                itemB.put("quantity", request.getCountB());
+                itemB.put("unit_price", 150.0);
+                itemB.put("total_price", request.getCountB() * 150.0);
+                itemB.put("description", "Ticket pour déjeuner/dîner");
+                itemsList.add(itemB);
+            }
+
+            invoice.put("items", itemsList);
+
+            // 4. URLs de callback
+            Map<String, String> actions = new HashMap<>();
+            actions.put("return_url", payDunyaConfig.getReturnUrl());
+            actions.put("cancel_url", payDunyaConfig.getCancelUrl());
+            actions.put("callback_url", payDunyaConfig.getCallbackUrl());
+            invoice.put("actions", actions);
+
+            // 5. Envoi de la requête
+            String jsonBody = objectMapper.writeValueAsString(invoice);
+            log.info("Requête PayDunya: {}", jsonBody);
+
+            // Construction de l'URL correcte
+            String apiUrl = payDunyaConfig.getApiUrl() + "/checkout/invoice/create";
+            log.info("URL PayDunya: {}", apiUrl);
+
+            Request payDunyaRequest = new Request.Builder()
+                    .url(apiUrl)
+                    .post(RequestBody.create(jsonBody, MediaType.parse("application/json")))
+                    .addHeader("PAYDUNYA-MASTER-KEY", payDunyaConfig.getMasterKey())
+                    .addHeader("PAYDUNYA-PRIVATE-KEY", payDunyaConfig.getPrivateKey())
+                    .addHeader("PAYDUNYA-PUBLIC-KEY", payDunyaConfig.getPublicKey())
+                    .addHeader("PAYDUNYA-TOKEN", payDunyaConfig.getToken())
+                    .build();
+
+            try (Response response = httpClient.newCall(payDunyaRequest).execute()) {
+                String responseBody = response.body() != null ? response.body().string() : "";
+                log.info("Status code: {}", response.code());
+                log.info("Réponse PayDunya: {}", responseBody);
+
+                if (response.isSuccessful()) {
+                    JsonNode jsonResponse = objectMapper.readTree(responseBody);
+                    String transactionId = jsonResponse.get("token").asText();
+                    String paymentUrl = jsonResponse.get("invoice_url").asText();
+
+                    pending.setTransactionId(transactionId);
+                    pendingPaymentRepository.save(pending);
+
+                    return PaymentResponseDTO.builder()
+                            .paymentUrl(paymentUrl)
+                            .transactionId(transactionId)
+                            .status("PENDING")
+                            .message("Paiement initialisé")
+                            .build();
+                } else {
+                    log.error("Erreur PayDunya - Status: {}, Body: {}", response.code(), responseBody);
+                    throw new RuntimeException("Erreur PayDunya: " + responseBody);
+                }
+            }
+
+        } catch (IOException e) {
+            log.error("Erreur lors de l'appel PayDunya", e);
+            throw new RuntimeException("Erreur technique: " + e.getMessage());
+        }
+    }
+
     /**
      * ÉTAPE 1: Initialisation du paiement
      * 1. Sauvegarde le panier dans pending_payments
@@ -59,7 +171,7 @@ public class PaymentServiceImpl implements PaymentService {
      * 3. Envoie la requête à PayDunya
      * 4. Retourne l'URL de paiement au frontend
      */
-    @Override
+/*    @Override
     public PaymentResponseDTO initiatePayment(PaymentInitiationDTO request) {
         log.info("=== INITIATION PAIEMENT SENTICKET ===");
         log.info("User ID: {}, Montant: {} FCFA", request.getUserId(), request.getTotalAmount());
@@ -159,7 +271,7 @@ public class PaymentServiceImpl implements PaymentService {
             log.error("Erreur lors de l'appel PayDunya", e);
             throw new RuntimeException("Erreur technique: " + e.getMessage());
         }
-    }
+    }*/
 
     /**
      * ÉTAPE 2: Confirmation du paiement (callback après paiement réussi)
