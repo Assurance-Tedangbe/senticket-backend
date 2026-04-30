@@ -28,6 +28,7 @@ import sn.estm.managingrestauranttickets.dto.customisedto.CancelTransferDTO;
 import sn.estm.managingrestauranttickets.dto.customisedto.OriginalSenderDTO;
 
 import sn.estm.managingrestauranttickets.dto.historydto.TransactionHistoryDTO;
+import sn.estm.managingrestauranttickets.dto.paymentdtos.PaymentInitiationDTO;
 import sn.estm.managingrestauranttickets.dto.statisticsDTO.TicketStatisticsDTO;
 import sn.estm.managingrestauranttickets.entities.TransactionHistory;
 import sn.estm.managingrestauranttickets.entities.User;
@@ -57,10 +58,11 @@ public class TicketServiceImpl implements TicketService {
     private final TicketRepository ticketRepository;
     private final TicketMapper ticketMapper;
     private final UserRepository userRepository;
-    private final TransfertHistoryRepository transfertHistoryRepository;
     private final TransactionHistoryService transactionHistoryService;
     private final TransactionHistoryRepository transactionHistoryRepository;
     private final TransactionHistoryMapper transactionHistoryMapper;
+    private final PendingPaymentRepository pendingPaymentRepository; // À injecter
+
 
     // private final PasswordEncoder passwordEncoder; // For password validation
 
@@ -93,7 +95,7 @@ public class TicketServiceImpl implements TicketService {
                 .collect(Collectors.toList());
     }
 
-    @Transactional
+   /* @Transactional
     @Override
     public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTicketsRequestDTO) {
 
@@ -233,9 +235,185 @@ public class TicketServiceImpl implements TicketService {
         return purchasedTickets.stream()
                 .map(ticketMapper::toDto)
                 .collect(Collectors.toList());
+    }*/
+
+    /// Integ Paydunya
+
+    @Transactional
+    @Override
+    public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTicketsRequestDTO) {
+        log.info("Purchasing tickets request: {}", purchaseTicketsRequestDTO);
+
+        // Appel à la méthode réutilisable
+        return executePurchase(
+                purchaseTicketsRequestDTO.getPurchaseUserDTO().getUserId(),
+                purchaseTicketsRequestDTO.getSelectedTicketIds()
+        );
     }
 
-    // ******** debitAccount service *********
+    // Cette méthode contient toute la logique d'achat
+    // Appelée par:
+    //   - purchaseTickets() (ancienne méthode)
+    //   - PaymentServiceImpl.confirmPayment() (nouveau flux PayDunya)
+    @Transactional
+    public List<TicketDTO> executePurchase(Long userId, List<Long> ticketIds) {
+
+        log.info("EXÉCUTION DE L'ACHAT POUR L'UTILISATEUR: {} ", userId);
+        log.info("Ticket IDs: {}", ticketIds);
+
+        // 1. Vérifier que l'utilisateur existe
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        MessageFormat.format("User not found with ID: {0}", userId)));
+
+        // 2. Vérifier que l'utilisateur a le rôle ETUDIANT
+        if (!user.getRole().getName().equals("ETUDIANT")) {
+            throw new IllegalStateException("Only ETUDIANT can purchase tickets");
+        }
+
+        // 3. Récupérer et valider les tickets
+        List<Ticket> tickets = ticketRepository.findAllById(ticketIds);
+
+        // Check if all tickets were found
+        if (tickets.size() != ticketIds.size()) {
+            throw new ResourceNotFoundException("One or more tickets not found");
+        }
+
+        // 4. Validate tickets and calculate total price + count ticket types
+        double totalPrice = 0.0;
+        List<Ticket> availableTickets = new ArrayList<>();
+        int countAPurchased = 0;
+        int countBPurchased = 0;
+
+        for (Ticket ticket : tickets) {
+            // Check eligibility for purchase: NOT booked AND TicketStatus.AVAILABLE
+            if (ticket.isBooked() || ticket.getStatus() != TicketStatus.AVAILABLE) {
+                throw new IllegalStateException(MessageFormat.format(
+                        "Ticket with ID: {0} is not available for purchase",
+                        ticket.getId()));
+            }
+
+            // Ensure ticket price is set based on type
+            if (ticket.getPrice() == null) {
+                if (ticket.getType() == TicketType.A) {
+                    ticket.setPrice(100.0);
+                } else if (ticket.getType() == TicketType.B) {
+                    ticket.setPrice(150.0);
+                } else {
+                    throw new IllegalStateException(MessageFormat.format(
+                            "Invalid ticket type for ticket ID: {0}", ticket.getId()));
+                }
+            }
+
+            totalPrice += ticket.getPrice();
+            availableTickets.add(ticket);
+
+            // Count ticket types
+            if (ticket.getType() == TicketType.A) {
+                countAPurchased++;
+            } else if (ticket.getType() == TicketType.B) {
+                countBPurchased++;
+            }
+        }
+
+        // 5. Mettre à jour les tickets achetés
+        List<Ticket> inPurchasingTickets = new ArrayList<>();
+        for (Ticket ticket : availableTickets) {
+            ticket.setBooked(true);
+            ticket.setStatus(TicketStatus.BOOKED);
+            ticket.setUser(user);
+            //collect purchased tickets
+            inPurchasingTickets.add(ticket);
+        }
+        List<Ticket> purchasedTickets = ticketRepository.saveAll(inPurchasingTickets);
+
+        // 6. BEGIN BUILDING TICKETS
+        log.info("BEGIN BUILDING TICKETS - Type A: {}, Type B: {}",
+                countAPurchased, countBPurchased);
+
+        if (countAPurchased > 0 || countBPurchased > 0) {
+            List<Ticket> newTicketsToSave = new ArrayList<>();
+            LocalDateTime creationTime = LocalDateTime.now();
+
+            for (int i = 0; i < countAPurchased; i++) {
+                Ticket ticketA = Ticket.builder()
+                        .type(TicketType.A)
+                        .price(100.0)
+                        .status(TicketStatus.AVAILABLE)
+                        .booked(false)
+                        .creationDate(creationTime)
+                        .user(user)
+                        .build();
+                newTicketsToSave.add(ticketA);
+            }
+
+            for (int i = 0; i < countBPurchased; i++) {
+                Ticket ticketB = Ticket.builder()
+                        .type(TicketType.B)
+                        .price(150.0)
+                        .status(TicketStatus.AVAILABLE)
+                        .booked(false)
+                        .creationDate(creationTime)
+                        .user(user)
+                        .build();
+                newTicketsToSave.add(ticketB);
+            }
+
+            // Use saveAll for efficient batch insertion
+            ticketRepository.saveAll(newTicketsToSave);
+
+            log.info("{} nouveaux tickets créés", newTicketsToSave.size());
+        }
+
+        // 7. RECORD PURCHASE TRANSACTION : Enregistrer dans l'historique des transactions
+        transactionHistoryService.recordPurchase(user, purchasedTickets);
+
+        log.info("Achat réussi pour l'utilisateur: {}, {} tickets", user.getUsername(), purchasedTickets.size());
+
+        // 8. Retourner les tickets achetés en DTO
+        return purchasedTickets.stream()
+                .map(ticketMapper::toDto)
+                .collect(Collectors.toList());
+    }
+
+    // Méthode pour préparer le paiement (appelée par le frontend)
+    public PaymentInitiationDTO preparePayment(Long userId, List<Long> ticketIds) {
+        log.info("Préparation du paiement pour l'utilisateur: {}, tickets: {}", userId, ticketIds);
+
+        // Récupérer l'utilisateur
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + userId));
+
+        // Vérifier le rôle
+        if (!user.getRole().getName().equals("ETUDIANT")) {
+            throw new IllegalStateException("Only ETUDIANT can purchase tickets");
+        }
+
+        // Récupérer et valider les tickets
+        List<Ticket> tickets = ticketRepository.findAllById(ticketIds);
+        double totalAmount = 0.0;
+        int countA = 0;
+        int countB = 0;
+
+        for (Ticket ticket : tickets) {
+            if (ticket.isBooked() || ticket.getStatus() != TicketStatus.AVAILABLE) {
+                throw new IllegalStateException("Ticket not available: " + ticket.getId());
+            }
+            totalAmount += ticket.getPrice();
+            if (ticket.getType() == TicketType.A) countA++;
+            else if (ticket.getType() == TicketType.B) countB++;
+        }
+
+        return PaymentInitiationDTO.builder()
+                .userId(userId)
+                .selectedTicketIds(ticketIds)
+                .totalAmount(totalAmount)
+                .countA(countA)
+                .countB(countB)
+                .build();
+    }
+
+    /// ******** debitAccount service *********
     @Transactional
     @Override
     public void debitAccount(DebitAccountRequestDTO debitAccountRequestDTO) {
@@ -399,9 +577,9 @@ public class TicketServiceImpl implements TicketService {
                 .map(ticketMapper::toDto)
                 .collect(Collectors.toList());
     }
-    // ******* End debitAccount service *********
+    /// ******* End debitAccount service *********
 
-    // ******* transferTickets service *********
+    /// ******* transferTickets service *********
     @Transactional
     @Override
     public TransactionHistoryDTO transferTickets(TransferTicketsRequestDTO transferTicketsRequestDTO) {
@@ -556,9 +734,9 @@ public class TicketServiceImpl implements TicketService {
         // Après avoir validé et traité le transfert, enregistrement dans l'historique unifié
         return transactionHistoryService.recordTransfer(sender, recipient, tickets);
     }
-    // ******** End transfert service *********
+    /// ******** End transfert service *********
 
-    // ********* cancelTransferTickets service ***********
+    /// ********* cancelTransferTickets service ***********
     @Transactional
     @Override
     public void cancelTransferTickets(CancelTransferTicketsRequestDTO cancelTransferTicketsRequestDTO) {
@@ -687,7 +865,7 @@ public class TicketServiceImpl implements TicketService {
                 .collect(Collectors.toList());
     }
 
-    //********* end of cancelTransferTickets service ***********
+    /// ********* end of cancelTransferTickets service ***********
 
     /**
      * Service pour récupérer les statistiques des tickets
@@ -804,5 +982,6 @@ public class TicketServiceImpl implements TicketService {
                 .availableStats(availableStats) // Statistiques des tickets disponibles
                 .build();
     }
+
 }
 

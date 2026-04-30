@@ -1,5 +1,5 @@
 // DTO Réponse envoyé au frontend après initiation/initialisation du paiement
-// Contient l'URL de paiement PayDunya
+// Contient l'URL de la page de paiement PayDunya
 
 package sn.estm.managingrestauranttickets.dto.paymentdtos;
 
@@ -26,22 +26,3 @@ public class PaymentResponseDTO {
     /** Message explicatif pour l'utilisateur  */
     private String message;
 }
-/*
-@Data
-@Builder
-@NoArgsConstructor
-@AllArgsConstructor
-public class PaymentResponseDTO {
-
-    *//** URL de la page de paiement PayDunya (à ouvrir dans le navigateur) *//*
-    private String paymentUrl;
-
-    *//** Identifiant unique de la transaction PayDunya *//*
-    private String transactionId;
-
-    *//** Statut du paiement: PENDING, SUCCESS, FAILED *//*
-    private String status;
-
-    *//** Message explicatif pour l'utilisateur *//*
-    private String message;
-}*/

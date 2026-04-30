@@ -9,48 +9,25 @@ import sn.estm.managingrestauranttickets.dto.paymentdtos.PaymentResponseDTO;
 public interface PaymentService {
 
     /**
-     * Initialise un paiement avec PayDunya
-     * Sauvegarde le panier puis redirige vers PayDunya
+     * Initie un nouveau paiement avec l'API PayDunya.
+     * Cette méthode:
+     * 1. Sauvegarde le panier dans la table pending_payments
+     * 2. Crée une facture sur les serveurs PayDunya
+     * 3. Retourne l'URL de paiement
      *
-     * @param request DTO contenant les informations du panier
-     * @return PaymentResponseDTO avec l'URL de paiement
+     * @param request DTO contenant les informations du panier (userId, tickets, montant)
+     * @return PaymentResponseDTO contenant l'URL de paiement et l'ID de transaction
      */
     PaymentResponseDTO initiatePayment(PaymentInitiationDTO request);
 
     /**
-     * Confirme un paiement après retour de PayDunya
-     * Appelle le service d'achat de tickets existant
+     * Confirme un paiement après le retour de PayDunya.
+     * Cette méthode:
+     * 1. Vérifie le statut du paiement auprès de PayDunya
+     * 2. Récupère le panier sauvegardé
+     * 3. Appelle le service d'achat de tickets pour créer les tickets
      *
      * @param transactionId Token PayDunya de la transaction
      */
     void confirmPayment(String transactionId);
 }
-
-/*
-public interface PaymentService {
-    */
-/**
-     * Initialise un nouveau paiement auprès de PayDunya
-     * @param request DTO contenant les informations du panier et du client
-     * @return PaymentResponseDTO contenant l'URL de paiement
-     *//*
-
-    PaymentResponseDTO initiatePayment(PaymentRequestDTO request);
-
-    */
-/**
-     * Traite le retour de PayDunya après un paiement réussi
-     * @param transactionId Identifiant de la transaction PayDunya
-     *//*
-
-    void processSuccessfulPayment(String transactionId);
-
-    */
-/**
-     * Vérifie le statut d'une transaction PayDunya
-     * @param transactionId Identifiant de la transaction
-     * @return Statut du paiement
-     *//*
-
-    String checkPaymentStatus(String transactionId);
-}*/

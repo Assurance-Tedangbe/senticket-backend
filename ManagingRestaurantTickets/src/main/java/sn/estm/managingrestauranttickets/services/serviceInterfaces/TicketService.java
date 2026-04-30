@@ -10,6 +10,7 @@ import sn.estm.managingrestauranttickets.dto.customisedto.PurchaseTicketsRequest
 import sn.estm.managingrestauranttickets.dto.customisedto.TransferTicketsRequestDTO;
 import sn.estm.managingrestauranttickets.dto.customisedto.CancelTransferTicketsRequestDTO;
 import sn.estm.managingrestauranttickets.dto.historydto.TransactionHistoryDTO;
+import sn.estm.managingrestauranttickets.dto.paymentdtos.PaymentInitiationDTO;
 import sn.estm.managingrestauranttickets.dto.statisticsDTO.TicketStatisticsDTO;
 import sn.estm.managingrestauranttickets.enumerations.TicketType;
 
@@ -36,4 +37,24 @@ public interface TicketService {
      * @return TicketStatisticsDTO contenant toutes les statistiques
      */
     TicketStatisticsDTO getTicketStatistics(Long userId);
+
+    /**
+     * Exécute l'achat de tickets (logique complète)
+     * Cette méthode est réutilisable et contient TOUTE la logique d'achat
+     *
+     * @param userId ID de l'utilisateur
+     * @param ticketIds IDs des tickets à acheter
+     * @return Liste des tickets achetés en DTO
+     */
+    List<TicketDTO> executePurchase(Long userId, List<Long> ticketIds);
+
+    /**
+     * Prépare un paiement (calcule le total et les quantités)
+     * Appelée par le frontend avant la redirection vers PayDunya
+     *
+     * @param userId ID de l'utilisateur
+     * @param ticketIds IDs des tickets à acheter
+     * @return PaymentInitiationDTO contenant les informations pour PayDunya
+     */
+    PaymentInitiationDTO preparePayment(Long userId, List<Long> ticketIds);
 }

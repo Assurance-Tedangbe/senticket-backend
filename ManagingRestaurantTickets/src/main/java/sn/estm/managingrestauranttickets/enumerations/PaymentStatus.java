@@ -8,5 +8,4 @@ public enum PaymentStatus {
     PENDING,    // En attente de paiement
     COMPLETED,  // Paiement confirmé par PayDunya
     FAILED,     // Paiement échoué
-    CANCELLED   // Paiement annulé par l'utilisateur
 }
