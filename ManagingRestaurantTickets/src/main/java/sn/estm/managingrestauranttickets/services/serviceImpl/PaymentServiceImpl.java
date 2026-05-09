@@ -41,23 +41,12 @@ public class PaymentServiceImpl implements PaymentService {
     private final TicketService ticketService;                       // Service existant pour les tickets
     private final ObjectMapper objectMapper;                        // Pour la conversion JSON
     private final UserRepository userRepository;
-
-    // Client HTTP pour les appels vers PayDunya
-    private OkHttpClient httpClient;
+    private OkHttpClient httpClient;  // Client HTTP pour les appels vers PayDunya
 
     /**
      * Initialisation du client HTTP après la construction du bean.
      * Configure les timeouts pour éviter les appels bloquants.
      */
-    /*@PostConstruct
-    public void init() {
-        // Configuration du client HTTP avec timeouts
-        this.httpClient = new OkHttpClient.Builder()
-                .connectTimeout(30, TimeUnit.SECONDS)   // Timeout de connexion
-                .writeTimeout(30, TimeUnit.SECONDS)     // Timeout d'écriture
-                .readTimeout(30, TimeUnit.SECONDS)      // Timeout de lecture
-                .build();
-    }*/
     @PostConstruct
     public void init() {
         OkHttpClient.Builder builder = new OkHttpClient.Builder()
@@ -86,6 +75,15 @@ public class PaymentServiceImpl implements PaymentService {
 
         this.httpClient = builder.build();
     }
+    /*@PostConstruct
+    public void init() {
+        // Configuration du client HTTP avec timeouts
+        this.httpClient = new OkHttpClient.Builder()
+                .connectTimeout(30, TimeUnit.SECONDS)   // Timeout de connexion
+                .writeTimeout(30, TimeUnit.SECONDS)     // Timeout d'écriture
+                .readTimeout(30, TimeUnit.SECONDS)      // Timeout de lecture
+                .build();
+    }*/
 
     /** ÉTAPE 1: INITIATION DU PAIEMENT
      * Déroulement:
@@ -98,13 +96,11 @@ public class PaymentServiceImpl implements PaymentService {
     @Transactional
     @Override
     public PaymentResponseDTO initiatePayment(PaymentInitiationDTO request) {
-        log.info("=== INITIATION PAIEMENT SENTICKET ===");
+        log.info("INITIATION PAIEMENT SENTICKET ");
         log.info("User ID: {}, Montant: {} FCFA", request.getUserId(), request.getTotalAmount());
 
         try {
-            // ====================================================================
-            // 1. Sauvegarde du panier
-            // ====================================================================
+            /// 1. Sauvegarde du panier
             String ticketIdsStr = request.getSelectedTicketIds().stream()
                     .map(String::valueOf)
                     .collect(Collectors.joining(","));
@@ -120,15 +116,11 @@ public class PaymentServiceImpl implements PaymentService {
             pending = pendingPaymentRepository.save(pending);
             log.info("Panier sauvegardé avec ID: {}", pending.getId());
 
-            // ====================================================================
-            // 2. Récupération des informations utilisateur
-            // ====================================================================
+            /// 2. Récupération des informations utilisateur
             User user = userRepository.findById(request.getUserId())
                     .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
 
-            // ====================================================================
-            // 3. Construction de l'objet STORE (Informations de la boutique)
-            // ====================================================================
+            /// 3. Construction de l'objet STORE (Informations de la boutique)
             Map<String, String> store = new HashMap<>();
             store.put("name", "Senticket - Gestion de Tickets");
             store.put("tagline", "Achetez et transférez vos tickets facilement");
@@ -137,9 +129,8 @@ public class PaymentServiceImpl implements PaymentService {
             store.put("logo_url", "https://senticket.sn/logo.png");
             store.put("website_url", "https://senticket.sn");
 
-            // 4. Construction des ARTICLES (items)
-            // PayDunya attend un objet avec des clés "item_1", "item_2", etc.
-            // ====================================================================
+            /// 4. Construction des ARTICLES (items)
+            /// PayDunya attend un objet avec des clés "item_1", "item_2", etc.
             Map<String, Object> items = new HashMap<>();
             int itemIndex = 1;
 
@@ -163,33 +154,25 @@ public class PaymentServiceImpl implements PaymentService {
                 items.put("item_" + itemIndex++, itemB);
             }
 
-            // ====================================================================
-            // 5. Construction des TAXES (optionnel - vide si pas de taxes)
-            // ====================================================================
+            /// 5. Construction des TAXES (optionnel - vide si pas de taxes)
             Map<String, Object> taxes = new HashMap<>();
             // Si vous avez des taxes, ajoutez-les ici:
             // taxes.put("tva", Map.of("name", "TVA (18%)", "amount", request.getTotalAmount() * 0.18));
 
-            // ====================================================================
-            // 6. Construction du CLIENT
-            // ====================================================================
+            /// 6. Construction du CLIENT
             Map<String, String> customer = new HashMap<>();
             customer.put("name", user.getFirstName() + " " + user.getLastName());
             customer.put("email", user.getEmail() != null ? user.getEmail() : "");
             customer.put("phone", "");
 
-            // ====================================================================
-            // 7. Configuration des CANAUX DE PAIEMENT (channels)
-            // Moyens de paiement disponibles pour le client
-            // ====================================================================
+            /// 7. Configuration des CANAUX DE PAIEMENT (channels)(optionnel)
+            /// Moyens de paiement disponibles pour le client
             List<String> channels = Arrays.asList(
                     "wave-senegal",           // Wave Sénégal
                     "orange-money-senegal"   // Orange Money Sénégal
             );
 
-            // ====================================================================
-            // 8. Construction de l'objet INVOICE (Facture)
-            // ====================================================================
+            /// 8. Construction de l'objet INVOICE (Facture)
             Map<String, Object> invoice = new HashMap<>();
             invoice.put("total_amount", request.getTotalAmount());
             invoice.put("description", "Achat de tickets Senticket");
@@ -198,37 +181,26 @@ public class PaymentServiceImpl implements PaymentService {
             invoice.put("customer", customer);
             invoice.put("channels", channels);
 
-            // ====================================================================
-            // 9. Construction des DONNÉES PERSONNALISÉES (custom_data)
-            // Ces données seront retournées dans le webhook
-            // ====================================================================
+            /// 9. Construction des DONNÉES PERSONNALISÉES (custom_data)(optionnel)
+            /// Ces données seront retournées dans le webhook
             Map<String, String> customData = new HashMap<>();
             customData.put("user_id", String.valueOf(request.getUserId()));
-            customData.put("cart_id", String.valueOf(pending.getId()));
             customData.put("ticket_ids", ticketIdsStr);
-            customData.put("count_a", String.valueOf(request.getCountA()));
-            customData.put("count_b", String.valueOf(request.getCountB()));
 
-            // ====================================================================
-            // 10. Construction des ACTIONS (URLs de callback)
-            // ====================================================================
+            /// 10. Construction des ACTIONS (URLs de callback)
             Map<String, String> actions = new HashMap<>();
             actions.put("return_url", payDunyaConfig.getReturnUrl());
             actions.put("cancel_url", payDunyaConfig.getCancelUrl());
             actions.put("callback_url", payDunyaConfig.getCallbackUrl());
 
-            // ====================================================================
-            // 11. Assemblage du corps de la requête COMPLET
-            // ====================================================================
+            /// 11. Assemblage du corps de la requête COMPLET
             Map<String, Object> requestBody = new HashMap<>();
             requestBody.put("store", store);
             requestBody.put("invoice", invoice);
             requestBody.put("custom_data", customData);
             requestBody.put("actions", actions);
 
-            // ====================================================================
-            // 12. Envoi de la requête à PayDunya
-            // ====================================================================
+            /// 12. Envoi de la requête à PayDunya
             String jsonBody = objectMapper.writeValueAsString(requestBody);
             log.info("Requête PayDunya: {}", jsonBody);
 
@@ -254,9 +226,7 @@ public class PaymentServiceImpl implements PaymentService {
                     throw new RuntimeException("Erreur PayDunya: " + responseBody);
                 }
 
-                // ====================================================================
-                // Traitement de la réponse PayDunya - Vérification du succès et extraction des données
-                // ====================================================================
+                /// Traitement de la réponse PayDunya - Vérification du succès et extraction des données
                 JsonNode jsonResponse = objectMapper.readTree(responseBody);
 
                 // Vérifier le code de réponse (00 = succès)
@@ -265,21 +235,9 @@ public class PaymentServiceImpl implements PaymentService {
                     String responseText = jsonResponse.has("response_text") ? jsonResponse.get("response_text").asText() : "Erreur inconnue";
                     throw new RuntimeException("PayDunya error: " + responseCode + " - " + responseText);
                 }
-                /*
-                if (!"00".equals(responseCode)) {
-                    String responseText = jsonResponse.has("response_text") ? jsonResponse.get("response_text").asText() : "Erreur inconnue";
-                    throw new RuntimeException("PayDunya error: " + responseCode + " - " + responseText);
-                }
-                // Récupérer les données de la transaction
-                JsonNode dataNode = jsonResponse.get("data");
-                if (dataNode == null) {
-                    throw new RuntimeException("Réponse PayDunya invalide: pas de clé 'data'");
-                }
-                String transactionId = dataNode.get("token").asText();
-                String paymentUrl = dataNode.get("invoice_url").asText(); */
 
                 /// La réponse contient directement le token et l'URL
-                // Récupérer le token (ID de transaction) - Directement dans la racine
+                // Récupérer le token (ID de transaction) directement dans la racine
                 String transactionId = jsonResponse.get("token").asText();
                 // L'URL de paiement est dans response_text pour ce format
                 String paymentUrl = jsonResponse.get("response_text").asText();
@@ -290,12 +248,12 @@ public class PaymentServiceImpl implements PaymentService {
                 pending.setTransactionId(transactionId);
                 pendingPaymentRepository.save(pending);
 
-                log.info("Paiement initialisé - Transaction ID: {}, URL: {}", transactionId, paymentUrl);
+                log.info("PAIEMENT INITIALISE - Transaction ID: {}, URL: {}", transactionId, paymentUrl);
 
                 return PaymentResponseDTO.builder()
                         .paymentUrl(paymentUrl)
                         .transactionId(transactionId)
-                        .status(String.valueOf(PaymentStatus.PENDING))
+                        .status(PaymentStatus.PENDING)
                         .message("Redirection vers la page de paiement")
                         .build();
             }
@@ -305,146 +263,11 @@ public class PaymentServiceImpl implements PaymentService {
             throw new RuntimeException("Erreur technique: " + e.getMessage());
         }
     }
-    /*public PaymentResponseDTO initiatePayment(PaymentInitiationDTO request) {
-        log.info("=== INITIATION PAIEMENT SENTICKET ===");
-        log.info("User ID: {}, Montant: {} FCFA", request.getUserId(), request.getTotalAmount());
-        log.info("Tickets A: {}, Tickets B: {}", request.getCountA(), request.getCountB());
-
-        try {
-            // 1. Sauvegarde du panier
-            String ticketIdsStr = request.getSelectedTicketIds().stream()
-                    .map(String::valueOf)
-                    .collect(Collectors.joining(","));
-
-            PendingPayment pending = PendingPayment.builder()
-                    .transactionId(generateTempId())
-                    .userId(request.getUserId())
-                    .ticketIds(ticketIdsStr)
-                    .countA(request.getCountA())
-                    .countB(request.getCountB())
-                    .amount(request.getTotalAmount())
-                    .build();
-            pending = pendingPaymentRepository.save(pending);
-            log.info("Panier sauvegardé avec ID: {}", pending.getId());
-
-            // 2. Construction de la facture PayDunya - FORMAT CORRECT
-            Map<String, Object> invoice = new HashMap<>();
-            // Montant total (OBLIGATOIRE)
-            invoice.put("total_amount", request.getTotalAmount());
-            // Description (OBLIGATOIRE)
-            invoice.put("description", "Achat de tickets Senticket");
-            // Référence interne (optionnelle mais recommandée)
-            invoice.put("invoice_id", pending.getId().toString());
-            // 3. Ajout des articles - FORMAT CORRECT
-            // Attention: PayDunya attend une Map avec des clés spécifiques
-            List<Map<String, Object>> itemsList = new ArrayList<>();
-
-            if (request.getCountA() > 0) {
-                Map<String, Object> itemA = new HashMap<>();
-                itemA.put("name", "Ticket Type A");
-                itemA.put("quantity", request.getCountA());
-                itemA.put("unit_price", 100.0);
-                itemA.put("total_price", request.getCountA() * 100.0);
-                itemA.put("description", "Ticket pour petit-déjeuner");
-                itemsList.add(itemA);
-            }
-
-            if (request.getCountB() > 0) {
-                Map<String, Object> itemB = new HashMap<>();
-                itemB.put("name", "Ticket Type B");
-                itemB.put("quantity", request.getCountB());
-                itemB.put("unit_price", 150.0);
-                itemB.put("total_price", request.getCountB() * 150.0);
-                itemB.put("description", "Ticket pour déjeuner/dîner");
-                itemsList.add(itemB);
-            }
-
-            invoice.put("items", itemsList);
-
-
-            // 1. Configuration de la boutique (STORE) - REQUIS PAR PAYDUNYA
-            Map<String, String> store = new HashMap<>();
-            store.put("name", "Senticket - Gestion de Tickets");
-            store.put("tagline", "Achetez et transférez vos tickets facilement");
-            store.put("phone_number", "+221 77 123 45 67");
-            store.put("postal_address", "Dakar, Sénégal");
-            store.put("website_url", "https://senticket.sn");
-            store.put("logo_url", "https://senticket.sn/logo.png");
-
-
-            // 4. URLs de callback
-            Map<String, String> actions = new HashMap<>();
-            actions.put("return_url", payDunyaConfig.getReturnUrl());
-            actions.put("cancel_url", payDunyaConfig.getCancelUrl());
-            actions.put("callback_url", payDunyaConfig.getCallbackUrl());
-            invoice.put("actions", actions);
-
-
-            Map<String, Object> requestBody = new HashMap<>();
-            requestBody.put("invoice", invoice);
-
-            // 5. Envoi de la requête à L'API PayDunya
-            String jsonBody = objectMapper.writeValueAsString(requestBody);
-            log.info("Requête PayDunya: {}", jsonBody);
-
-            // Construction de l'URL correcte (sandbox ou production)
-            String apiUrl = payDunyaConfig.getApiUrl() + "/checkout-invoice/create";
-            log.info("URL PayDunya: {}", apiUrl);
-
-            // Construction de la requête HTTP
-            Request payDunyaRequest = new Request.Builder()
-                    .url(apiUrl)
-                    .post(RequestBody.create(jsonBody, MediaType.parse("application/json")))
-                    .addHeader("PAYDUNYA-MASTER-KEY", payDunyaConfig.getMasterKey())
-                    .addHeader("PAYDUNYA-PRIVATE-KEY", payDunyaConfig.getPrivateKey())
-                    .addHeader("PAYDUNYA-PUBLIC-KEY", payDunyaConfig.getPublicKey())
-                    .addHeader("PAYDUNYA-TOKEN", payDunyaConfig.getToken())
-                    .build();
-
-            try (Response response = httpClient.newCall(payDunyaRequest).execute()) {
-                String responseBody = response.body() != null ? response.body().string() : "";
-                log.info("Status code: {}", response.code());
-                log.info("Réponse PayDunya: {}", responseBody);
-                // Ajoutez ces logs pour vérifier les clés
-                log.info("Master Key: {}", payDunyaConfig.getMasterKey());
-                log.info("Private Key: {}", payDunyaConfig.getPrivateKey());
-                log.info("Public Key: {}", payDunyaConfig.getPublicKey());
-                log.info("Token: {}", payDunyaConfig.getToken());
-
-                if (response.isSuccessful()) {
-                    JsonNode jsonResponse = objectMapper.readTree(responseBody);
-                    String transactionId = jsonResponse.get("token").asText();
-                    String paymentUrl = jsonResponse.get("invoice_url").asText();
-
-                    // Mise à jour avec le vrai token PayDunya
-                    pending.setTransactionId(transactionId);
-                    pendingPaymentRepository.save(pending);
-                    log.info("Paiement initialisé - Transaction ID: {}", transactionId);
-
-                    return PaymentResponseDTO.builder()
-                            .paymentUrl(paymentUrl)
-                            .transactionId(transactionId)
-                            .status("PENDING")
-                            .message("Paiement initialisé")
-                            .build();
-                } else {
-                    log.error("Erreur PayDunya - Status: {}, Body: {}", response.code(), responseBody);
-                    throw new RuntimeException("Erreur PayDunya: " + responseBody);
-                }
-            }
-
-        } catch (IOException e) {
-            log.error("Erreur lors de l'appel PayDunya", e);
-            throw new RuntimeException("Erreur technique: " + e.getMessage());
-        }
-    }*/
 
     /**
-     * ÉTAPE 2: CONFIRMATION DU PAIEMENT (CALLBACK après paiement réussi)
-     *
+     * ÉTAPE 2 : CONFIRMATION DU PAIEMENT (CALLBACK après paiement réussi)
      * Cette méthode est appelée par le controller /api/payments/return
      * après que PayDunya a redirigé l'utilisateur.
-     *
      * Déroulement :
      * 1. Vérification du statut du paiement auprès de PayDunya
      * 2. Récupération du panier sauvegardé
@@ -454,7 +277,7 @@ public class PaymentServiceImpl implements PaymentService {
    /* @Override
     @Transactional
     public void confirmPayment(String transactionId) {
-        log.info("=== CONFIRMATION PAIEMENT SENTICKET ===");
+        log.info("CONFIRMATION PAIEMENT SENTICKET");
         log.info("Transaction ID: {}", transactionId);
 
         try {

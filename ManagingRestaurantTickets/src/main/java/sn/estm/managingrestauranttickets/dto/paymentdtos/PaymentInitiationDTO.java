@@ -1,5 +1,6 @@
-// DTO  reçu du frontend pour initier un paiement.
+// DTO reçue du frontend pour initier un paiement.
 // Contient toutes les informations nécessaires pour créer une facture PayDunya.
+
 package sn.estm.managingrestauranttickets.dto.paymentdtos;
 
 import lombok.AllArgsConstructor;

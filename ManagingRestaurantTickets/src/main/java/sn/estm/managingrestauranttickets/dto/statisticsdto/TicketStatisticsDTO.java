@@ -1,4 +1,4 @@
-package sn.estm.managingrestauranttickets.dto.statisticsDTO;
+package sn.estm.managingrestauranttickets.dto.statisticsdto;
 
 import lombok.AllArgsConstructor;
 import lombok.Builder;

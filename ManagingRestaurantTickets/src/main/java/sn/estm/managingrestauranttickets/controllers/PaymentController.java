@@ -40,14 +40,13 @@ public class PaymentController {
     public ResponseEntity<PaymentResponseDTO> initiatePayment(
             @Valid @RequestBody PaymentInitiationDTO request) {
 
-        log.info("POST /api/payments/initiate - User: {}", request.getUserId());
+        log.info("Payment initiation running for User: {}", request.getUserId());
 
         PaymentResponseDTO paymentResponseDTO = paymentService.initiatePayment(request);
 
         log.info("Payment initiation response: {}", paymentResponseDTO);
 
         return new ResponseEntity<>(paymentResponseDTO, HttpStatus.OK);
-        //return ResponseEntity.ok(paymentService.initiatePayment(request));
     }
 
     /**
@@ -55,41 +54,20 @@ public class PaymentController {
      * PayDunya redirige l'utilisateur vers cette URL avec le token en paramètre
      *
      * GET /api/payments/return?token=xxx
-     *
-     * * Cette méthode:
-     *      * 1. Traite le paiement réussi
-     *      * 2. Redirige vers l'application mobile via deep linking
+     *   Cette méthode:
+     *    1. Traite le paiement réussi
+     *    2. Redirige vers l'application mobile via deep linking
      */
     @GetMapping("/return")
     public ResponseEntity<?> paymentReturn(@RequestParam("token") String token) {
         log.info("GET /api/payments/return - Transaction: {}", token);
 
-        //  Confirmer etTraiter le paiement réussi
+        //  Confirmer et traiter le paiement réussi
         paymentService.confirmPayment(token);
 
         // Rediriger vers l'application mobile via deep linking
-        // Format: senticket://payment/success?transactionId=xxx
         // String redirectUrl = "senticket://payment/success?transactionId=" + token;
         String redirectUrl = "http://localhost:8080/api/payments/return?token=" + token;
-
-        return ResponseEntity.status(302)
-                .header("Location", redirectUrl)
-                .build();
-    }
-
-    /**
-     * Callback d'annulation de paiement.
-     * PayDunya redirige l'utilisateur vers cette URL s'il annule le paiement.
-     *
-     * GET /api/payments/cancel?token=xxx
-     */
-    @GetMapping("/cancel")
-    public ResponseEntity<?> paymentCancel(@RequestParam("token") String token) {
-        log.info("GET /api/payments/cancel - Transaction: {}", token);
-
-        // Rediriger vers l'application mobile avec le statut annulé
-        // String redirectUrl = "senticket://payment/cancel?transactionId=" + token;
-        String redirectUrl = "http://localhost:8080/api/payments/cancel?token=" + token;
 
         return ResponseEntity.status(302)
                 .header("Location", redirectUrl)
@@ -124,9 +102,26 @@ public class PaymentController {
                 paymentService.confirmPayment(token);
             }
         }
-
         // Toujours retourner 200 OK pour que PayDunya arrête d'envoyer la notification
         return ResponseEntity.ok().build();
     }
+
+    /**
+     * Callback d'annulation de paiement.
+     * PayDunya redirige l'utilisateur vers cette URL s'il annule le paiement.
+     * GET /api/payments/cancel?token=xxx
+     */
+   /* @GetMapping("/cancel")
+    public ResponseEntity<?> paymentCancel(@RequestParam("token") String token) {
+        log.info("Requête d'annulation de paiement - TransactionID: {}", token);
+
+        // Rediriger vers l'application mobile avec le statut annulé
+        // String redirectUrl = "senticket://payment/cancel?transactionId=" + token;
+        String redirectUrl = "http://localhost:8080/api/payments/cancel?token=" + token;
+
+        return ResponseEntity.status(302)
+                .header("Location", redirectUrl)
+                .build();
+    }*/
 }
 

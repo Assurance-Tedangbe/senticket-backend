@@ -1,6 +1,6 @@
 // Cette classe configure la connexion à l'API PayDunya.
-// Il charge les config (clés API) depuis application.properties et fournit
-//  les URLs de l'API PayDunya selon le mode (test/production)
+// Il charge les configurations (clés API) depuis application.properties et fournit
+// les URLs de l'API PayDunya selon le mode (test/production).
 
 package sn.estm.managingrestauranttickets.paydunyaconfig;
 
@@ -45,7 +45,6 @@ public class PayDunyaConfig {
      * @return URL du sandbox ou de production
      */
     public String getApiUrl() {
-        // Pour le sandbox (test)
         return "test".equals(mode)
                 ? "https://app.paydunya.com/sandbox-api/v1"
                 : "https://app.paydunya.com/api/v1/";

@@ -7,7 +7,6 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import org.springframework.security.access.AccessDeniedException;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -29,7 +28,7 @@ import sn.estm.managingrestauranttickets.dto.customisedto.OriginalSenderDTO;
 
 import sn.estm.managingrestauranttickets.dto.historydto.TransactionHistoryDTO;
 import sn.estm.managingrestauranttickets.dto.paymentdtos.PaymentInitiationDTO;
-import sn.estm.managingrestauranttickets.dto.statisticsDTO.TicketStatisticsDTO;
+import sn.estm.managingrestauranttickets.dto.statisticsdto.TicketStatisticsDTO;
 import sn.estm.managingrestauranttickets.entities.TransactionHistory;
 import sn.estm.managingrestauranttickets.entities.User;
 import sn.estm.managingrestauranttickets.entities.Ticket;
@@ -377,7 +376,7 @@ public class TicketServiceImpl implements TicketService {
     }
 
     // Méthode pour préparer le paiement (appelée par le frontend)
-    public PaymentInitiationDTO preparePayment(Long userId, List<Long> ticketIds) {
+    /*public PaymentInitiationDTO preparePayment(Long userId, List<Long> ticketIds) {
         log.info("Préparation du paiement pour l'utilisateur: {}, tickets: {}", userId, ticketIds);
 
         // Récupérer l'utilisateur
@@ -411,7 +410,7 @@ public class TicketServiceImpl implements TicketService {
                 .countA(countA)
                 .countB(countB)
                 .build();
-    }
+    }*/
 
     /// ******** debitAccount service *********
     @Transactional
