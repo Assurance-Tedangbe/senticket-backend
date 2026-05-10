@@ -30,4 +30,6 @@ public interface PaymentService {
      * @param transactionId Token PayDunya de la transaction
      */
     void confirmPayment(String transactionId);
+
+    String checkPaymentStatus(String invoiceToken);
 }

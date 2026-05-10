@@ -265,6 +265,14 @@ public class PaymentServiceImpl implements PaymentService {
     }
 
     /**
+     * Génère un ID temporaire avant la confirmation PayDunya
+     * @return ID temporaire (préfixé par TMP_)
+     */
+    private String generateTempId() {
+        return "TMP_" + System.currentTimeMillis();
+    }
+
+    /**
      * ÉTAPE 2 : CONFIRMATION DU PAIEMENT (CALLBACK après paiement réussi)
      * Cette méthode est appelée par le controller /api/payments/return
      * après que PayDunya a redirigé l'utilisateur.
@@ -274,7 +282,85 @@ public class PaymentServiceImpl implements PaymentService {
      * 3. APPELLE VOTRE SERVICE purchaseTickets() EXISTANT
      * 4. Mise à jour du statut dans pending_payments
      */
-   /* @Override
+    @Override
+    @Transactional
+    public void confirmPayment(String transactionId) {
+        log.info("CONFIRMATION PAIEMENT SENTICKET ");
+        log.info("Transaction ID: {}", transactionId);
+
+        try {
+            // 1. Vérification du statut auprès de PayDunya
+            String status = checkPaymentStatus(transactionId);
+            log.info("Statut PayDunya: {}", status);
+
+            if (!"completed".equals(status)) {
+                log.warn("Paiement non complété - Statut: {}", status);
+                return;
+            }
+
+            // 2. Récupération du panier sauvegardé
+            PendingPayment pending = pendingPaymentRepository.findByTransactionId(transactionId)
+                    .orElseThrow(() -> new RuntimeException("Transaction non trouvée: " + transactionId));
+
+            // 3. Récupérer les IDs des tickets
+            List<Long> ticketIds = Arrays.stream(pending.getTicketIds().split(","))
+                    .map(Long::parseLong)
+                    .collect(Collectors.toList());
+
+            // 4. APPEL À LA NOUVELLE MÉTHODE DE TICKET SERVICE
+            // Cette méthode contient toute la logique d'achat
+            // C'est ici que les tickets sont réellement achetés et que l'historique est créé
+            log.info("Appel du service d'achat de tickets pour l'utilisateur: {}", pending.getUserId());
+            ticketService.executePurchase(pending.getUserId(), ticketIds);
+
+            // 5. Mise à jour du statut
+            pending.setStatus(PaymentStatus.COMPLETED);
+            pendingPaymentRepository.save(pending);
+
+            log.info("Paiement confirmé et tickets créés pour l'utilisateur: {}", pending.getUserId());
+
+        } catch (Exception e) {
+            log.error("Erreur lors de la confirmation du paiement", e);
+            throw new RuntimeException("Erreur: " + e.getMessage());
+        }
+    }
+
+    public String checkPaymentStatus(String invoiceToken) {
+        try {
+            // URL correcte : /checkout-invoice/confirm/{token}
+            String url = payDunyaConfig.getApiUrl()
+                    + "/checkout-invoice/confirm/" + invoiceToken;
+
+            OkHttpClient client = new OkHttpClient();
+            Request request = new Request.Builder()
+                    .url(url)
+                    .get()
+                    .addHeader("PAYDUNYA-MASTER-KEY", payDunyaConfig.getMasterKey())
+                    .addHeader("PAYDUNYA-PRIVATE-KEY", payDunyaConfig.getPrivateKey())
+                    .addHeader("PAYDUNYA-TOKEN", payDunyaConfig.getToken())    // ← clé API, PAS le token de facture
+                    .addHeader("PAYDUNYA-PUBLIC-KEY", payDunyaConfig.getPublicKey())
+                    .build();
+
+            try (Response response = client.newCall(request).execute()) {
+                String body = response.body() != null ? response.body().string() : "";
+                log.info("Réponse statut PayDunya [{}]: {}", response.code(), body);
+
+                if (body.trim().startsWith("<")) {
+                    log.error("PayDunya a retourné du HTML - URL incorrecte: {}", url);
+                    return "unknown";
+                }
+
+                JsonNode root = new ObjectMapper().readTree(body);
+                return root.path("invoice").path("status").asText("unknown");
+            }
+
+        } catch (Exception e) {
+            log.error("Erreur vérification statut: {}", e.getMessage());
+            return "unknown";
+        }
+    }
+
+     /* @Override
     @Transactional
     public void confirmPayment(String transactionId) {
         log.info("CONFIRMATION PAIEMENT SENTICKET");
@@ -336,10 +422,11 @@ public class PaymentServiceImpl implements PaymentService {
      * @param transactionId Token PayDunya de la transaction
      * @return Statut: "completed", "pending", "cancelled", "unknown"
      */
-    private String checkPaymentStatus(String transactionId) {
+    /*private String checkPaymentStatus(String transactionId) {
         try {
             Request request = new Request.Builder()
-                    .url(payDunyaConfig.getApiUrl() + "/checkout/invoice/" + transactionId)
+                    .url(//payDunyaConfig.getApiUrl() +
+                            "https://paydunya.com/sandbox-checkout/invoice/" + transactionId)
                     .get()
                     .addHeader("PAYDUNYA-MASTER-KEY", payDunyaConfig.getMasterKey())
                     .addHeader("PAYDUNYA-PRIVATE-KEY", payDunyaConfig.getPrivateKey())
@@ -347,6 +434,7 @@ public class PaymentServiceImpl implements PaymentService {
                     .build();
 
             // Vérifier statut GET: https://app.paydunya.com/sandbox-api/v1/checkout-invoice/confirm/{token}
+           // https://app.paydunya.com/sandbox-api/v1/checkout-invoice/create
             try (Response response = httpClient.newCall(request).execute()) {
                 if (response.isSuccessful() && response.body() != null) {
                     JsonNode jsonResponse = objectMapper.readTree(response.body().byteStream());
@@ -357,57 +445,5 @@ public class PaymentServiceImpl implements PaymentService {
             log.error("Erreur vérification statut", e);
         }
         return "unknown";
-    }
-
-    /**
-     * Génère un ID temporaire avant la confirmation PayDunya
-     * @return ID temporaire (préfixé par TMP_)
-     */
-    private String generateTempId() {
-        return "TMP_" + System.currentTimeMillis();
-    }
-
-    /// confirmPayment utilise la nouvelle méthode executePurchase
-    @Override
-    @Transactional
-    public void confirmPayment(String transactionId) {
-        log.info("CONFIRMATION PAIEMENT SENTICKET ");
-        log.info("Transaction ID: {}", transactionId);
-
-        try {
-            // 1. Vérification du statut auprès de PayDunya
-            String status = checkPaymentStatus(transactionId);
-            log.info("Statut PayDunya: {}", status);
-
-            if (!"completed".equals(status)) {
-                log.warn("Paiement non complété - Statut: {}", status);
-                return;
-            }
-
-            // 2. Récupération du panier sauvegardé
-            PendingPayment pending = pendingPaymentRepository.findByTransactionId(transactionId)
-                    .orElseThrow(() -> new RuntimeException("Transaction non trouvée: " + transactionId));
-
-            // 3. Récupérer les IDs des tickets
-            List<Long> ticketIds = Arrays.stream(pending.getTicketIds().split(","))
-                    .map(Long::parseLong)
-                    .collect(Collectors.toList());
-
-            // 4. APPEL À LA NOUVELLE MÉTHODE DE TICKET SERVICE
-            // Cette méthode contient toute la logique d'achat
-            // C'est ici que les tickets sont réellement achetés et que l'historique est créé
-            log.info("Appel du service d'achat de tickets pour l'utilisateur: {}", pending.getUserId());
-            ticketService.executePurchase(pending.getUserId(), ticketIds);
-
-            // 5. Mise à jour du statut
-            pending.setStatus(PaymentStatus.COMPLETED);
-            pendingPaymentRepository.save(pending);
-
-            log.info("Paiement confirmé et tickets créés pour l'utilisateur: {}", pending.getUserId());
-
-        } catch (Exception e) {
-            log.error("Erreur lors de la confirmation du paiement", e);
-            throw new RuntimeException("Erreur: " + e.getMessage());
-        }
-    }
+    }*/
 }
