@@ -164,36 +164,6 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public boolean validateCredentials(String username, String password) {
-        log.info("Validation des identifiants pour: {}", username);
-
-        try {
-            User user = userRepository.findByUsername(username)
-                    .orElse(null);
-
-            if (user == null) {
-                log.warn("Utilisateur non trouvé: {}", username);
-                return false;
-            }
-
-            // Vérification du mot de passe
-            boolean isValid = user.getPassword().equals(password);
-
-            if (!isValid) {
-                log.warn("Mot de passe incorrect pour: {}", username);
-            } else {
-                log.info("Identifiants valides pour: {}", username);
-            }
-
-            return isValid;
-        } catch (Exception e) {
-            log.error("Erreur lors de la validation des identifiants: {}", e.getMessage());
-            return false;
-        }
-    }
-
-
-    @Override
     public List<UserDTO> readUsers() {
         List<User> users = userRepository.findAll();
         
@@ -320,4 +290,33 @@ public class UserServiceImpl implements UserService {
     public void scanCodeQr(UserDTO userDto) {
         
     }
+
+    /*    @Override
+    public boolean validateCredentials(String username, String password) {
+        log.info("Validation des identifiants pour: {}", username);
+
+        try {
+            User user = userRepository.findByUsername(username)
+                    .orElse(null);
+
+            if (user == null) {
+                log.warn("Utilisateur non trouvé: {}", username);
+                return false;
+            }
+
+            // Vérification du mot de passe
+            boolean isValid = user.getPassword().equals(password);
+
+            if (!isValid) {
+                log.warn("Mot de passe incorrect pour: {}", username);
+            } else {
+                log.info("Identifiants valides pour: {}", username);
+            }
+
+            return isValid;
+        } catch (Exception e) {
+            log.error("Erreur lors de la validation des identifiants: {}", e.getMessage());
+            return false;
+        }
+    }*/
 }

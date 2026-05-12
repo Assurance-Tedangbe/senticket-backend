@@ -25,7 +25,7 @@ import sn.estm.managingrestauranttickets.dto.customisedto.DebitAccountRequestDTO
 import sn.estm.managingrestauranttickets.dto.customisedto.PurchaseTicketsRequestDTO;
 import sn.estm.managingrestauranttickets.dto.customisedto.TransferTicketsRequestDTO;
 import sn.estm.managingrestauranttickets.dto.historydto.TransactionHistoryDTO;
-import sn.estm.managingrestauranttickets.dto.statisticsDTO.TicketStatisticsDTO;
+import sn.estm.managingrestauranttickets.dto.statisticsdto.TicketStatisticsDTO;
 import sn.estm.managingrestauranttickets.enumerations.TicketStatus;
 import sn.estm.managingrestauranttickets.enumerations.TicketType;
 import sn.estm.managingrestauranttickets.services.serviceInterfaces.TicketService;
