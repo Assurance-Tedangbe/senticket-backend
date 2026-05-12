@@ -12,6 +12,8 @@ import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.PreUpdate;
 import jakarta.persistence.PrePersist;
+import jakarta.persistence.EnumType;
+import jakarta.persistence.Enumerated;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -54,6 +56,8 @@ public class PendingPayment {
     private Double amount;
 
     /** Statut:PENDING (en attente), COMPLETED(réussi), FAILED */
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
     private PaymentStatus status;
 
     /** Date de création de l'enregistrement */

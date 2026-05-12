@@ -13,7 +13,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import sn.estm.managingrestauranttickets.dto.paymentdtos.PaymentInitiationDTO;
-import sn.estm.managingrestauranttickets.enumerations.PaymentStatus;
 import sn.estm.managingrestauranttickets.services.serviceInterfaces.PaymentService;
 import sn.estm.managingrestauranttickets.dto.paymentdtos.PaymentResponseDTO;
 
@@ -27,8 +26,11 @@ public class PaymentController {
     private final PaymentService paymentService;
 
     /**
-     * Endpoint pour initier un paiement
-     * Appelé par l'application Flutter quand l'utilisateur clique sur "Payer"
+     * Initie un paiement PayDunya et retourne l'URL de paiement à Flutter
+     *
+     * Appelé par Flutter quand l'utilisateur clique sur "Payer"
+     * Flutter enverra ensuite le body JSON avec les détails du paiement
+     * En réponse, Flutter reçoit l'URL PayDunya et l'ouvre dans un WebView.
      *
      * POST /api/payments/initiate
      * Body: PaymentInitiationDTO (userId, selectedTicketIds, totalAmount, countA, countB)
@@ -49,14 +51,18 @@ public class PaymentController {
 
     /**
      * Page de retour navigateur après paiement (return_url).
+     * RÔLE : Afficher une page HTML simple de confirmation.
      *
-     * PayDunya redirige le NAVIGATEUR de l'utilisateur ici après paiement.
+     * PayDunya redirige le navigateur de l'utilisateur vers cette URL.
      * Cette URL est ouverte dans le WebView Flutter.
      *
      * IMPORTANT : NE PAS traiter le paiement ici.
-     * - Le traitement réel se fait dans le webhook (serveur→serveur)
+     * - Le traitement réel se fait dans le webhook (serveur→serveur).
      * - Flutter détecte cette URL et ferme le WebView
-     * - Flutter continue le polling sur /api/payments/status/{token}
+     * - puis commence le polling sur /api/payments/status/{token}
+     *
+     * @param token Token PayDunya passé en paramètre GET par PayDunya (optionnel par sécurité)
+     * @return 200 OK avec une page HTML de confirmation (visible dans le WebView)
      *
      * GET /api/payments/return?token=xxx
      */
@@ -102,9 +108,12 @@ public class PaymentController {
      * C'est ICI que le paiement est traité :
      * tickets achetés par l'utilisateur, transaction enregistrée.
      *
-     * Nécessite ngrok en développement (localhost non accessible depuis internet).
+     * IMPORTANT en développement :
+     *   PayDunya ne peut pas appeler localhost. Il faut exposer le serveur via ngrok :
+     *      → ngrok http 8080
+     *      → Copier l'URL ngrok dans application.properties :
+     *      paydunya.callback-url=https://xxx.ngrok.io/api/payments/webhook
      *
-     * POST /api/payments/webhook
      */
     @PostMapping("/webhook")
     public ResponseEntity<String> webhook(@RequestBody(required = false) String rawBody) {
@@ -161,9 +170,12 @@ public class PaymentController {
 
     /**
      * Page d'annulation navigateur (cancel_url).
-     * PayDunya redirige ici si l'utilisateur annule pendant le paiement.
+     * PayDunya redirige le navigateur vers cette URL si l'utilisateur
+     * clique sur "Annuler" pendant le paiement.
+     * Affichée dans le WebView Flutter, qui détecte l'URL et ferme le WebView.
+     * Flutter affiche alors un message d'annulation à l'utilisateur.
      *
-     * GET /api/payments/cancel
+     * @return 200 OK avec une page HTML d'annulation
      */
     @GetMapping("/cancel")
     public ResponseEntity<String> paymentCancel() {
@@ -195,93 +207,32 @@ public class PaymentController {
     }
 
     /**
-     * Endpoint de polling statut pour Flutter.
-     * Flutter appelle cet endpoint toutes les 5 secondes
-     * pour savoir si le paiement a été confirmé.
+     * Endpoint de polling du statut de paiement pour Flutter.
+     * Flutter appelle cet endpoint toutes les 5 secondes (polling)
+     * après fermeture du WebView pour savoir si le paiement a été confirmé.
+     * C'est le mécanisme de synchronisation entre le webhook (serveur→serveur)
+     * et l'application Flutter.
+     * Flux complet côté Flutter :
+     *   1. Utilisateur paie dans le WebView
+     *   2. WebView redirige vers /return → Flutter détecte et ferme le WebView
+     *   3. Flutter commence le polling toutes les 5s sur cet endpoint
+     *   4. Pendant ce temps, PayDunya appelle /webhook → paiement confirmé en BDD
+     *   5. Quand cet endpoint retourne "completed", Flutter arrête le polling
+     *    et affiche le message de succès à l'utilisateur
      *
-     * GET /api/payments/status/{token}
+     *  @param token Token PayDunya de la transaction à vérifier (dans l'URL path)
+     *  @return 200 OK avec le statut
      */
     @GetMapping("/status/{token}")
     public ResponseEntity<String> getPaymentStatus(@PathVariable String token) {
 
         log.info("GET /api/payments/status/{}", token);
 
+        // Interroge PayDunya directement pour avoir le statut le plus à jour
         String status = paymentService.checkPaymentStatus(token);
+
         return ResponseEntity.ok(status);
     }
 }
 
-    /**
-     * Callback de retour après paiement réussi (PAR - Paiement Avec Redirection)
-     * PayDunya redirige l'utilisateur vers cette URL avec le token en paramètre
-     *
-     * GET /api/payments/return?token=xxx
-     *   Cette méthode:
-     *    1. Traite le paiement réussi
-     *    2. Redirige vers l'application mobile via deep linking
-     */
-    /*@GetMapping("/return")
-    public ResponseEntity<?> paymentReturn(@RequestParam("token") String invoice_token) {
-        log.info("Callback de retour  - Transaction: {}", invoice_token);
-
-        //  Confirmer et traiter le paiement réussi
-        paymentService.confirmPayment(invoice_token);
-
-        // Rediriger vers l'application mobile via deep linking
-        String redirectUrl = "http://localhost:8080/api/payments/return?token=" + invoice_token;
-
-        return ResponseEntity.status(302)
-                .header("Location", redirectUrl)
-                .build();
-    }*/
-
-    /**
-     * Webhook pour les notifications IPN (Instant Payment Notification)
-     * PayDunya envoie une requête POST sur cette URL automatiquement
-     * quand le statut du paiement change
-     * Cela permet de traiter les paiements même si l'utilisateur ferme le navigateur.
-     *
-     * POST /api/payments/webhook
-     * Body: payload contenant token et status dans la clé "data"
-     */
-    /*@PostMapping("/webhook")
-    public ResponseEntity<?> webhook(@RequestBody Map<String, Object> payload) {
-        log.info("POST /api/payments/webhook");
-
-        // La structure des données reçues est dans la clé "data"
-        @SuppressWarnings("unchecked")
-        Map<String, Object> data = (Map<String, Object>) payload.get("data");
-
-        if (data != null) {
-            String token = (String) data.get("token");
-            String status = (String) data.get("status");
-
-            log.info("Webhook - Transaction: {}, Statut: {}", token, status);
-
-            // Traiter le paiement si complété
-            if ("completed".equals(status)) {
-                paymentService.confirmPayment(token);
-            }
-        }
-        // Toujours retourner 200 OK pour que PayDunya arrête d'envoyer la notification
-        return ResponseEntity.ok().build();
-    }*/
-
-    /**
-     * Callback d'annulation de paiement.
-     * PayDunya redirige l'utilisateur vers cette URL s'il annule le paiement.
-     * GET /api/payments/cancel?token=xxx
-     */
-   /* @GetMapping("/cancel")
-    public ResponseEntity<?> paymentCancel(@RequestParam("token") String token) {
-        log.info("Requête d'annulation de paiement - TransactionID: {}", token);
-
-        // Rediriger vers l'application mobile avec le statut annulé
-        // String redirectUrl = "senticket://payment/cancel?transactionId=" + token;
-        String redirectUrl = "http://localhost:8080/api/payments/cancel?token=" + token;
-
-        return ResponseEntity.status(302)
-                .header("Location", redirectUrl)
-                .build();
-    }*/
 
