@@ -34,7 +34,7 @@ public class CorsConfig {
                 //"http://localhost:54181"
                // "http://10.0.2.2",           // Émulateur Android
                // "http://10.0.2.2:*",         // Émulateur Android avec tous ports
-                "http://192.168.1.3"
+                "http://192.168.1.7"
                 //"http://192.168.0.0/16",    // Tout le réseau local (192.168.x.x)
                 //"http://0.0.0.0"            // Toutes interfaces réseau
                // "http://[::1]"               // Localhost IPv6
