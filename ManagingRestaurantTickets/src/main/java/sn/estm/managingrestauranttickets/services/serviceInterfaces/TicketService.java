@@ -48,13 +48,13 @@ public interface TicketService {
      */
     List<TicketDTO> executePurchase(Long userId, List<Long> ticketIds);
 
-    /**
-     * Prépare un paiement (calcule le total et les quantités)
-     * Appelée par le frontend avant la redirection vers PayDunya
-     *
-     * @param userId ID de l'utilisateur
-     * @param ticketIds IDs des tickets à acheter
-     * @return PaymentInitiationDTO contenant les informations pour PayDunya
-     */
-   // PaymentInitiationDTO preparePayment(Long userId, List<Long> ticketIds);
 }
+/**
+ * Prépare un paiement (calcule le total et les quantités)
+ * Appelée par le frontend avant la redirection vers PayDunya
+ *
+ * @param userId ID de l'utilisateur
+ * @param ticketIds IDs des tickets à acheter
+ * @return PaymentInitiationDTO contenant les informations pour PayDunya
+ */
+// PaymentInitiationDTO preparePayment(Long userId, List<Long> ticketIds);
