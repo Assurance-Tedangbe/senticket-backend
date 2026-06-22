@@ -166,7 +166,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public List<UserDTO> readUsers() {
         List<User> users = userRepository.findAll();
-        
+
         return users.stream()
                 .map(userMapper::toDto)
                 .collect(Collectors.toList());
@@ -179,17 +179,17 @@ public class UserServiceImpl implements UserService {
 
         User existingUser = userRepository.findById(userDto.getId())
                 .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
-                    "User not found with ID: {0}", userDto.getId())));
-                    
+                        "User not found with ID: {0}", userDto.getId())));
+
         existingUser.setUsername(userDto.getUsername());
         existingUser.setFirstName(userDto.getFirstName());
         existingUser.setLastName(userDto.getLastName());
         existingUser.setEmail(userDto.getEmail());
-        
+
         User updatedUser = userRepository.save(existingUser);
 
         log.info("User updated successfully with username: {}", updatedUser.getUsername());
-        
+
         return userMapper.toDto(updatedUser);
     }
 
@@ -200,7 +200,7 @@ public class UserServiceImpl implements UserService {
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
-                    "User not found with ID: {0}", userId)));
+                        "User not found with ID: {0}", userId)));
         userRepository.delete(user);
 
         log.info("deleteUser end ok - userId: {}", userId);
@@ -213,12 +213,12 @@ public class UserServiceImpl implements UserService {
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
-                    "User not found with ID: {0}", userId)));
-                    
+                        "User not found with ID: {0}", userId)));
+
         user.setPassword(password); // In a real application, ensure to hash the password before saving
-        
+
         log.debug("Password updated for userId: {}", userId);
-        
+
         userRepository.save(user);
     }
 
@@ -229,7 +229,7 @@ public class UserServiceImpl implements UserService {
 
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
-                    "User not found with ID: {0}", userId)));
+                        "User not found with ID: {0}", userId)));
         return userMapper.toDto(user);
     }
 
@@ -240,21 +240,20 @@ public class UserServiceImpl implements UserService {
 
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
-                    "User not found with username: {0}", username)));
+                        "User not found with username: {0}", username)));
         return userMapper.toDto(user);
     }
 
     @Override
     public void logout(String username) {
         log.info("Déconnexion de l'utilisateur : {}", username);
-
-        // Option 1 : Ne rien faire côté serveur (c'est le client qui supprime le token)
-        // Cette option est suffisante dans la plupart des cas.
-
-        // Option 2 : Ajouter le token à une blacklist (nécessite de récupérer le token depuis la requête)
-        // String token = extractToken(request);
-        // blacklistService.addToBlacklist(token);
     }
+
+    @Override
+    public void scanCodeQr(UserDTO userDto) {
+
+    }
+}
 
     /*@Override
     public String logout(String username) {
@@ -286,10 +285,6 @@ public class UserServiceImpl implements UserService {
         log.info("Role {} added to user with userId: {}", roleId, userId);
     }*/
 
-    @Override
-    public void scanCodeQr(UserDTO userDto) {
-        
-    }
 
     /*    @Override
     public boolean validateCredentials(String username, String password) {
@@ -319,4 +314,3 @@ public class UserServiceImpl implements UserService {
             return false;
         }
     }*/
-}
