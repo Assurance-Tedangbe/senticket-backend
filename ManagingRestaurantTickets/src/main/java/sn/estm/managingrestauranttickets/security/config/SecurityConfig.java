@@ -1,136 +1,71 @@
-/*
+// Fichier: src/main/java/sn/estm/managingrestauranttickets/security/config/SecurityConfig.java
 package sn.estm.managingrestauranttickets.security.config;
 
-import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
-import lombok.experimental.FieldDefaults;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
-
 import org.springframework.security.web.SecurityFilterChain;
-import sn.estm.managingrestauranttickets.security.jwt.filter.JwtAuthenticationFilter;
-import sn.estm.managingrestauranttickets.security.jwt.filter.JwtFilter;
-import sn.estm.managingrestauranttickets.services.CustomUserDetailsService;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfigurationSource;
+import sn.estm.managingrestauranttickets.security.jwt.AuthEntryPointJwt;
+import sn.estm.managingrestauranttickets.security.jwt.CustomAccessDeniedHandler;
+import sn.estm.managingrestauranttickets.security.jwt.JwtAuthenticationFilter;
 
-*/
-/**
- * Set up the SecurityFilterChain to secure endpoints and integrate the JWT filter.
- *//*
-
-
-@FieldDefaults(level = AccessLevel.PRIVATE)
-@RequiredArgsConstructor
 @Configuration
-public class SecurityConfig{
+@EnableWebSecurity
+@RequiredArgsConstructor
+public class SecurityConfig {
 
-    final CustomUserDetailsService customUserDetailsService;
-
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final AuthEntryPointJwt authEntryPointJwt;
+    private final CustomAccessDeniedHandler customAccessDeniedHandler;
+    private final CorsConfigurationSource corsConfigurationSource;
     @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http,JwtFilter jwtFilter) throws Exception {
-
-        */
-/*  security management via HttpSecurity  *//*
-
+    public PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
-                //.csrf(csrf -> csrf.disable())
+                .cors(cors -> cors.configurationSource(corsConfigurationSource))
                 .csrf(AbstractHttpConfigurer::disable)
-
-                //.formLogin(withDefaults()) // disable it when using jwt
-
-                // Desactivate session management (utile for JWT)
+                .exceptionHandling(handling -> handling
+                        .authenticationEntryPoint(authEntryPointJwt)
+                        .accessDeniedHandler(customAccessDeniedHandler))
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-
-                // customUserDetailsService registration
-                .userDetailsService(customUserDetailsService)
-
-                .headers(headers -> headers
-                        .frameOptions(frame -> frame.disable()))
-
                 .authorizeHttpRequests(auth -> auth
-                                .requestMatchers("/authenticate/login").permitAll()
-                                .requestMatchers("/api/menus/**").permitAll()
-                                .requestMatchers(HttpMethod.GET, "/api/users/**").permitAll()
-                                .requestMatchers(HttpMethod.GET, "/api/roles/**").permitAll()
-                                .requestMatchers(HttpMethod.POST, "/api/users/**").permitAll()
-                                .requestMatchers(HttpMethod.PUT, "/api/users/**").hasAuthority("ADMIN")
-                                .requestMatchers(HttpMethod.PATCH, "/api/users/**").hasAuthority("ADMIN")
-                                .requestMatchers(HttpMethod.DELETE, "/api/users/**").hasAuthority("ADMIN")
-                                .requestMatchers(HttpMethod.POST, "/api/roles/**").hasAuthority("ADMIN")
-                                .requestMatchers(HttpMethod.PUT, "/api/roles/**").hasAuthority("ADMIN")
-                                .requestMatchers(HttpMethod.DELETE, "/api/roles/**").hasAuthority("ADMIN")
-                                //.requestMatchers( new AntPathRequestMatcher("/api/roles/**")).hasRole("ADMIN")
-                                //.requestMatchers( new AntPathRequestMatcher("/api/users/**")).hasRole("ADMIN")
-                                //.requestMatchers( new AntPathRequestMatcher("/api/users/{userId}/profil")).hasAnyRole("ADMIN", "ETUDIANT")
-                                .requestMatchers( new AntPathRequestMatcher("/api/comptes/**")).hasAnyRole("ADMIN", "AGENT", "ETUDIANT")
-                                .requestMatchers( new AntPathRequestMatcher("/api/credits/**")).hasAnyRole("ADMIN", "AGENT", "ETUDIANT")
-                                .requestMatchers( new AntPathRequestMatcher("/api/tickets/**")).hasAnyRole("ADMIN", "ETUDIANT")
-                                .requestMatchers( new AntPathRequestMatcher("/api/debits/**")).hasAnyRole("ADMIN", "PORTIER")
-                        //  .anyRequest().authenticated()
-                        // Toute autre requête emise vers l'appli doit être authentifiée
-                )
-                // .addFilter(new JwtAuthenticationFilter(authenticationManagerBean())) // from videos
-                */
-/*  jwtFilter is your custom filter that checks for a Bearer token
-                    in the header and sets the user context  *//*
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+                        .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/payments/webhook", "/api/payments/return", "/api/payments/cancel").permitAll()
 
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+                        .requestMatchers(HttpMethod.POST, "/api/roles").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/roles/*").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/roles/*").hasAuthority("ADMIN")
+
+                        .requestMatchers(HttpMethod.POST, "/api/users").hasAuthority("ADMIN, ETUDIANT, PORTIER")
+                        .requestMatchers(HttpMethod.PUT, "/api/users/*").hasAuthority("ADMIN, ETUDIANT, PORTIER")
+                        .requestMatchers(HttpMethod.DELETE, "/api/users/*").hasAuthority("ADMIN")
+
+                        .requestMatchers(HttpMethod.PUT, "/api/tickets/purchase").hasAuthority("ETUDIANT")
+                        .requestMatchers(HttpMethod.PUT, "/api/tickets/transferTickets").hasAuthority("ETUDIANT")
+                        .requestMatchers(HttpMethod.PUT, "/api/tickets/cancelTransfer").hasAuthority("ETUDIANT")
+                        .requestMatchers(HttpMethod.PUT, "/api/tickets/debit").hasAuthority("PORTIER")
+                        .requestMatchers(HttpMethod.GET, "/api/tickets/statistics").hasAnyAuthority("ADMIN", "ETUDIANT")
+
+                        .requestMatchers(HttpMethod.POST, "/api/payments/initiate").hasAuthority("ETUDIANT")
+
+                        .anyRequest().authenticated()  // Tte autre requête emise vers l'appli doit être authentifiée
+                )
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
         return http.build();
     }
-
-    */
-/**
-     * with bean, I have the possibility to inject this object where I want
-     * @param authConfig
-     * @return
-     * @throws Exception
-     *//*
-
-    @Bean
-    public AuthenticationManager authenticationManagerBean(
-            AuthenticationConfiguration authConfig) throws Exception {
-        return authConfig.getAuthenticationManager();
-        // return super.authenticationManagerBean(); //from videos
-        */
-/*  Spring auto-registers DaoAuthenticationProvider and uses
-             userDetailsService + PasswordEncoder automatically      *//*
-
-    }
-
-    // this figure in video screenshot
-   */
-/* @Bean
-    public AuthenticationManager authenticationManagerBean() throws Exception {
-        return super.authenticationManagerBean();
-    }*//*
-
-
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder(); // Password encryption, should be called later
-    }
-
-    */
-/* @Bean
-    public DaoAuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider authProvider = new
-                DaoAuthenticationProvider();
-        authProvider.setUserDetailsService(customUserDetailsService);
-        authProvider.setPasswordEncoder(passwordEncoder());
-        return authProvider;
-    }*//*
-
-
 }
-*/

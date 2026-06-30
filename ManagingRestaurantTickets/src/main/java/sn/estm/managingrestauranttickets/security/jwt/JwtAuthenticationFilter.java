@@ -1,4 +1,3 @@
-// Fichier: src/main/java/sn/estm/managingrestauranttickets/security/jwt/JwtAuthenticationFilter.java
 package sn.estm.managingrestauranttickets.security.jwt;
 
 import jakarta.servlet.FilterChain;

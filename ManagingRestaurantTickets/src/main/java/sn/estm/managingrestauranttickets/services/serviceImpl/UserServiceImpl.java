@@ -24,6 +24,7 @@ import sn.estm.managingrestauranttickets.repositories.RoleRepository;
 import sn.estm.managingrestauranttickets.repositories.TicketRepository;
 import sn.estm.managingrestauranttickets.repositories.UserRepository;
 import sn.estm.managingrestauranttickets.services.serviceInterfaces.UserService;
+import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.text.MessageFormat;
 import java.time.LocalDateTime;
@@ -43,6 +44,7 @@ public class UserServiceImpl implements UserService {
     private final RoleRepository roleRepository;
     private final TicketRepository ticketRepository;
     private final TicketMapper ticketMapper;
+    private final PasswordEncoder passwordEncoder;  //ICI
 
     // Si vous utilisez une blacklist de tokens, injectez-la ici
     // private final TokenBlacklistService blacklistService;
@@ -80,6 +82,7 @@ public class UserServiceImpl implements UserService {
 
         // 3. Assigner explicitement le rôle à l'utilisateur
         user.setRole(role);
+        user.setPassword(passwordEncoder.encode(userDto.getPassword()));  //ICI
 
         // 4. Sauvegarder l'utilisateur
         User savedUser = userRepository.save(user);
@@ -153,8 +156,9 @@ public class UserServiceImpl implements UserService {
                 });
 
         // Vérification du mot de passe
-        // ⚠️ IMPORTANT : Dans un système de production, utilisez BCryptPasswordEncoder !
-        if (!user.getPassword().equals(password)) {
+        // ⚠️IMPORTANT : Dans un système de production, utilisez BCryptPasswordEncoder !
+        //if (!user.getPassword().equals(password)) {
+        if (!passwordEncoder.matches(password, user.getPassword())) {  //ICI
             log.warn("Mot de passe incorrect pour l'utilisateur: {}", username);
             throw new IllegalArgumentException("Mot de passe incorrect");
         }
@@ -215,7 +219,8 @@ public class UserServiceImpl implements UserService {
                 .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
                         "User not found with ID: {0}", userId)));
 
-        user.setPassword(password); // In a real application, ensure to hash the password before saving
+       // user.setPassword(password); // In a real application, ensure to hash the password before saving
+        user.setPassword(passwordEncoder.encode(password));  //ICI
 
         log.debug("Password updated for userId: {}", userId);
 

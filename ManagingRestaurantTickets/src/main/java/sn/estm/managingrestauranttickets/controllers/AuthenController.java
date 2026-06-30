@@ -12,6 +12,7 @@ import sn.estm.managingrestauranttickets.dto.LoginRequestDTO;
 import sn.estm.managingrestauranttickets.dto.LoginResponseDTO;
 import sn.estm.managingrestauranttickets.dto.UserDTO;
 import sn.estm.managingrestauranttickets.services.serviceInterfaces.UserService;
+import sn.estm.managingrestauranttickets.security.jwt.JwtUtils;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -23,6 +24,7 @@ import java.util.Map;
 public class AuthenController {
 
     private final UserService userService;
+    private final JwtUtils jwtUtils;      //ICI
 
     @PostMapping(value = "/login", consumes = "application/json", produces = "application/json")
     public ResponseEntity<LoginResponseDTO> login(@RequestBody LoginRequestDTO loginRequest) {
@@ -34,11 +36,18 @@ public class AuthenController {
                     loginRequest.getPassword()
             );
 
+            // Génération du token JWT         //ICI
+            String token = jwtUtils.generateJwtToken(
+                    user.getUsername(),
+                    user.getId(),
+                    user.getRoleDTO().getName()
+            );
+
             log.info("✅ Connexion réussie pour: {}", loginRequest.getUsername());
 
-            return ResponseEntity.ok(LoginResponseDTO.success(user));
+            return ResponseEntity.ok(LoginResponseDTO.success(user, token));  //ICI
         } catch (Exception e) {
-            log.warn("❌ Échec de connexion: {}", e.getMessage());
+            log.warn("Échec de connexion: {}", e.getMessage());
 
             String errorMessage = "Échec de l'authentification";
             if (e.getMessage().contains("non trouvé")) {
