@@ -26,6 +26,7 @@ public interface UserMapper {
      * @param userDTO the UserDTO to convert
      * @return the corresponding User entity
      */
+    @Mapping(source = "roleDTO", target = "role")
     User toEntity(UserDTO userDTO);
 
     /** Convert a set of User entities to a set of UserDTOs.
