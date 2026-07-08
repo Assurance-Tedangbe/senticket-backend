@@ -41,7 +41,6 @@ public class RoleController {
     
     private final RoleService roleService;
 
-    //@PostAuthorize("hasAuthority('ADMIN')")
     @PostMapping(consumes = "application/json", produces = "application/json")
     public ResponseEntity<RoleDTO> createRole(@RequestBody RoleDTO roleDTO) {
         log.info("Creating role with details: {}", roleDTO);
@@ -53,7 +52,6 @@ public class RoleController {
         return new ResponseEntity<>(createdRole, HttpStatus.CREATED);
     }
 
-    //@PostAuthorize("hasAnyAuthority('ADMIN', 'AGENT', 'ETUDIANT', 'PORTIER')")
     @GetMapping(produces = "application/json")
     public ResponseEntity<List<RoleDTO>> getAllRoles() {
         List<RoleDTO> roles = roleService.readRoles();
@@ -69,7 +67,6 @@ public class RoleController {
         return new ResponseEntity<>(roles, HttpStatus.OK);
     }
 
-    //@PostAuthorize("hasAnyAuthority('ADMIN', 'AGENT', 'ETUDIANT', 'PORTIER')")
     @GetMapping(value = "/{roleId}", produces = "application/json")
     public ResponseEntity<RoleDTO> getRoleById(@PathVariable Long roleId) {
         RoleDTO role = roleService.readRoleByRoleId(roleId);
@@ -79,7 +76,6 @@ public class RoleController {
         return new ResponseEntity<>(role, HttpStatus.OK);
     }
 
-    //@PostAuthorize("hasAnyAuthority('ADMIN', 'AGENT', 'ETUDIANT', 'PORTIER')")
     @GetMapping(value = "/name/{roleName}", produces = "application/json")
     public ResponseEntity<RoleDTO> getRoleByName(@PathVariable String roleName) {
         RoleDTO role = roleService.readRoleByRoleName(roleName);
@@ -89,7 +85,6 @@ public class RoleController {
         return new ResponseEntity<>(role, HttpStatus.OK);
     }
 
-    //@PostAuthorize("hasAuthority('ADMIN')")
     @PutMapping(value = "/{roleId}", consumes = "application/json", produces = "application/json")
     public ResponseEntity<RoleDTO> updateRole(@PathVariable Long roleId, @RequestBody RoleDTO roleDTO) {
         log.info("Updating role with ID: {} with details: {}", roleId, roleDTO);
@@ -101,7 +96,6 @@ public class RoleController {
         return new ResponseEntity<>(updatedRole, HttpStatus.OK);
     }
 
-    //@PostAuthorize("hasAuthority('ADMIN')")
     @DeleteMapping("/{roleId}")
     public ResponseEntity<Void> deleteRole(@PathVariable Long roleId) {
         log.info("Deleting role with ID: {}", roleId);

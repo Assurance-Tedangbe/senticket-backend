@@ -27,10 +27,12 @@ public class SecurityConfig {
     private final AuthEntryPointJwt authEntryPointJwt;
     private final CustomAccessDeniedHandler customAccessDeniedHandler;
     private final CorsConfigurationSource corsConfigurationSource;
+
     @Bean
     public PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
     }
+
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
@@ -42,27 +44,58 @@ public class SecurityConfig {
                 .sessionManagement(session -> session
                         .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth -> auth
+
+                        /// ============ OPTIONS (pre-flight CORS) ============
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
+                        /// ============ AUTHENTIFICATION ============
                         .requestMatchers("/api/auth/**").permitAll()
-                        .requestMatchers("/api/payments/webhook", "/api/payments/return", "/api/payments/cancel").permitAll()
 
+                        /// ============ UTILISATEURS ============
+                        // Inscription libre
+                        .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
+                        // Liste complète : ADMIN seulement
+                        .requestMatchers(HttpMethod.GET, "/api/users").hasAuthority("ADMIN")
+
+                        // Un utilisateur connecté peut voir/modifier son propre profil
+                        // (contrôleur vérifie que c'est son propre compte)
+                        .requestMatchers(HttpMethod.GET, "/api/users/{userId}").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/users/username/{username}").authenticated()
+                        // Modification : connecté (contrôleur vérifie que c'est son propre compte)
+                        .requestMatchers(HttpMethod.PUT, "/api/users/{userId}").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/api/users/password/{userId}").authenticated()
+                        // Suppression : ADMIN seulement
+                        .requestMatchers(HttpMethod.DELETE, "/api/users/{userId}").hasAuthority("ADMIN")
+
+                        /// ============ RÔLES ============
+                        .requestMatchers(HttpMethod.GET, "/api/roles").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/roles/**").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/roles").hasAuthority("ADMIN")
-                        .requestMatchers(HttpMethod.PUT, "/api/roles/*").hasAuthority("ADMIN")
-                        .requestMatchers(HttpMethod.DELETE, "/api/roles/*").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/roles/**").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/roles/**").hasAuthority("ADMIN")
 
-                        .requestMatchers(HttpMethod.POST, "/api/users").hasAuthority("ADMIN, ETUDIANT, PORTIER")
-                        .requestMatchers(HttpMethod.PUT, "/api/users/*").hasAuthority("ADMIN, ETUDIANT, PORTIER")
-                        .requestMatchers(HttpMethod.DELETE, "/api/users/*").hasAuthority("ADMIN")
-
+                        /// ============ TICKETS ============
+                        .requestMatchers(HttpMethod.GET, "/api/tickets").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/tickets/user/{userId}/purchased").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/tickets/user/{userId}/filter").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/tickets/statistics").hasAuthority("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/tickets/purchase").hasAuthority("ETUDIANT")
                         .requestMatchers(HttpMethod.PUT, "/api/tickets/transferTickets").hasAuthority("ETUDIANT")
                         .requestMatchers(HttpMethod.PUT, "/api/tickets/cancelTransfer").hasAuthority("ETUDIANT")
                         .requestMatchers(HttpMethod.PUT, "/api/tickets/debit").hasAuthority("PORTIER")
-                        .requestMatchers(HttpMethod.GET, "/api/tickets/statistics").hasAnyAuthority("ADMIN", "ETUDIANT")
 
+                        /// ============ PAIEMENTS ============
+                        /// Callbacks PayDunya : publics (appelés par PayDunya sans token)
+                        .requestMatchers("/api/payments/webhook").permitAll()
+                        .requestMatchers("/api/payments/return").permitAll()
+                        .requestMatchers("/api/payments/cancel").permitAll()
+                        /// Actions Flutter : authentifiées
                         .requestMatchers(HttpMethod.POST, "/api/payments/initiate").hasAuthority("ETUDIANT")
+                        .requestMatchers(HttpMethod.GET, "/api/payments/status/**").hasAuthority("ETUDIANT")
 
-                        .anyRequest().authenticated()  // Tte autre requête emise vers l'appli doit être authentifiée
+                        /// ============ FILET DE SÉCURITÉ ============
+                        /// Toute route non listée explicitement exige d'être connecté
+                        .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
