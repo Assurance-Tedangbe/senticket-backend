@@ -13,8 +13,6 @@ import org.springframework.web.bind.annotation.PutMapping;
 
 import jakarta.validation.Valid;
 
-//import org.springframework.security.access.prepost.PostAuthorize;
-
 import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -43,7 +41,6 @@ public class TicketController {
 
     private final TicketService ticketService;
 
-    //@PostAuthorize("hasAnyAuthority('ADMIN', 'AGENT', 'ETUDIANT', 'PORTIER')")
     @GetMapping(produces = "application/json")
     public ResponseEntity<List<TicketDTO>> getAllTickets() {
 
@@ -54,8 +51,6 @@ public class TicketController {
         return new ResponseEntity<>(tickets, HttpStatus.OK);
     }
 
-
-    //@PostAuthorize("hasAnyAuthority('ETUDIANT')")
     @PutMapping(value = "/purchase", consumes = "application/json", produces = "application/json")
     public ResponseEntity<List<TicketDTO>> purchaseTickets(@Valid @RequestBody PurchaseTicketsRequestDTO purchaseTicketsRequestDTO) {
 
@@ -66,7 +61,6 @@ public class TicketController {
         return new ResponseEntity<>(purchasedTickets, HttpStatus.OK);
     }
 
-    //@PostAuthorize("hasAuthority('PORTIER')")
     @PutMapping(value = "/debit", consumes = "application/json", produces = "application/json")
     @ResponseStatus(HttpStatus.OK)
     public void debitAccount(@Valid @RequestBody DebitAccountRequestDTO debitAccountRequestDTO) {

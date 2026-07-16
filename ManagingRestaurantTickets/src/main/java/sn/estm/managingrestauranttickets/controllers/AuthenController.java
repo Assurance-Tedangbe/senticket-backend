@@ -62,7 +62,7 @@ public class AuthenController {
     }
 
     /// ============ VALIDATE — vérifie les identifiants sans générer de token ============
-    // Utile pour Flutter : vérifier si l'utilisateur existe avant de payer par exemple
+    /// Utile pour Flutter : vérifier si l'utilisateur existe avant de payer par exemple
     @PostMapping(value = "/validate", consumes = "application/json", produces = "application/json")
     public ResponseEntity<Map<String, Object>> validate(@RequestBody LoginRequestDTO loginRequest) {
         log.info("🔍 Validation des identifiants pour: {}", loginRequest.getUsername());
@@ -104,31 +104,22 @@ public class AuthenController {
         return ResponseEntity.ok(user);
     }
 
-    // endpoint lié au logout service non commenté
-   /* @PostMapping("/logout")
-    public ResponseEntity<String> logout(@RequestHeader("Authorization") String authHeader) {
-        // Extraire le username du token (si nécessaire)
-        String token = authHeader.replace("Bearer ", "");
-        String username = extractUsernameFromToken(token); // méthode utilitaire
+    /// ============ LOGOUT ============
+    // JWT est stateless : le serveur ne peut pas annuler un token sans blacklist.
+    // Ce endpoint accuse réception de la déconnexion — Flutter supprime le token
+    // localement de son côté (flutter_secure_storage), ce qui est suffisant.
+    // Si tu veux une invalidation immédiate côté serveur, il faudra ajouter
+    // une blacklist en base (table token_blacklist) — prévu comme évolution future.
+    @PostMapping("/logout")
+    public ResponseEntity<Map<String, String>> logout(Authentication authentication) {
+        log.info("Déconnexion de: {}", authentication.getName());
 
-        userService.logout(username);
-        return ResponseEntity.ok("Déconnexion réussie");
+        userService.logout(authentication.getName());
+
+        Map<String, String> response = new HashMap<>();
+        response.put("message", "Déconnexion réussie");
+        response.put("username", authentication.getName());
+
+        return ResponseEntity.ok(response);
     }
-
-    private String extractUsernameFromToken(String token) {
-        // Utilisez votre JwtUtils pour extraire le username
-        return JwtUtils.extractUsername(token);
-    }*/
-
-   /* @PostMapping("/logout")
-    public ResponseEntity<String> logout(@RequestParam(required = false) String username) {
-        // Si vous utilisez Spring Security, vous pouvez récupérer le username depuis le contexte de sécurité
-        // Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        // String username = auth.getName();
-
-        // Pour l'exemple, on passe le username en paramètre ou on le récupère d'une autre manière
-        String responseMessage = userService.logout(username != null ? username : "inconnu");
-        log.info("Logout effectué: {}", responseMessage);
-        return ResponseEntity.ok(responseMessage);
-    }*/
 }

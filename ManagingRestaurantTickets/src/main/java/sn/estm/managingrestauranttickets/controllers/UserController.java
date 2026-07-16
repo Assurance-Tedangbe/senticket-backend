@@ -142,117 +142,11 @@ public class UserController {
      * Appelée sur toutes les actions sensibles (voir, modifier, changer mdp).
      */
     private boolean isOwnerOrAdmin(String targetUsername, Authentication authentication) {
+        // authentication.getName() retourne le username extrait du token JWT, sans aucun accès BDD
         String connectedUsername = authentication.getName();
         boolean isAdmin = authentication.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ADMIN"));
         return connectedUsername.equals(targetUsername) || isAdmin;
     }
-
-       /* @PostMapping(value = "/login", consumes = "application/json", produces = "application/json")
-    public ResponseEntity<UserDTO> login(@RequestBody LoginRequestDTO loginRequest) {
-
-        UserDTO user = userService.login(loginRequest.getUsername(), loginRequest.getPassword());
-
-        log.info("User logged in successfully: {}", user.getUsername());
-
-        return new ResponseEntity<>(user, HttpStatus.OK);
-    }*/
-
-     /* // ⭐ Connexion avec réponse détaillée
-    @PostMapping(value = "/login", consumes = "application/json", produces = "application/json")
-    public ResponseEntity<LoginResponseDTO> login(@RequestBody LoginRequestDTO loginRequest) {
-        log.info("Login request for user: {}", loginRequest.getUsername());
-
-        try {
-            UserDTO user = userService.authenticate(
-                    loginRequest.getUsername(),
-                    loginRequest.getPassword()
-            );
-
-            log.info("Connexion réussie pour: {}", loginRequest.getUsername());
-
-            return ResponseEntity.ok(LoginResponseDTO.success(user));
-        } catch (ResourceNotFoundException e) {
-            log.warn("Échec de connexion: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.NOT_FOUND)
-                    .body(LoginResponseDTO.failure("Utilisateur non trouvé"));
-        } catch (IllegalArgumentException e) {
-            log.warn("Échec de connexion: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(LoginResponseDTO.failure("Mot de passe incorrect"));
-        } catch (Exception e) {
-            log.error("Erreur lors de la connexion: {}", e.getMessage());
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
-                    .body(LoginResponseDTO.failure("Erreur interne du serveur"));
-        }
-    }
-
-    // ⭐ Validation simple des identifiants
-    @PostMapping(value = "/validate", consumes = "application/json",
-                                      produces = "application/json")
-    public ResponseEntity<Map<String, Object>> validateCredentials(
-            @RequestBody LoginRequestDTO loginRequest) {
-        log.info("Validation des identifiants pour: {}", loginRequest.getUsername());
-
-        Map<String, Object> response = new HashMap<>();
-
-        try {
-            boolean isValid = userService.validateCredentials(
-                    loginRequest.getUsername(),
-                    loginRequest.getPassword()
-            );
-
-            response.put("success", isValid);
-            response.put("message", isValid ? "Identifiants valides" : "Identifiants invalides");
-            response.put("username", loginRequest.getUsername());
-
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            log.error("Erreur lors de la validation: {}", e.getMessage());
-            response.put("success", false);
-            response.put("message", "Erreur lors de la validation");
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-        }
-    }
-
-    // ⭐ Vérification rapide si l'utilisateur existe
-    @GetMapping(value = "/check/{username}", produces = "application/json")
-    public ResponseEntity<Map<String, Object>> checkUserExists(@PathVariable String username) {
-        log.info("Vérification de l'existence de l'utilisateur: {}", username);
-
-        Map<String, Object> response = new HashMap<>();
-
-        try {
-            boolean exists = userRepository.findByUsername(username).isPresent();
-
-            response.put("exists", exists);
-            response.put("username", username);
-            response.put("message", exists ? "Utilisateur trouvé" : "Utilisateur non trouvé");
-
-            return ResponseEntity.ok(response);
-        } catch (Exception e) {
-            log.error("Erreur lors de la vérification: {}", e.getMessage());
-            response.put("exists", false);
-            response.put("message", "Erreur lors de la vérification");
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
-        }
-    }
-
-    @ExceptionHandler(InvalidCredentialsException.class)
-    public ResponseEntity<String> handleInvalidCredentialsException(InvalidCredentialsException ex) {
-        return new ResponseEntity<>(ex.getMessage(), HttpStatus.UNAUTHORIZED);
-    }
-
-   /* //@PostAuthorize("hasAuthority('ADMIN')")
-    @PutMapping(value = "/{userId}/roles/{roleId}")
-    @ResponseStatus(HttpStatus.OK)
-    public void addRoleToUser(@PathVariable Long userId, @PathVariable Long roleId) {
-        
-        log.info("Adding role with ID: {} to user with ID: {}", roleId, userId);
-       
-        userService.addRoleToUser(userId, roleId);
-       
-        log.info("Role with ID: {} added to user with ID: {}", roleId, userId);
-    }*/
 }
 

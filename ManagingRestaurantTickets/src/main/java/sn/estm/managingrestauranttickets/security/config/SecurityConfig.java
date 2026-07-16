@@ -49,7 +49,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
                         /// ============ AUTHENTIFICATION ============
-                        .requestMatchers("/api/auth/**").permitAll()
+                       // .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/auth/login").permitAll()   // login : public
+                        .requestMatchers("/api/auth/**").authenticated()   // tout le reste (validate, me, logout) : connecté
 
                         /// ============ UTILISATEURS ============
                         // Inscription libre
@@ -58,10 +60,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/users").hasAuthority("ADMIN")
 
                         // Un utilisateur connecté peut voir/modifier son propre profil
-                        // (contrôleur vérifie que c'est son propre compte)
+                        // (contrôleur vérifie que c'est son propre compte : userId == utilisateur connecté)
                         .requestMatchers(HttpMethod.GET, "/api/users/{userId}").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/users/username/{username}").authenticated()
-                        // Modification : connecté (contrôleur vérifie que c'est son propre compte)
                         .requestMatchers(HttpMethod.PUT, "/api/users/{userId}").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/api/users/password/{userId}").authenticated()
                         // Suppression : ADMIN seulement
