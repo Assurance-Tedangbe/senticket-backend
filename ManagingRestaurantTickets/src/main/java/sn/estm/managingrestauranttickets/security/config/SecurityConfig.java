@@ -1,4 +1,3 @@
-// Fichier: src/main/java/sn/estm/managingrestauranttickets/security/config/SecurityConfig.java
 package sn.estm.managingrestauranttickets.security.config;
 
 import lombok.RequiredArgsConstructor;
@@ -69,7 +68,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE, "/api/users/{userId}").hasAuthority("ADMIN")
 
                         /// ============ RÔLES ============
-                        .requestMatchers(HttpMethod.GET, "/api/roles").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/roles").permitAll()
                         .requestMatchers(HttpMethod.GET, "/api/roles/**").authenticated()
                         .requestMatchers(HttpMethod.POST, "/api/roles").hasAuthority("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/roles/**").hasAuthority("ADMIN")
