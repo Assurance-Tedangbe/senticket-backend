@@ -1,4 +1,3 @@
-// Fichier: src/main/java/com/votreapp/config/CorsConfig.java
 package sn.estm.managingrestauranttickets.security.config;
 
 import org.springframework.context.annotation.Bean;
@@ -6,7 +5,11 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 import org.springframework.web.filter.CorsFilter;
+
 import java.util.Arrays;
+import java.util.List;
+
+import org.springframework.web.cors.CorsConfigurationSource;
 
 /**
  * CONFIGURATION CORS POUR SPRING BOOT
@@ -18,44 +21,25 @@ import java.util.Arrays;
  */
 @Configuration  // Marque cette classe comme configuration Spring
 public class CorsConfig {
-
     @Bean  // Crée un bean Spring disponible dans toute l'application
-    public CorsFilter corsFilter() {
+    public CorsConfigurationSource corsConfigurationSource() {
         // Crée une configuration CORS
         CorsConfiguration corsConfiguration = new CorsConfiguration();
 
-        // ============ SECTION 1: ORIGINES AUTORISÉES ============
-        // Définit quelles applications peuvent accéder à l'API
-        corsConfiguration.setAllowedOrigins(Arrays.asList(
-               // "http://localhost",           // Pour tests en local depuis un navigateur
-               // "http://localhost:*"        // Tous les ports locaux (ex: 3000, 4200, 8081)
-                //"http://127.0.0.1",
-               // "http://127.0.0.1:*",
-                //"http://localhost:54181"
-               // "http://10.0.2.2",           // Émulateur Android
-               // "http://10.0.2.2:*",         // Émulateur Android avec tous ports
-                "http://192.168.1.7"
-                //"http://192.168.0.0/16",    // Tout le réseau local (192.168.x.x)
-                //"http://0.0.0.0"            // Toutes interfaces réseau
-               // "http://[::1]"               // Localhost IPv6
+        /* SECTION 1 : ORIGINES AUTORISÉES : Définit quelles applications peuvent accéder à l'API */
+        corsConfiguration.setAllowedOrigins(List.of(
+                "http://192.168.1.5"                    // Adresse IP locale de l'ordinateur
         ));
 
-        // ============ SECTION 2: MÉTHODES HTTP AUTORISÉES ============
-        // Définit quelles opérations HTTP sont permises
-        corsConfiguration.setAllowedMethods(Arrays.asList(
-                "GET",     // Récupérer des données
-                "POST",    // Créer des données
-                "PUT",     // Mettre à jour des données
-                "DELETE",  // Supprimer des données
-                "PATCH",   // Mettre à jour partiellement
+        /* SECTION 2 : MÉTHODES HTTP AUTORISÉES : Définit quelles opérations HTTP sont permises */
+        corsConfiguration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH",
                 "OPTIONS", // Pré-vérification CORS
                 "HEAD"     // Récupérer uniquement les en-têtes
         ));
 
-        // ============ SECTION 3: EN-TÊTES AUTORISÉS ============
-        // Définit quels en-têtes HTTP peuvent être envoyés
+        /* SECTION 3 : EN-TÊTES AUTORISÉS : Définit quels en-têtes HTTP peuvent être envoyés */
         corsConfiguration.setAllowedHeaders(Arrays.asList(
-            //    "Authorization",     // Pour l'authentification (Bearer token)
+                "Authorization",     // Pour l'authentification (Bearer token)
                 "Content-Type",      // Type de contenu (JSON, form-data)
                 "Accept",            // Format de réponse accepté
                 "Origin",            // Origine de la requête
@@ -67,8 +51,7 @@ public class CorsConfig {
                 "Cache-Control"      // Contrôle du cache
         ));
 
-        // ============ SECTION 4: EN-TÊTES EXPOSÉS ============
-        // Définit quels en-têtes peuvent être lus par Flutter
+        /* SECTION 4 : EN-TÊTES EXPOSÉS : Définit quels en-têtes peuvent être lus par Flutter */
         corsConfiguration.setExposedHeaders(Arrays.asList(
                 "Authorization",     // Pour récupérer le token JWT
                 "Content-Type",
@@ -76,21 +59,18 @@ public class CorsConfig {
                 "Access-Control-Allow-Credentials"
         ));
 
-        // ============ SECTION 5: CREDENTIALS ============
-        // Autorise l'envoi de cookies/sessions (important pour l'auth)
-       // corsConfiguration.setAllowCredentials(true);
+        /* SECTION 5 : CREDENTIALS : Autorise l'envoi de cookies/sessions (important pour l'auth) */
+        // corsConfiguration.setAllowCredentials(true);
 
-        // ============ SECTION 6: CACHE CORS ============
-        // Durée de mise en cache des pré-vérifications CORS (1 heure)
+        /* SECTION 6 : CACHE CORS : Durée de mise en cache des pré-vérifications CORS(1h) */
         corsConfiguration.setMaxAge(3600L);
 
-        // ============ SECTION 7: APPLICATION À TOUTES LES ROUTES ============
-        // Applique cette configuration à toutes les routes de l'API
+        /* SECTION 7 : APPLICATION À TTES LES ROUTES : Applique cette config à ttes les routes de l'API */
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/**", corsConfiguration); // ** = toutes les routes
 
         // Retourne le filtre CORS configuré
-        return new CorsFilter(source);
+        return source;
     }
 }
 

@@ -1,136 +1,104 @@
-/*
 package sn.estm.managingrestauranttickets.security.config;
 
-import lombok.AccessLevel;
 import lombok.RequiredArgsConstructor;
-import lombok.experimental.FieldDefaults;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.http.HttpMethod;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
-import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
-import org.springframework.security.web.util.matcher.AntPathRequestMatcher;
-
 import org.springframework.security.web.SecurityFilterChain;
-import sn.estm.managingrestauranttickets.security.jwt.filter.JwtAuthenticationFilter;
-import sn.estm.managingrestauranttickets.security.jwt.filter.JwtFilter;
-import sn.estm.managingrestauranttickets.services.CustomUserDetailsService;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.web.cors.CorsConfigurationSource;
+import sn.estm.managingrestauranttickets.security.jwt.AuthEntryPointJwt;
+import sn.estm.managingrestauranttickets.security.jwt.CustomAccessDeniedHandler;
+import sn.estm.managingrestauranttickets.security.jwt.JwtAuthenticationFilter;
 
-*/
-/**
- * Set up the SecurityFilterChain to secure endpoints and integrate the JWT filter.
- *//*
-
-
-@FieldDefaults(level = AccessLevel.PRIVATE)
-@RequiredArgsConstructor
 @Configuration
-public class SecurityConfig{
+@EnableWebSecurity
+@RequiredArgsConstructor
+public class SecurityConfig {
 
-    final CustomUserDetailsService customUserDetailsService;
-
-    @Bean
-    public SecurityFilterChain securityFilterChain(HttpSecurity http,JwtFilter jwtFilter) throws Exception {
-
-        */
-/*  security management via HttpSecurity  *//*
-
-        http
-                //.csrf(csrf -> csrf.disable())
-                .csrf(AbstractHttpConfigurer::disable)
-
-                //.formLogin(withDefaults()) // disable it when using jwt
-
-                // Desactivate session management (utile for JWT)
-                .sessionManagement(session -> session
-                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-
-                // customUserDetailsService registration
-                .userDetailsService(customUserDetailsService)
-
-                .headers(headers -> headers
-                        .frameOptions(frame -> frame.disable()))
-
-                .authorizeHttpRequests(auth -> auth
-                                .requestMatchers("/authenticate/login").permitAll()
-                                .requestMatchers("/api/menus/**").permitAll()
-                                .requestMatchers(HttpMethod.GET, "/api/users/**").permitAll()
-                                .requestMatchers(HttpMethod.GET, "/api/roles/**").permitAll()
-                                .requestMatchers(HttpMethod.POST, "/api/users/**").permitAll()
-                                .requestMatchers(HttpMethod.PUT, "/api/users/**").hasAuthority("ADMIN")
-                                .requestMatchers(HttpMethod.PATCH, "/api/users/**").hasAuthority("ADMIN")
-                                .requestMatchers(HttpMethod.DELETE, "/api/users/**").hasAuthority("ADMIN")
-                                .requestMatchers(HttpMethod.POST, "/api/roles/**").hasAuthority("ADMIN")
-                                .requestMatchers(HttpMethod.PUT, "/api/roles/**").hasAuthority("ADMIN")
-                                .requestMatchers(HttpMethod.DELETE, "/api/roles/**").hasAuthority("ADMIN")
-                                //.requestMatchers( new AntPathRequestMatcher("/api/roles/**")).hasRole("ADMIN")
-                                //.requestMatchers( new AntPathRequestMatcher("/api/users/**")).hasRole("ADMIN")
-                                //.requestMatchers( new AntPathRequestMatcher("/api/users/{userId}/profil")).hasAnyRole("ADMIN", "ETUDIANT")
-                                .requestMatchers( new AntPathRequestMatcher("/api/comptes/**")).hasAnyRole("ADMIN", "AGENT", "ETUDIANT")
-                                .requestMatchers( new AntPathRequestMatcher("/api/credits/**")).hasAnyRole("ADMIN", "AGENT", "ETUDIANT")
-                                .requestMatchers( new AntPathRequestMatcher("/api/tickets/**")).hasAnyRole("ADMIN", "ETUDIANT")
-                                .requestMatchers( new AntPathRequestMatcher("/api/debits/**")).hasAnyRole("ADMIN", "PORTIER")
-                        //  .anyRequest().authenticated()
-                        // Toute autre requête emise vers l'appli doit être authentifiée
-                )
-                // .addFilter(new JwtAuthenticationFilter(authenticationManagerBean())) // from videos
-                */
-/*  jwtFilter is your custom filter that checks for a Bearer token
-                    in the header and sets the user context  *//*
-
-                .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
-
-        return http.build();
-    }
-
-    */
-/**
-     * with bean, I have the possibility to inject this object where I want
-     * @param authConfig
-     * @return
-     * @throws Exception
-     *//*
-
-    @Bean
-    public AuthenticationManager authenticationManagerBean(
-            AuthenticationConfiguration authConfig) throws Exception {
-        return authConfig.getAuthenticationManager();
-        // return super.authenticationManagerBean(); //from videos
-        */
-/*  Spring auto-registers DaoAuthenticationProvider and uses
-             userDetailsService + PasswordEncoder automatically      *//*
-
-    }
-
-    // this figure in video screenshot
-   */
-/* @Bean
-    public AuthenticationManager authenticationManagerBean() throws Exception {
-        return super.authenticationManagerBean();
-    }*//*
-
+    private final JwtAuthenticationFilter jwtAuthenticationFilter;
+    private final AuthEntryPointJwt authEntryPointJwt;
+    private final CustomAccessDeniedHandler customAccessDeniedHandler;
+    private final CorsConfigurationSource corsConfigurationSource;
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder(); // Password encryption, should be called later
+        return new BCryptPasswordEncoder();
     }
 
-    */
-/* @Bean
-    public DaoAuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider authProvider = new
-                DaoAuthenticationProvider();
-        authProvider.setUserDetailsService(customUserDetailsService);
-        authProvider.setPasswordEncoder(passwordEncoder());
-        return authProvider;
-    }*//*
+    @Bean
+    public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
+        http
+                .cors(cors -> cors.configurationSource(corsConfigurationSource))
+                .csrf(AbstractHttpConfigurer::disable)
+                .exceptionHandling(handling -> handling
+                        .authenticationEntryPoint(authEntryPointJwt)
+                        .accessDeniedHandler(customAccessDeniedHandler))
+                .sessionManagement(session -> session
+                        .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+                .authorizeHttpRequests(auth -> auth
 
+                        /// ============ OPTIONS (pre-flight CORS) ============
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
+                        /// ============ AUTHENTIFICATION ============
+                       // .requestMatchers("/api/auth/**").permitAll()
+                        .requestMatchers("/api/auth/login").permitAll()   // login : public
+                        .requestMatchers("/api/auth/**").authenticated()   // tout le reste (validate, me, logout) : connecté
+
+                        /// ============ UTILISATEURS ============
+                        // Inscription libre
+                        .requestMatchers(HttpMethod.POST, "/api/users").permitAll()
+                        // Liste complète : ADMIN seulement
+                        .requestMatchers(HttpMethod.GET, "/api/users").hasAuthority("ADMIN")
+
+                        // Un utilisateur connecté peut voir/modifier son propre profil
+                        // (contrôleur vérifie que c'est son propre compte : userId == utilisateur connecté)
+                        .requestMatchers(HttpMethod.GET, "/api/users/{userId}").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/users/username/{username}").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/api/users/{userId}").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/api/users/password/{userId}").authenticated()
+                        // Suppression : ADMIN seulement
+                        .requestMatchers(HttpMethod.DELETE, "/api/users/{userId}").hasAuthority("ADMIN")
+
+                        /// ============ RÔLES ============
+                        .requestMatchers(HttpMethod.GET, "/api/roles").permitAll()
+                        .requestMatchers(HttpMethod.GET, "/api/roles/**").authenticated()
+                        .requestMatchers(HttpMethod.POST, "/api/roles").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/roles/**").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.DELETE, "/api/roles/**").hasAuthority("ADMIN")
+
+                        /// ============ TICKETS ============
+                        .requestMatchers(HttpMethod.GET, "/api/tickets").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/tickets/user/{userId}/purchased").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/tickets/user/{userId}/filter").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/tickets/statistics").hasAuthority("ADMIN")
+                        .requestMatchers(HttpMethod.PUT, "/api/tickets/purchase").hasAuthority("ETUDIANT")
+                        .requestMatchers(HttpMethod.PUT, "/api/tickets/transferTickets").hasAuthority("ETUDIANT")
+                        .requestMatchers(HttpMethod.PUT, "/api/tickets/cancelTransfer").hasAuthority("ETUDIANT")
+                        .requestMatchers(HttpMethod.PUT, "/api/tickets/debit").hasAuthority("PORTIER")
+
+                        /// ============ PAIEMENTS ============
+                        /// Callbacks PayDunya : publics (appelés par PayDunya sans token)
+                        .requestMatchers("/api/payments/webhook").permitAll()
+                        .requestMatchers("/api/payments/return").permitAll()
+                        .requestMatchers("/api/payments/cancel").permitAll()
+                        /// Actions Flutter : authentifiées
+                        .requestMatchers(HttpMethod.POST, "/api/payments/initiate").hasAuthority("ETUDIANT")
+                        .requestMatchers(HttpMethod.GET, "/api/payments/status/**").hasAuthority("ETUDIANT")
+
+                        /// ============ FILET DE SÉCURITÉ ============
+                        /// Toute route non listée explicitement exige d'être connecté
+                        .anyRequest().authenticated()
+                )
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+
+        return http.build();
+    }
 }
-*/

@@ -22,11 +22,7 @@ public interface UserService {
 
     UserDTO readUserByUsername(String username);
 
-    //  boolean validateCredentials(String username, String password);
-
-    void logout(String username);  // ou void logout(HttpServletRequest request)
-
-    // void addRoleToUser(Long userId, Long roleId);
+    void logout(String username);
 
     void scanCodeQr(UserDTO userDto);
 }
