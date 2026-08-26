@@ -61,7 +61,7 @@ public class SecurityConfig {
                         // Un utilisateur connecté peut voir/modifier son propre profil
                         // (contrôleur vérifie que c'est son propre compte : userId == utilisateur connecté)
                         .requestMatchers(HttpMethod.GET, "/api/users/{userId}").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/api/users/username/{username}").authenticated()
+                       // .requestMatchers(HttpMethod.GET, "/api/users/username/{username}").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/api/users/{userId}").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/api/users/password/{userId}").authenticated()
                         // Suppression : ADMIN seulement
@@ -78,7 +78,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/tickets").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/tickets/user/{userId}/purchased").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/tickets/user/{userId}/filter").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/api/tickets/statistics").hasAuthority("ADMIN")
+                      //  .requestMatchers(HttpMethod.GET, "/api/tickets/statistics").hasAuthority("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/tickets/purchase").hasAuthority("ETUDIANT")
                         .requestMatchers(HttpMethod.PUT, "/api/tickets/transferTickets").hasAuthority("ETUDIANT")
                         .requestMatchers(HttpMethod.PUT, "/api/tickets/cancelTransfer").hasAuthority("ETUDIANT")
