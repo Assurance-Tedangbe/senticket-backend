@@ -61,7 +61,7 @@ public class SecurityConfig {
                         // Un utilisateur connecté peut voir/modifier son propre profil
                         // (contrôleur vérifie que c'est son propre compte : userId == utilisateur connecté)
                         .requestMatchers(HttpMethod.GET, "/api/users/{userId}").authenticated()
-                       // .requestMatchers(HttpMethod.GET, "/api/users/username/{username}").authenticated()
+                        .requestMatchers(HttpMethod.GET, "/api/users/username/{username}").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/api/users/{userId}").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/api/users/password/{userId}").authenticated()
                         // Suppression : ADMIN seulement
