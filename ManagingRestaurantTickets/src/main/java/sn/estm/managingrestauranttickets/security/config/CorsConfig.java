@@ -28,7 +28,7 @@ public class CorsConfig {
 
         /* SECTION 1 : ORIGINES AUTORISÉES : Définit quelles applications peuvent accéder à l'API */
         corsConfiguration.setAllowedOrigins(List.of(
-                "http://192.168.1.5"                    // Adresse IP locale de l'ordinateur
+                "http://192.168.1.6"                    // Adresse IP locale de l'ordinateur
         ));
 
         /* SECTION 2 : MÉTHODES HTTP AUTORISÉES : Définit quelles opérations HTTP sont permises */

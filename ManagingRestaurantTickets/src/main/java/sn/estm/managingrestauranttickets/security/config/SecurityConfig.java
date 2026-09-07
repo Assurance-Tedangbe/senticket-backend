@@ -78,7 +78,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/tickets").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/tickets/user/{userId}/purchased").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/tickets/user/{userId}/filter").authenticated()
-                        .requestMatchers(HttpMethod.GET, "/api/tickets/statistics").hasAuthority("ADMIN")
+                      //  .requestMatchers(HttpMethod.GET, "/api/tickets/statistics").hasAuthority("ADMIN")
                         .requestMatchers(HttpMethod.PUT, "/api/tickets/purchase").hasAuthority("ETUDIANT")
                         .requestMatchers(HttpMethod.PUT, "/api/tickets/transferTickets").hasAuthority("ETUDIANT")
                         .requestMatchers(HttpMethod.PUT, "/api/tickets/cancelTransfer").hasAuthority("ETUDIANT")
