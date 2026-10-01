@@ -394,12 +394,21 @@ public class PaymentServiceImpl implements PaymentService {
                 // Cela indique une URL incorrecte
                 if (body.trim().startsWith("<")) {
                     log.error("PayDunya a retourné du HTML - URL incorrecte: {}", url);
-                    return String.valueOf(PaymentStatus.UNKNOWN);
+                    return "UNKNOWN";
+                   // return String.valueOf(PaymentStatus.UNKNOWN);
                 }
 
                 // Parse la réponse JSON et extrait le statut du paiement
                 JsonNode root = new ObjectMapper().readTree(body);
-                return root.path("invoice").path("status").asText("UNKNOWN").toUpperCase();
+
+                // ✅ status est à la RACINE, pas dans invoice
+                String status = root.path("status").asText("UNKNOWN").toUpperCase();
+                log.info("Statut extrait: {}", status);
+                return status;
+
+                //return root.path("invoice").path("status").asText("UNKNOWN").toUpperCase();
+                // ✅ CORRECT — status est à la racine du JSON
+               // return root.path("status").asText("UNKNOWN").toUpperCase();
             }
 
         } catch (Exception e) {
