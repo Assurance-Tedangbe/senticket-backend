@@ -305,7 +305,58 @@ public class PaymentServiceImpl implements PaymentService {
      *      * @Transactional : rollback automatique si l'achat de tickets ou la mise à jour
      *      * du statut échoue, évitant un paiement confirmé sans tickets attribués.
      */
+
     @Override
+    @Transactional
+    public void confirmPayment(String transactionId) {
+        log.info("CONFIRMATION PAIEMENT SENTICKET");
+        log.info("Transaction ID: {}", transactionId);
+
+        try {
+            // ✅ Récupérer d'abord le panier avant de vérifier le statut
+            PendingPayment pending = pendingPaymentRepository
+                    .findByTransactionId(transactionId)
+                    .orElseThrow(() -> new RuntimeException(
+                            "Transaction non trouvée: " + transactionId));
+
+            // ✅ Idempotence — ne pas retraiter si déjà COMPLETED
+            if (PaymentStatus.COMPLETED.equals(pending.getStatus())) {
+                log.warn("Transaction {} déjà traitée — ignorée", transactionId);
+                return;
+            }
+
+            // Vérification du statut auprès de PayDunya
+            String status = checkPaymentStatus(transactionId);
+            log.info("Statut PayDunya: {}", status);
+
+            if (!"COMPLETED".equals(status)) {
+                log.warn("Paiement non complété - Statut: {}", status);
+                return;
+            }
+
+            // ✅ .trim() sur chaque ID pour éviter les espaces parasites
+            List<Long> ticketIds = Arrays.stream(pending.getTicketIds().split(","))
+                    .map(String::trim)
+                    .filter(s -> !s.isEmpty())
+                    .map(Long::parseLong)
+                    .collect(Collectors.toList());
+
+            log.info("Exécution achat - userId: {}, ticketIds: {}",
+                    pending.getUserId(), ticketIds);
+
+            ticketService.executePurchase(pending.getUserId(), ticketIds);
+
+            pending.setStatus(PaymentStatus.COMPLETED);
+            pendingPaymentRepository.save(pending);
+
+            log.info("✅ Paiement confirmé pour userId: {}", pending.getUserId());
+
+        } catch (Exception e) {
+            log.error("❌ Erreur confirmation paiement: {}", e.getMessage(), e);
+            // Ne pas re-throw — le webhook doit toujours retourner 200 à PayDunya
+        }
+    }
+   /* @Override
     @Transactional
     public void confirmPayment(String transactionId) {
         log.info("CONFIRMATION PAIEMENT SENTICKET ");
@@ -358,7 +409,7 @@ public class PaymentServiceImpl implements PaymentService {
             log.error("Erreur lors de la confirmation du paiement", e);
             throw new RuntimeException("Erreur: " + e.getMessage());
         }
-    }
+    }*/
 
     /**
      * Vérifie le statut d'une transaction auprès de PayDunya
