@@ -117,7 +117,6 @@ public class PaymentController {
      */
     @PostMapping("/webhook")
     public ResponseEntity<String> webhook(@RequestBody(required = false) String rawBody) {
-
         log.info("POST /api/payments/webhook - Body: {}", rawBody);
 
         if (rawBody == null || rawBody.isBlank()) {
@@ -129,42 +128,40 @@ public class PaymentController {
             ObjectMapper mapper = new ObjectMapper();
             JsonNode root = mapper.readTree(rawBody);
 
-            // PayDunya envoie le token dans différents champs selon la version API
-            // Essayer plusieurs emplacements possibles dans le JSON
             String token = null;
 
-            // Format 1 : { "data": { "token": "xxx" } }
-            if (root.has("data")) {
+            // Format PayDunya réel : { "data": { "invoice": { "token": "xxx" } } }
+            if (token == null || token.isBlank()) {
+                token = root.path("data").path("invoice").path("token").asText(null);
+            }
+
+            // Format alternatif 1 : { "data": { "token": "xxx" } }
+            if (token == null || token.isBlank()) {
                 token = root.path("data").path("token").asText(null);
             }
 
-            // Format 2 : { "token": "xxx" }
+            // Format alternatif 2 : { "token": "xxx" }
             if (token == null || token.isBlank()) {
                 token = root.path("token").asText(null);
             }
 
-            // Format 3 : { "invoice": { "token": "xxx" } }
+            // Format alternatif 3 : { "invoice": { "token": "xxx" } }
             if (token == null || token.isBlank()) {
                 token = root.path("invoice").path("token").asText(null);
             }
 
             if (token == null || token.isBlank()) {
                 log.error("Token introuvable dans le payload webhook: {}", rawBody);
-                return ResponseEntity.ok("OK"); // Toujours 200 pour éviter les retries PayDunya
+                return ResponseEntity.ok("OK");
             }
 
-            log.info("Webhook - Token: {}", token);
-
-            // Confirmer le paiement : vérifie le statut auprès de PayDunya
-            // et attribue les tickets si le paiement est "completed"
+            log.info("Webhook - Token extrait: {}", token);
             paymentService.confirmPayment(token);
 
         } catch (Exception e) {
             log.error("Erreur parsing webhook: {}", e.getMessage());
-            // Retourner quand même 200 pour éviter que PayDunya réessaie en boucle
         }
 
-        // PayDunya arrête d'envoyer le webhook seulement si on répond 200
         return ResponseEntity.ok("OK");
     }
 
