@@ -129,9 +129,9 @@ public class UserController {
         UserDTO user = userService.readUserByUsername(username);
 
         // Un utilisateur ne peut voir que son propre profil, sauf l'ADMIN
-        if (!isOwnerOrAdmin(user.getUsername(), authentication)) {
+        /*if (!isOwnerOrAdmin(user.getUsername(), authentication)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
+        }*/
        
         return new ResponseEntity<>(user, HttpStatus.OK);
     }
