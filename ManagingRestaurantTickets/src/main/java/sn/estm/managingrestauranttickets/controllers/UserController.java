@@ -121,6 +121,51 @@ public class UserController {
 
     /// VOIR UN PROFIL PAR USERNAME
     @GetMapping(value = "/username/{username}", produces = "application/json")
+    public ResponseEntity<UserDTO> getUserByUsername(
+            @PathVariable String username,
+            Authentication authentication) {
+
+        log.info("Fetched user with username: {}", username);
+
+        UserDTO user = userService.readUserByUsername(username);
+        // Un utilisateur ne peut voir que son propre profil, sauf l'ADMIN
+        /*if (!isOwnerOrAdmin(user.getUsername(), authentication)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }*/
+
+        // ✅ Règles d'accès :
+        // - ADMIN          → peut voir n'importe quel utilisateur
+        // - Propriétaire   → peut voir son propre profil
+        // - PORTIER        → peut chercher un ETUDIANT (pour débiter)
+        // - ETUDIANT       → peut chercher un autre ETUDIANT (pour transférer)
+        // - Tout le reste  → 403
+
+        String requesterRole = authentication.getAuthorities().stream()
+                .findFirst()
+                .map(a -> a.getAuthority())
+                .orElse("");
+
+        boolean isOwner = authentication.getName().equals(username);
+        boolean isAdmin  = requesterRole.equals("ADMIN");
+        boolean isPorter = requesterRole.equals("PORTIER");
+        boolean isStudent = requesterRole.equals("ETUDIANT");
+        boolean targetIsStudent = "ETUDIANT".equals(user.getRoleDTO().getName());
+
+        // PORTIER peut chercher un ETUDIANT (débit)
+        // ETUDIANT peut chercher un autre ETUDIANT (transfert)
+        boolean allowedToSearch = isAdmin || isOwner
+                || (isPorter  && targetIsStudent)
+                || (isStudent && targetIsStudent && !isOwner);
+
+        if (!allowedToSearch) {
+            log.warn("Accès refusé : {} ({}) tente d'accéder au profil de {}",
+                    authentication.getName(), requesterRole, username);
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        return new ResponseEntity<>(user, HttpStatus.OK);
+    }
+   /* @GetMapping(value = "/username/{username}", produces = "application/json")
     public ResponseEntity<UserDTO> getUserByUsername(@PathVariable String username,
                                                      Authentication authentication) {
 
@@ -129,12 +174,12 @@ public class UserController {
         UserDTO user = userService.readUserByUsername(username);
 
         // Un utilisateur ne peut voir que son propre profil, sauf l'ADMIN
-        /*if (!isOwnerOrAdmin(user.getUsername(), authentication)) {
+        *//*if (!isOwnerOrAdmin(user.getUsername(), authentication)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }*/
+        }*//*
        
         return new ResponseEntity<>(user, HttpStatus.OK);
-    }
+    }*/
 
     /** MÉTHODE UTILITAIRE
      * Vérifie que l'utilisateur connecté est le propriétaire du compte
