@@ -16,6 +16,8 @@ import sn.estm.managingrestauranttickets.dto.paymentdtos.PaymentInitiationDTO;
 import sn.estm.managingrestauranttickets.services.serviceInterfaces.PaymentService;
 import sn.estm.managingrestauranttickets.dto.paymentdtos.PaymentResponseDTO;
 
+import java.util.Map;
+
 
 @Slf4j
 @RestController
@@ -116,6 +118,121 @@ public class PaymentController {
      *
      */
     @PostMapping("/webhook")
+    public ResponseEntity<String> webhook(
+            @RequestBody(required = false) String rawBody,
+            @RequestParam(required = false) Map<String, String> formParams) {
+
+        log.info("POST /api/payments/webhook");
+
+        // Déterminer le contenu selon le Content-Type
+        String token = null;
+
+        // ── CAS 1 : Form URL-encoded (envoi réel de PayDunya)
+        // PayDunya envoie : data[invoice][token]=xxx
+        if (formParams != null && !formParams.isEmpty()) {
+            log.info("Webhook reçu en form-data: {} paramètres", formParams.size());
+
+            // Chercher le token dans les paramètres form
+            token = formParams.get("data[invoice][token]");
+
+            if (token == null || token.isBlank()) {
+                // Parcourir tous les paramètres pour trouver le token
+                for (Map.Entry<String, String> entry : formParams.entrySet()) {
+                    if (entry.getKey().contains("token") &&
+                            entry.getKey().contains("invoice")) {
+                        token = entry.getValue();
+                        log.info("Token trouvé dans: {} = {}", entry.getKey(), token);
+                        break;
+                    }
+                }
+            }
+
+            // Si toujours pas trouvé, décoder manuellement depuis rawBody
+            if ((token == null || token.isBlank()) && rawBody != null) {
+                token = extractTokenFromFormBody(rawBody);
+            }
+        }
+
+        // ── CAS 2 : JSON (test via Postman)
+        if ((token == null || token.isBlank()) && rawBody != null && !rawBody.isBlank()) {
+            try {
+                if (rawBody.trim().startsWith("{")) {
+                    ObjectMapper mapper = new ObjectMapper();
+                    JsonNode root = mapper.readTree(rawBody);
+
+                    token = root.path("data").path("invoice").path("token").asText(null);
+                    if (token == null || token.isBlank()) {
+                        token = root.path("data").path("token").asText(null);
+                    }
+                    if (token == null || token.isBlank()) {
+                        token = root.path("token").asText(null);
+                    }
+                }
+            } catch (Exception e) {
+                log.warn("Parsing JSON webhook échoué: {}", e.getMessage());
+            }
+        }
+
+        if (token == null || token.isBlank()) {
+            log.error("Token introuvable. formParams: {}, rawBody: {}",
+                    formParams, rawBody != null ? rawBody.substring(0, Math.min(200, rawBody.length())) : "null");
+            return ResponseEntity.ok("OK");
+        }
+
+        log.info("✅ Webhook - Token extrait: {}", token);
+
+        try {
+            paymentService.confirmPayment(token);
+        } catch (Exception e) {
+            log.error("Erreur confirmPayment: {}", e.getMessage(), e);
+        }
+
+        return ResponseEntity.ok("OK");
+    }
+
+    /**
+     * Extrait le token PayDunya depuis un body URL-encodé.
+     * PayDunya envoie : data%5Binvoice%5D%5Btoken%5D=test_xxx
+     * Décodé : data[invoice][token]=test_xxx
+     */
+    private String extractTokenFromFormBody(String body) {
+        try {
+            // Décoder l'URL encoding
+            String decoded = java.net.URLDecoder.decode(body, "UTF-8");
+            log.info("Body décodé (premiers 300 chars): {}",
+                    decoded.substring(0, Math.min(300, decoded.length())));
+
+            // Chercher data[invoice][token]=xxx
+            String[] pairs = decoded.split("&");
+            for (String pair : pairs) {
+                String[] keyValue = pair.split("=", 2);
+                if (keyValue.length == 2) {
+                    String key = keyValue[0].trim();
+                    String value = keyValue[1].trim();
+                    if (key.equals("data[invoice][token]") ||
+                            key.contains("[invoice]") && key.contains("[token]")) {
+                        log.info("Token trouvé dans body décodé: {}", value);
+                        return value;
+                    }
+                }
+            }
+
+            // Chercher aussi data[status]=completed pour confirmer
+            for (String pair : pairs) {
+                String[] keyValue = pair.split("=", 2);
+                if (keyValue.length == 2 &&
+                        keyValue[0].trim().equals("data[status]")) {
+                    log.info("Status PayDunya: {}", keyValue[1]);
+                }
+            }
+
+        } catch (Exception e) {
+            log.error("Erreur décodage form body: {}", e.getMessage());
+        }
+        return null;
+    }
+
+    /*@PostMapping("/webhook")
     public ResponseEntity<String> webhook(@RequestBody(required = false) String rawBody) {
         log.info("POST /api/payments/webhook - Body: {}", rawBody);
 
@@ -163,7 +280,7 @@ public class PaymentController {
         }
 
         return ResponseEntity.ok("OK");
-    }
+    }*/
 
     /**
      * Page d'annulation navigateur (cancel_url).

@@ -7,6 +7,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 import org.springframework.security.access.AccessDeniedException;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -45,9 +46,6 @@ import sn.estm.managingrestauranttickets.repositories.*;
 import sn.estm.managingrestauranttickets.services.serviceInterfaces.TicketService;
 import sn.estm.managingrestauranttickets.services.serviceInterfaces.TransactionHistoryService;
 
-import static java.util.regex.Pattern.matches;
-
-
 @Slf4j
 @Service
 @RequiredArgsConstructor
@@ -59,8 +57,7 @@ public class TicketServiceImpl implements TicketService {
     private final TransactionHistoryService transactionHistoryService;
     private final TransactionHistoryRepository transactionHistoryRepository;
     private final TransactionHistoryMapper transactionHistoryMapper;
-
-    // private final PasswordEncoder passwordEncoder; // For password validation
+    private final PasswordEncoder passwordEncoder;  // For password validation
 
     @Transactional
     @Override
@@ -509,12 +506,18 @@ public class TicketServiceImpl implements TicketService {
         }
     }
 
+    // Remplacer la méthode validatePassword()
     private void validatePassword(String providedPassword, String storedPasswordHash) {
-        if (!matches(providedPassword, storedPasswordHash)) {
+        // ✅ BCrypt — compare le mot de passe en clair avec le hash stocké
+        if (!passwordEncoder.matches(providedPassword, storedPasswordHash)) {
             throw new IllegalArgumentException("Invalid password");
         }
     }
-
+  /*  private void validatePassword(String providedPassword, String storedPasswordHash) {
+        if (!matches(providedPassword, storedPasswordHash)) {
+            throw new IllegalArgumentException("Invalid password");
+        }
+    }*/
     private List<Ticket> findTicketsForTransfer(User sender, TicketType ticketType, int numberOfTickets) {
 
         // Find sender's tickets that are booked, have BOOKED status, and match the ticket type
@@ -802,42 +805,6 @@ public class TicketServiceImpl implements TicketService {
 
 }
 
-// Méthode pour préparer le paiement (appelée par le frontend)
-    /*public PaymentInitiationDTO preparePayment(Long userId, List<Long> ticketIds) {
-        log.info("Préparation du paiement pour l'utilisateur: {}, tickets: {}", userId, ticketIds);
-
-        // Récupérer l'utilisateur
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException("User not found: " + userId));
-
-        // Vérifier le rôle
-        if (!user.getRole().getName().equals("ETUDIANT")) {
-            throw new IllegalStateException("Only ETUDIANT can purchase tickets");
-        }
-
-        // Récupérer et valider les tickets
-        List<Ticket> tickets = ticketRepository.findAllById(ticketIds);
-        double totalAmount = 0.0;
-        int countA = 0;
-        int countB = 0;
-
-        for (Ticket ticket : tickets) {
-            if (ticket.isBooked() || ticket.getStatus() != TicketStatus.AVAILABLE) {
-                throw new IllegalStateException("Ticket not available: " + ticket.getId());
-            }
-            totalAmount += ticket.getPrice();
-            if (ticket.getType() == TicketType.A) countA++;
-            else if (ticket.getType() == TicketType.B) countB++;
-        }
-
-        return PaymentInitiationDTO.builder()
-                .userId(userId)
-                .selectedTicketIds(ticketIds)
-                .totalAmount(totalAmount)
-                .countA(countA)
-                .countB(countB)
-                .build();
-    }*/
    /* @Transactional
     @Override
     public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTicketsRequestDTO) {

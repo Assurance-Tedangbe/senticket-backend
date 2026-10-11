@@ -305,7 +305,6 @@ public class PaymentServiceImpl implements PaymentService {
      *      * @Transactional : rollback automatique si l'achat de tickets ou la mise à jour
      *      * du statut échoue, évitant un paiement confirmé sans tickets attribués.
      */
-
     @Override
     @Transactional
     public void confirmPayment(String transactionId) {
@@ -356,60 +355,6 @@ public class PaymentServiceImpl implements PaymentService {
             // Ne pas re-throw — le webhook doit toujours retourner 200 à PayDunya
         }
     }
-   /* @Override
-    @Transactional
-    public void confirmPayment(String transactionId) {
-        log.info("CONFIRMATION PAIEMENT SENTICKET ");
-        log.info("Transaction ID: {}", transactionId);
-
-        try {
-            // 1. Vérification du statut auprès de PayDunya
-            // Interroge directement l'API PayDunya pour obtenir le statut réel du paiement
-            // Ne pas faire confiance uniquement au webhook : toujours vérifier le statut
-            String status = checkPaymentStatus(transactionId);
-            log.info("Statut PayDunya: {}", status);
-
-            // Si le PaiementStatus n'est pas "completed", on arrête sans attribuer de tickets
-            if (!"COMPLETED".equals(status)) {
-                log.warn("Paiement non complété - Statut: {}", status);
-                return;
-            }
-
-            // 2. Récupération du panier sauvegardé
-            // Retrouve le panier créé lors de initiatePayment() grâce au token PayDunya
-            PendingPayment pending = pendingPaymentRepository.findByTransactionId(transactionId)
-                    .orElseThrow(() -> new RuntimeException("Transaction non trouvée: " + transactionId));
-
-            // 3. Parsing des IDs de tickets
-            // Reconvertit la chaîne CSV stockée en BDD en liste d'IDs Java
-            // "1,2" → [1L, 2L]
-            List<Long> ticketIds = Arrays.stream(pending.getTicketIds().split(","))
-                    .map(Long::parseLong)
-                    .collect(Collectors.toList());
-
-            // 4. EXÉCUTION DE L'ACHAT DE TICKETS
-            // Cette méthode contient toute la logique d'achat de tickets :
-            // Délègue à TicketService.executePurchase() qui :
-            //   - Change le statut des tickets de AVAILABLE à BOOKED
-            //   - Lie les tickets à l'utilisateur
-            //   - Crée une entrée dans l'historique des transactions
-            //   - Génère de nouveaux tickets disponibles en remplacement
-            log.info("Appel du service d'achat de tickets pour l'utilisateur: {}", pending.getUserId());
-            ticketService.executePurchase(pending.getUserId(), ticketIds);
-
-            // 5. Mise à jour du statut
-            // Marque le paiement comme COMPLETED dans pending_payments
-            // Empêche un double traitement si le webhook est appelé plusieurs fois (idempotence)
-            pending.setStatus(PaymentStatus.COMPLETED);
-            pendingPaymentRepository.save(pending);
-
-            log.info("Paiement confirmé et tickets créés pour l'utilisateur: {}", pending.getUserId());
-
-        } catch (Exception e) {
-            log.error("Erreur lors de la confirmation du paiement", e);
-            throw new RuntimeException("Erreur: " + e.getMessage());
-        }
-    }*/
 
     /**
      * Vérifie le statut d'une transaction auprès de PayDunya
