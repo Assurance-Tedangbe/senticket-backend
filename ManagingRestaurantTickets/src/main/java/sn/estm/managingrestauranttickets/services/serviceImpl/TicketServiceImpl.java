@@ -46,9 +46,6 @@ import sn.estm.managingrestauranttickets.repositories.*;
 import sn.estm.managingrestauranttickets.services.serviceInterfaces.TicketService;
 import sn.estm.managingrestauranttickets.services.serviceInterfaces.TransactionHistoryService;
 
-import static java.util.regex.Pattern.matches;
-
-
 @Slf4j
 @Service
 @RequiredArgsConstructor

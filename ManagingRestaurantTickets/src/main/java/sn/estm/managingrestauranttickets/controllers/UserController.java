@@ -1,7 +1,6 @@
 /* UserController class handling all services in UserServiceImpl. */
 package sn.estm.managingrestauranttickets.controllers;
 
-import lombok.Data;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -129,10 +128,6 @@ public class UserController {
 
         UserDTO user = userService.readUserByUsername(username);
         // Un utilisateur ne peut voir que son propre profil, sauf l'ADMIN
-        /*if (!isOwnerOrAdmin(user.getUsername(), authentication)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }*/
-
         // ✅ Règles d'accès :
         // - ADMIN          → peut voir n'importe quel utilisateur
         // - Propriétaire   → peut voir son propre profil
