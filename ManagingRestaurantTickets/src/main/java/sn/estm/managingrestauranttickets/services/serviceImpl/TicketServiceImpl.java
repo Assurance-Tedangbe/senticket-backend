@@ -43,6 +43,7 @@ import sn.estm.managingrestauranttickets.mappers.TicketMapper;
 import sn.estm.managingrestauranttickets.mappers.TransactionHistoryMapper;
 import sn.estm.managingrestauranttickets.repositories.*;
 
+import sn.estm.managingrestauranttickets.services.serviceInterfaces.NotificationService;
 import sn.estm.managingrestauranttickets.services.serviceInterfaces.TicketService;
 import sn.estm.managingrestauranttickets.services.serviceInterfaces.TransactionHistoryService;
 
@@ -58,6 +59,7 @@ public class TicketServiceImpl implements TicketService {
     private final TransactionHistoryRepository transactionHistoryRepository;
     private final TransactionHistoryMapper transactionHistoryMapper;
     private final PasswordEncoder passwordEncoder;  // For password validation
+    private final NotificationService notificationService;
 
     @Transactional
     @Override
@@ -358,6 +360,16 @@ public class TicketServiceImpl implements TicketService {
 
         // Après avoir validé et traité le débit, enregistrement dans l'historique unifié
         transactionHistoryService.recordDebit(porter, student, updatedTickets);
+
+        // ✅ Notifier l'étudiant du débit (ne fait jamais échouer le débit)
+        if (student.getFcmToken() != null) {
+            notificationService.notifyDebit(
+                    student.getFcmToken(),
+                    porter.getUsername(),
+                    tickets.size(),
+                    tickets.get(0).getType().name()
+            );
+        }
     }
 
     @Override
@@ -552,7 +564,20 @@ public class TicketServiceImpl implements TicketService {
         log.info("RECORD TRANSFER TRANSACTION:");
 
         // Après avoir validé et traité le transfert, enregistrement dans l'historique unifié
-        return transactionHistoryService.recordTransfer(sender, recipient, tickets);
+        TransactionHistory history = transactionHistoryService.recordTransfer(
+                sender, recipient, tickets);
+
+        // ✅ Notifier le destinataire du transfert reçu
+        if (recipient.getFcmToken() != null) {
+            notificationService.notifyTransferReceived(
+                    recipient.getFcmToken(),
+                    sender.getUsername(),
+                    tickets.size(),
+                    tickets.get(0).getType().name()
+            );
+        }
+
+        return history;
     }
     /// ******** End transfert service *********
 

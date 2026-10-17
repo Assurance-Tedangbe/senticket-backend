@@ -16,6 +16,7 @@ import sn.estm.managingrestauranttickets.enumerations.PaymentStatus;
 import sn.estm.managingrestauranttickets.paydunyaconfig.PayDunyaConfig;
 import sn.estm.managingrestauranttickets.repositories.PendingPaymentRepository;
 import sn.estm.managingrestauranttickets.repositories.UserRepository;
+import sn.estm.managingrestauranttickets.services.serviceInterfaces.NotificationService;
 import sn.estm.managingrestauranttickets.services.serviceInterfaces.PaymentService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import okhttp3.*;
@@ -38,6 +39,8 @@ public class PaymentServiceImpl implements PaymentService {
     // Contient les clés API PayDunya (masterKey, privateKey, publicKey, token)
     // et les URLs (apiUrl, returnUrl, cancelUrl, callbackUrl)
     // Chargées depuis application.properties via @ConfigurationProperties
+    private final NotificationService notificationService;
+
 
     private final PendingPaymentRepository pendingPaymentRepository; // Repository pour les paiements temporaires
     private final TicketService ticketService;
@@ -349,6 +352,19 @@ public class PaymentServiceImpl implements PaymentService {
             pendingPaymentRepository.save(pending);
 
             log.info("✅ Paiement confirmé pour userId: {}", pending.getUserId());
+
+            // Notifier l'étudiant du paiement confirmé
+            // Récupérer l'utilisateur pour avoir son FCM token
+            userRepository.findById(pending.getUserId()).ifPresent(user -> {
+                if (user.getFcmToken() != null) {
+                    notificationService.notifyPaymentSuccess(
+                            user.getFcmToken(),
+                            pending.getCountA(),
+                            pending.getCountB(),
+                            pending.getAmount()
+                    );
+                }
+            });
 
         } catch (Exception e) {
             log.error("❌ Erreur confirmation paiement: {}", e.getMessage(), e);
