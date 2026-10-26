@@ -1,10 +1,9 @@
-package sn.estm.managingrestauranttickets.security.config;
+package sn.estm.managingrestauranttickets.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.cors.CorsConfiguration;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
-import org.springframework.web.filter.CorsFilter;
 
 import java.util.Arrays;
 import java.util.List;
@@ -28,7 +27,7 @@ public class CorsConfig {
 
         /* SECTION 1 : ORIGINES AUTORISÉES : Définit quelles applications peuvent accéder à l'API */
         corsConfiguration.setAllowedOrigins(List.of(
-                "http://192.168.1.6"                    // Adresse IP locale de l'ordinateur
+                "http://192.168.1.27"                    // Adresse IP locale de l'ordinateur
         ));
 
         /* SECTION 2 : MÉTHODES HTTP AUTORISÉES : Définit quelles opérations HTTP sont permises */
