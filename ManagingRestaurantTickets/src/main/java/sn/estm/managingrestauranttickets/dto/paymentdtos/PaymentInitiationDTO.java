@@ -33,6 +33,23 @@ public class PaymentInitiationDTO {
     /** Nombre de tickets Type A à créer après l'achat (pour maintenir le stock) */
     private int countA;
 
-    /** Nombre de tickets Type B à créer après l'achat (pour maintenir le stock) */
     private int countB;
+
+    /*
+    // ✅ SUPPRIMÉ : selectedTicketIds — les tickets n'existent pas encore
+
+    @Min(0)
+    private int countA; // Nombre de tickets Type A souhaités
+
+    @Min(0)
+    private int countB; // Nombre de tickets Type B souhaités
+
+    @Positive
+    private double totalAmount; // countA * 100 + countB * 150
+
+    // Validation métier
+    public boolean isValid() {
+        return (countA + countB) > 0 && totalAmount > 0;
+    }
+     */
 }

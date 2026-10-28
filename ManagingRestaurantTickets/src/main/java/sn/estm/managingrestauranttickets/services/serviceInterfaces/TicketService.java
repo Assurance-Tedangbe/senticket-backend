@@ -47,4 +47,9 @@ public interface TicketService {
      */
     List<TicketDTO> executePurchase(Long userId, List<Long> ticketIds);
 
+    // Remplacer l'ancienne signature :
+    // List<TicketDTO> executePurchase(Long userId, List<Long> ticketIds);
+
+    // Par la nouvelle :
+   // List<TicketDTO> executePurchase(Long userId, int countA, int countB);
 }

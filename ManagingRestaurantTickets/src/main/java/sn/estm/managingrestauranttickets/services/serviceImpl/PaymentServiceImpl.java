@@ -284,6 +284,42 @@ public class PaymentServiceImpl implements PaymentService {
         }
     }
 
+    /* nouveau
+    @Transactional
+    @Override
+    public PaymentResponseDTO initiatePayment(PaymentInitiationDTO request) {
+    log.info("INITIATION PAIEMENT — userId: {}, countA: {}, countB: {}, montant: {}",
+            request.getUserId(), request.getCountA(),
+            request.getCountB(), request.getTotalAmount());
+
+    // Validation
+    if (!request.isValid()) {
+        throw new IllegalArgumentException(
+            "Commande invalide: au moins un ticket requis");
+    }
+
+    // Vérifier le montant cohérent
+    double expectedAmount = request.getCountA() * 100.0 + request.getCountB() * 150.0;
+    if (Math.abs(expectedAmount - request.getTotalAmount()) > 0.01) {
+        throw new IllegalArgumentException(
+            "Montant incohérent avec la quantité de tickets");
+    }
+
+    try {
+        // ✅ Sauvegarde sans ticketIds — juste countA, countB, montant
+        PendingPayment pending = PendingPayment.builder()
+                .transactionId(generateTempId())
+                .userId(request.getUserId())
+                .ticketIds("")      // ← vide, plus utilisé
+                .countA(request.getCountA())
+                .countB(request.getCountB())
+                .amount(request.getTotalAmount())
+                .build();
+        pending = pendingPaymentRepository.save(pending);
+
+        // ... reste du code inchangé (appel PayDunya, URL, etc.)
+     */
+
     /**
      * Génère un ID temporaire avant la confirmation PayDunya
      * @return ID temporaire (préfixé par TMP_)
@@ -371,6 +407,68 @@ public class PaymentServiceImpl implements PaymentService {
             // Ne pas re-throw — le webhook doit toujours retourner 200 à PayDunya
         }
     }
+
+    /*
+    @Override
+    @Transactional
+    public void confirmPayment(String transactionId) {
+    log.info("CONFIRMATION PAIEMENT SENTICKET — Transaction: {}", transactionId);
+
+    try {
+        PendingPayment pending = pendingPaymentRepository
+                .findByTransactionId(transactionId)
+                .orElseThrow(() -> new RuntimeException(
+                        "Transaction non trouvée: " + transactionId));
+
+        // Idempotence
+        if (PaymentStatus.COMPLETED.equals(pending.getStatus())) {
+            log.warn("Transaction {} déjà traitée — ignorée", transactionId);
+            return;
+        }
+
+        // Vérification PayDunya
+        String status = checkPaymentStatus(transactionId);
+        log.info("Statut PayDunya: {}", status);
+
+        if (!"COMPLETED".equals(status)) {
+            log.warn("Paiement non complété - Statut: {}", status);
+            return;
+        }
+
+        // ✅ NOUVEAU — utiliser countA et countB stockés dans PendingPayment
+        // Plus besoin de parser des ticketIds
+        int countA = pending.getCountA();
+        int countB = pending.getCountB();
+
+        log.info("Création tickets — userId: {}, countA: {}, countB: {}",
+                pending.getUserId(), countA, countB);
+
+        // ✅ NOUVELLE SIGNATURE — crée les tickets au moment de la confirmation
+        ticketService.executePurchase(pending.getUserId(), countA, countB);
+
+        pending.setStatus(PaymentStatus.COMPLETED);
+        pendingPaymentRepository.save(pending);
+
+        log.info("✅ Paiement confirmé — tickets créés pour userId: {}",
+                pending.getUserId());
+
+        // Notification push si FCM token disponible
+        userRepository.findById(pending.getUserId()).ifPresent(user -> {
+            if (user.getFcmToken() != null) {
+                notificationService.notifyPaymentSuccess(
+                    user.getFcmToken(),
+                    countA,
+                    countB,
+                    pending.getAmount()
+                );
+            }
+        });
+
+    } catch (Exception e) {
+        log.error("❌ Erreur confirmation paiement: {}", e.getMessage(), e);
+    }
+}
+     */
 
     /**
      * Vérifie le statut d'une transaction auprès de PayDunya
