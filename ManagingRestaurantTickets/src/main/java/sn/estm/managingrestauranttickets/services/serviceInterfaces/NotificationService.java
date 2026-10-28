@@ -38,8 +38,8 @@ public class NotificationService {
     public void notifyDebit(String fcmToken, String porterName,
                             int ticketCount, String ticketType) {
         send(fcmToken,
-                "💳 Débit effectué",
-                ticketCount + " ticket(s) " + ticketType
+                " Débit effectué",
+                ticketCount + " ticket(s) de type " + ticketType
                         + " débité(s) par " + porterName,
                 Map.of("type", "DEBIT",
                         "count", String.valueOf(ticketCount),
@@ -50,9 +50,8 @@ public class NotificationService {
     public void notifyTransferReceived(String fcmToken, String senderName,
                                        int ticketCount, String ticketType) {
         send(fcmToken,
-                "🎫 Tickets reçus",
-                senderName + " vous a transféré "
-                        + ticketCount + " ticket(s) " + ticketType,
+                " Tickets transférés",
+                ticketCount + " ticket(s) de type " + ticketType +  " transféré(s)",
                 Map.of("type", "TRANSFER_RECEIVED",
                         "count", String.valueOf(ticketCount),
                         "ticketType", ticketType,
@@ -62,10 +61,10 @@ public class NotificationService {
     /** Notifie l'étudiant après confirmation du paiement PayDunya */
     public void notifyPaymentSuccess(String fcmToken,
                                      int countA, int countB, double amount) {
-        String details = (countA > 0 ? countA + " Type A " : "")
-                + (countB > 0 ? countB + " Type B" : "");
+        String details = (countA > 0 ? countA + " type A " : "")
+                + (countB > 0 ? countB + " type B" : "");
         send(fcmToken,
-                "✅ Paiement confirmé",
+                " Paiement confirmé",
                 "Vos tickets ont été ajoutés : " + details
                         + " — " + (int) amount + " FCFA",
                 Map.of("type", "PAYMENT_SUCCESS",
