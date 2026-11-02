@@ -9,15 +9,10 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import sn.estm.managingrestauranttickets.dto.RoleDTO;
 import sn.estm.managingrestauranttickets.dto.UserDTO;
-import sn.estm.managingrestauranttickets.dto.customisedto.CreationTicketsRequestDTO;
 import sn.estm.managingrestauranttickets.entities.Role;
-import sn.estm.managingrestauranttickets.entities.Ticket;
 import sn.estm.managingrestauranttickets.entities.User;
-import sn.estm.managingrestauranttickets.enumerations.TicketStatus;
-import sn.estm.managingrestauranttickets.enumerations.TicketType;
 import sn.estm.managingrestauranttickets.exceptions.ForbiddenActionException;
 import sn.estm.managingrestauranttickets.exceptions.ResourceNotFoundException;
-import sn.estm.managingrestauranttickets.mappers.TicketMapper;
 import sn.estm.managingrestauranttickets.mappers.UserMapper;
 import sn.estm.managingrestauranttickets.repositories.RoleRepository;
 import sn.estm.managingrestauranttickets.repositories.TicketRepository;
@@ -26,8 +21,6 @@ import sn.estm.managingrestauranttickets.services.serviceInterfaces.UserService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 
 import java.text.MessageFormat;
-import java.time.LocalDateTime;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -37,16 +30,12 @@ import lombok.extern.slf4j.Slf4j;
 @Service
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
-
+    private static final int MIN_PASSWORD_LENGTH = 6;
     private final UserRepository userRepository;
     private final UserMapper userMapper;
     private final RoleRepository roleRepository;
     private final TicketRepository ticketRepository;
-    private final TicketMapper ticketMapper;
-    private final PasswordEncoder passwordEncoder;  //ICI
-
-    // Si vous utilisez une blacklist de tokens, injectez-la ici
-    // private final TokenBlacklistService blacklistService;
+    private final PasswordEncoder passwordEncoder;
 
     @Transactional
     @Override
@@ -60,88 +49,51 @@ public class UserServiceImpl implements UserService {
                     "User with username: " + userDto.getUsername() + " already exists");
         }
 
-        // 1. Vérifier si le rôle existe dans la BD
-        RoleDTO roleDTO = userDto.getRoleDTO();
-        Role role;
-
-        if (roleDTO.getId() != null) {
-            role = roleRepository.findById(roleDTO.getId())
-                    .orElseThrow(() -> new RuntimeException("Rôle non trouvé avec l'ID: " + roleDTO.getId()));
-        } else if (roleDTO.getName() != null && !roleDTO.getName().isBlank()) {
-            role = roleRepository.findByName(roleDTO.getName())
-                    .orElseThrow(() -> new RuntimeException("Rôle non trouvé avec le nom: " + roleDTO.getName()));
-        } else {
-            throw new IllegalArgumentException("L'ID ou le nom du rôle doit être fourni");
+        if (userDto.getPassword() == null || userDto.getPassword().length() < MIN_PASSWORD_LENGTH) {
+            throw new IllegalArgumentException(
+                    "The password must contain at least " + MIN_PASSWORD_LENGTH + " characters");
         }
 
-        log.info("Rôle trouvé: {} (ID: {})", role.getName(), role.getId());
+        Role role = resolveRole(userDto.getRoleDTO());
 
+        // L'inscription est publique : on interdit de s'auto-attribuer ADMIN
+        if ("ADMIN".equals(role.getName())) {
+            throw new ForbiddenActionException(HttpStatus.FORBIDDEN,
+                    "Le rôle ADMIN ne peut pas être attribué à l'inscription");
+        }
         // 2. Convertir UserDTO en entité User
         User user = userMapper.toEntity(userDto);
-
         // 3. Assigner explicitement le rôle à l'utilisateur
         user.setRole(role);
         user.setPassword(passwordEncoder.encode(userDto.getPassword()));  //ICI
-
         // 4. Sauvegarder l'utilisateur
         User savedUser = userRepository.save(user);
 
-        // 5. Convertir en DTO pour la réponse
-        UserDTO savedUserDto = userMapper.toDto(savedUser);
+        log.info("✅ User created successfully: {} (ID: {}, rôle: {})",
+                savedUser.getUsername(), savedUser.getId(), role.getName());
 
-        log.info("User created successfully with ID: {}", savedUserDto.getId());
-
-        log.info("BEGIN BUILDING TICKETS:");
-        CreationTicketsRequestDTO creationTicketsRequestDTO = CreationTicketsRequestDTO.builder()
-                .countA(2)
-                .countB(2)
-                .build();
-
-        if (creationTicketsRequestDTO.getCountA() < 0 || creationTicketsRequestDTO.getCountB() < 0) {
-            throw new IllegalArgumentException("Ticket counts cannot be negative");
+        return userMapper.toDto(savedUser);
+    }
+    /// Vérifier si le rôle existe dans la BD
+    private Role resolveRole(RoleDTO roleDTO) {
+        if (roleDTO == null) {
+            throw new IllegalArgumentException("Le rôle doit être fourni");
         }
-
-        List<Ticket> ticketsToSave = new ArrayList<>();
-        LocalDateTime creationTime = LocalDateTime.now();
-
-        // Create Type A tickets
-        for (int i = 0; i < creationTicketsRequestDTO.getCountA(); i++) {
-            Ticket ticketA = Ticket.builder()
-                    .type(TicketType.A)
-                    .price(100.0)
-                    .status(TicketStatus.AVAILABLE)
-                    .booked(false)
-                    .creationDate(creationTime)
-                    .user(user)
-                    .build();
-            ticketsToSave.add(ticketA);
+        if (roleDTO.getId() != null) {
+            return roleRepository.findById(roleDTO.getId())
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Rôle non trouvé avec l'ID: " + roleDTO.getId()));
         }
-
-        // Create Type B tickets
-        for (int i = 0; i < creationTicketsRequestDTO.getCountB(); i++) {
-            Ticket ticketB = Ticket.builder()
-                    .type(TicketType.B)
-                    .price(150.0)
-                    .status(TicketStatus.AVAILABLE)
-                    .booked(false)
-                    .creationDate(creationTime)
-                    .user(user)
-                    .build();
-            ticketsToSave.add(ticketB);
+        if (roleDTO.getName() != null && !roleDTO.getName().isBlank()) {
+            return roleRepository.findByName(roleDTO.getName())
+                    .orElseThrow(() -> new ResourceNotFoundException(
+                            "Rôle non trouvé avec le nom: " + roleDTO.getName()));
         }
-
-        // Use saveAll for efficient batch insertion
-        List<Ticket> savedTickets = ticketRepository.saveAll(ticketsToSave);
-
-        creationTicketsRequestDTO.setTicketDTO(ticketMapper.toDtoSet(savedTickets));
-
-        log.info("Successfully created tickets {} with requests {}",
-                savedTickets.size(), creationTicketsRequestDTO);
-
-        return savedUserDto;
+        throw new IllegalArgumentException("L'ID ou le nom du rôle doit être fourni");
     }
 
     @Override
+    @Transactional(readOnly = true)
     public UserDTO authenticate(String username, String password) {
         log.info("Tentative d'authentification pour l'utilisateur: {}", username);
 
@@ -155,112 +107,101 @@ public class UserServiceImpl implements UserService {
                 });
 
         // Vérification du mot de passe
-        // ⚠️IMPORTANT : Dans un système de production, utilisez BCryptPasswordEncoder !
-        //if (!user.getPassword().equals(password)) {
-        if (!passwordEncoder.matches(password, user.getPassword())) {  //ICI
+        // Dans un système de production, utilisez BCryptPasswordEncoder !
+        if (!passwordEncoder.matches(password, user.getPassword())) {
             log.warn("Mot de passe incorrect pour l'utilisateur: {}", username);
             throw new IllegalArgumentException("Mot de passe incorrect");
         }
-
         log.info("Authentification réussie pour: {}", username);
         return userMapper.toDto(user);
     }
 
     @Override
+    @Transactional(readOnly = true)
     public List<UserDTO> readUsers() {
-        List<User> users = userRepository.findAll();
-
-        return users.stream()
+        return userRepository.findAll().stream()
                 .map(userMapper::toDto)
                 .collect(Collectors.toList());
     }
-
     @Override
-    public UserDTO updateUser(UserDTO userDto) {
-
-        log.info("Updating user details: {}", userDto);
-
-        User existingUser = userRepository.findById(userDto.getId())
-                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
-                        "User not found with ID: {0}", userDto.getId())));
-
-        existingUser.setUsername(userDto.getUsername());
-        existingUser.setFirstName(userDto.getFirstName());
-        existingUser.setLastName(userDto.getLastName());
-        existingUser.setEmail(userDto.getEmail());
-
-        User updatedUser = userRepository.save(existingUser);
-
-        log.info("User updated successfully with username: {}", updatedUser.getUsername());
-
-        return userMapper.toDto(updatedUser);
-    }
-
-    @Override
-    public void deleteUser(Long userId) {
-
-        log.info("Deleting user with userId: {}", userId);
-
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
-                        "User not found with ID: {0}", userId)));
-        userRepository.delete(user);
-
-        log.info("deleteUser end ok - userId: {}", userId);
-    }
-    @Override
-    public void updatePassword(Long userId, String password) {
-
-        log.info("Updating password for user with userId: {}", userId);
-
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
-                        "User not found with ID: {0}", userId)));
-
-       // user.setPassword(password); // In a real application, ensure to hash the password before saving
-        user.setPassword(passwordEncoder.encode(password));  //ICI
-
-        log.debug("Password updated for userId: {}", userId);
-
-        userRepository.save(user);
-    }
-
-    @Override
+    @Transactional(readOnly = true)
     public UserDTO readUserByUserId(Long userId) {
-
-        log.info("Reading user by userId: {}", userId);
-
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
-                        "User not found with ID: {0}", userId)));
-        return userMapper.toDto(user);
+        return userMapper.toDto(findUserOrThrow(userId));
     }
     @Override
+    @Transactional(readOnly = true)
     public UserDTO readUserByUsername(String username) {
-
-        log.info("Reading user by username: {}", username);
-
         User user = userRepository.findByUsername(username)
                 .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
                         "User not found with username: {0}", username)));
         return userMapper.toDto(user);
     }
+    @Transactional
     @Override
-    public void logout(String username) {
-        log.info("Déconnexion de l'utilisateur : {}", username);
+    public UserDTO updateUser(UserDTO userDto) {
+
+        User existingUser = findUserOrThrow(userDto.getId());
+
+        // Chargement et vérification username
+        if (userDto.getUsername() != null
+                && !userDto.getUsername().equals(existingUser.getUsername())) {
+            if (userRepository.existsByUsername(userDto.getUsername())) {
+                throw new IllegalArgumentException(
+                        "Ce nom d'utilisateur est déjà utilisé");
+            }
+            existingUser.setUsername(userDto.getUsername());
+        }
+
+        existingUser.setFirstName(userDto.getFirstName());
+        existingUser.setLastName(userDto.getLastName());
+        existingUser.setEmail(userDto.getEmail());
+        // Le rôle et le mot de passe ne se modifient pas ici
+
+        User updatedUser = userRepository.save(existingUser);
+        log.info("User updated successfully with username: {}", updatedUser.getUsername());
+        return userMapper.toDto(updatedUser);
     }
+    @Transactional
+    @Override
+    public void updatePassword(Long userId, String password) {
+        if (password == null || password.length() < MIN_PASSWORD_LENGTH) {
+            throw new IllegalArgumentException(
+                    "Le mot de passe doit contenir au moins " + MIN_PASSWORD_LENGTH + " caractères");
+        }
+        User user = findUserOrThrow(userId);
+        user.setPassword(passwordEncoder.encode(password));
+        userRepository.save(user);
+        log.info("Password updated for userId: {}", userId);
+    }
+    @Transactional
     @Override
     public void updateFcmToken(Long userId, String fcmToken) {
-        log.info("Mise à jour du FCM token pour userId: {}", userId);
-
-        User user = userRepository.findById(userId)
-                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
-                        "User not found with ID: {0}", userId)));
-
+        User user = findUserOrThrow(userId);
         user.setFcmToken(fcmToken);
         userRepository.save(user);
+        log.info("✅ FCM token updated for : {}", user.getUsername());
+    }
+    @Transactional
+    @Override
+    public void deleteUser(Long userId) {
+        User user = findUserOrThrow(userId);
+        // Can't delete user if they have tickets
+        if (ticketRepository.existsByUser(user)) {
+            throw new IllegalStateException(
+                    "Impossible de supprimer un utilisateur qui possède des tickets");
+        }
+        userRepository.delete(user);
+        log.info("User deleted - userId: {}", userId);
+    }
+    @Override
+    public void logout(String username) {
+        log.info("Déconnexion de : {}", username);
+    }
 
-        log.info("✅ FCM token mis à jour pour: {}", user.getUsername());
+    private User findUserOrThrow(Long userId) {
+        return userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
+                        "User not found with ID: {0}", userId)));
     }
 }
 

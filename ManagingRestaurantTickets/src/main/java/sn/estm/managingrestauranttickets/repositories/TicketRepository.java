@@ -12,81 +12,13 @@ import sn.estm.managingrestauranttickets.enumerations.TicketType;
 
 @Repository
 public interface TicketRepository extends JpaRepository<Ticket, Long> {
-    /**
-     * Retrieves a list of tickets associated with the specified user
-     */
-    List<Ticket> findByUser(User user);
 
-    /**
-     * Retrieves list of tickets by user, ticketType, booked, ticketStatus
-     * @param user
-     * @param type
-     * @param booked
-     * @param status
-     * @return
-     */
-    List<Ticket> findByUserAndTypeAndBookedAndStatus(
-            User user,
-            TicketType type,
-            boolean booked,
-            TicketStatus status
-    );
+    /** Tickets d'un utilisateur par type et statut */
+    List<Ticket> findByUserAndTypeAndStatus(User user, TicketType type, TicketStatus status);
 
-    /**
-     * Retrieves a user's tickets by status and ticketStatus
-     * @param user The owner user
-     * @param booked Booking status (true = reserved)
-     * @param status Ticket status (BOOKED, USED, AVAILABLE)
-     * @return List of tickets matching the criteria
-     */
-    List<Ticket> findByUserAndBookedAndStatus(User user, boolean booked, TicketStatus status);
-
-    /**
-     * Retrieves a user's tickets by ticket status
-     * @param user The owner user
-     * @param status Ticket status (BOOKED, USED, AVAILABLE)
-     * @return List of tickets matching the criteria
-     */
-    List<Ticket> findByUserAndStatus(User user, TicketStatus status);
-
-    /**
-     * Retrieves all tickets by booking status and ticket status
-     * Used for overall statistics(statistiques globales)
-     * @param booked Booking status (true)
-     * @param status Ticket status (BOOKED, USED, AVAILABLE)
-     * @return List of tickets matching the criteria
-     */
-    List<Ticket> findByBookedAndStatus(boolean booked, TicketStatus status);
-
-    /**
-     * Retrieves all tickets by ticket status
-     * @param status Ticket status (BOOKED, USED, AVAILABLE)
-     * @return List of tickets matching the status
-     */
-    List<Ticket> findByStatus(TicketStatus status);
-
-    /*  Not used
-       List<Ticket> findByBooked(boolean booked);
-       List<Ticket> findByUserId(Long userId);
-
-    *//**
-     * Checks if a ticket with the specified status exists in the repository.
-     * @param status the status to check for existence
-     * @return {@code true} if a ticket with the given status exists, {@code false} otherwise
-     *//*
-    boolean existsByStatus(TicketStatus status);
-
-    *//**
-     * @param id the unique identifier of the ticket to find
-     * @return an Optional containing the Ticket entity with the specified ticket ID if found, or an empty Optional if not found
-     *//*
-    Optional<Ticket> findById(Long id);
-
-    *//**
-     * @param userId the unique identifier of the user whose tickets are to be retrieved
-     * @param status the status of the tickets to filter by (e.g., "ACTIVE", "USED", etc.)
-     * @return a list of tickets objects matching the given user ID and status
-     *//*
-    List<Ticket> findByUserIdAndStatus(Long userId, TicketStatus status);
-    */
+    /** Nombre de tickets d'un utilisateur par statut */
+    long countByUserAndStatus(User user, TicketStatus status);
+    /** Nombre total de tickets par statut */
+    long countByStatus(TicketStatus status);
+    boolean existsByUser(User user);
 }

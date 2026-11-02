@@ -29,11 +29,6 @@ public class TicketStatisticsDTO {
     private GlobalTicketStats globalStats;
 
     /**
-     * Statistiques des tickets disponibles (non achetés, non débités)
-     */
-    private AvailableTicketsStats availableStats;
-
-    /**
      * Statistiques individuelles d'un utilisateur (étudiant)
      */
     @Data
@@ -61,18 +56,5 @@ public class TicketStatisticsDTO {
         private Long totalPurchasedTickets;     // Total tickets achetés (tous utilisateurs)
         private Long totalDebitedTickets;       // Total tickets débités (tous comptes)
         private Long totalTicketsProcessed;     // Total tickets achetés + débités
-    }
-
-    /**
-     * Statistiques des tickets disponibles (status = AVAILABLE)
-     */
-    @Data
-    @NoArgsConstructor
-    @AllArgsConstructor
-    @Builder
-    public static class AvailableTicketsStats {
-        private Integer typeATicketsAvailable;   // Tickets Type A disponibles
-        private Integer typeBTicketsAvailable;   // Tickets Type B disponibles
-        private Integer totalTicketsAvailable;   // Total tickets disponibles (A + B)
     }
 }

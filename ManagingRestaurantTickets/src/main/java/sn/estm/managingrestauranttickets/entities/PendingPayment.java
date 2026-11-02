@@ -40,19 +40,20 @@ public class PendingPayment {
     private String transactionId;
 
     /** ID de l'utilisateur qui a initié le paiement */
+    @Column(nullable = false)
     private Long userId;
 
-    /** IDs des tickets sélectionnés (stockés sous forme "1,2,3") */
-    @Column(length = 500)
-    private String ticketIds;
+    /** Nombre de tickets Type A commandés */
+    @Column(nullable = false)
+    @Builder.Default
+    private Integer countA = 0;
 
-    /** Nombre de tickets Type A à régénérer après achat */
-    private Integer countA;
+    /** Nombre de tickets Type B commandés */
+    @Column(nullable = false)
+    @Builder.Default
+    private Integer countB = 0;
 
-    /** Nombre de tickets Type B à régénérer après achat */
-    private Integer countB;
-
-    /** Montant total du paiement */
+    /** Montant total du paiement en FCFA */
     private Double amount;
 
     /** Statut:PENDING (en attente), COMPLETED(réussi), FAILED */
@@ -61,6 +62,7 @@ public class PendingPayment {
     private PaymentStatus status;
 
     /** Date de création de l'enregistrement */
+    @Column(nullable = false, updatable = false)
     private LocalDateTime createdAt;
 
     /** Date de dernière mise à jour */

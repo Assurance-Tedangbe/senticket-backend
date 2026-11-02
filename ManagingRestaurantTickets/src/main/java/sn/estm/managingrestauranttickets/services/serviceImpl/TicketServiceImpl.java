@@ -2,7 +2,6 @@
 package sn.estm.managingrestauranttickets.services.serviceImpl;
 
 import java.text.MessageFormat;
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -14,10 +13,9 @@ import org.springframework.transaction.annotation.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
+import sn.estm.managingrestauranttickets.config.TicketPricing;
 import sn.estm.managingrestauranttickets.dto.TicketDTO;
-import sn.estm.managingrestauranttickets.dto.customisedto.CreationTicketsRequestDTO;
 import sn.estm.managingrestauranttickets.dto.customisedto.DebitAccountRequestDTO;
-import sn.estm.managingrestauranttickets.dto.customisedto.PurchaseTicketsRequestDTO;
 import sn.estm.managingrestauranttickets.dto.customisedto.TransferTicketsRequestDTO;
 import sn.estm.managingrestauranttickets.dto.customisedto.CancelTransferTicketsRequestDTO;
 import sn.estm.managingrestauranttickets.dto.customisedto.DebitStudentDTO;
@@ -61,26 +59,6 @@ public class TicketServiceImpl implements TicketService {
     private final PasswordEncoder passwordEncoder;  // For password validation
     private final NotificationService notificationService;
 
-    @Transactional
-    @Override
-    public List<TicketDTO> createTickets(CreationTicketsRequestDTO creationTicketsRequestDTO) {
-
-        log.info(" Creating tickets with requests {}", creationTicketsRequestDTO);
-
-        if (creationTicketsRequestDTO.getCountA() < 0 || creationTicketsRequestDTO.getCountB() < 0) {
-            throw new IllegalArgumentException("Ticket counts cannot be negative");
-        }
-
-        List<Ticket> ticketsToSave = new ArrayList<>();
-
-        // Use saveAll for efficient batch insertion
-        List<Ticket> savedTickets = ticketRepository.saveAll(ticketsToSave);
-
-        return savedTickets.stream()
-                .map(ticketMapper::toDto)
-                .collect(Collectors.toList());
-    }
-
     @Override
     public List<TicketDTO> readTickets() {
         List<Ticket> tickets = ticketRepository.findAll();
@@ -90,206 +68,56 @@ public class TicketServiceImpl implements TicketService {
                 .collect(Collectors.toList());
     }
 
-    /// Integ Paydunya
-
+    /// Integ Paydunya ----------------------------------------------------------------------
+    /// executePurchase : crée les tickets au moment du paiement ----------------------------
     @Transactional
-    @Override
-    public List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTicketsRequestDTO) {
-        log.info("Purchasing tickets request: {}", purchaseTicketsRequestDTO);
+    public List<TicketDTO> executePurchase(Long userId, int countA, int countB) {
 
-        // Appel à la méthode réutilisable
-        return executePurchase(
-                purchaseTicketsRequestDTO.getPurchaseUserDTO().getUserId(),
-                purchaseTicketsRequestDTO.getSelectedTicketIds()
-        );
-    }
+        log.info("ACHAT — userId: {}, typeA: {}, typeB: {}", userId, countA, countB);
 
-    // Cette méthode contient toute la logique d'achat
-    // Appelée par:
-    //   - purchaseTickets() (ancienne méthode)
-    //   - PaymentServiceImpl.confirmPayment() (nouveau flux PayDunya)
-    @Transactional
-    public List<TicketDTO> executePurchase(Long userId, List<Long> ticketIds) {
-
-        log.info("EXÉCUTION DE L'ACHAT POUR L'UTILISATEUR: {} ", userId);
-        log.info("Ticket IDs: {}", ticketIds);
+        if (countA < 0 || countB < 0 || (countA + countB) == 0) {
+            throw new IllegalArgumentException(
+                    "La commande doit contenir au moins un ticket");
+        }
 
         // 1. Vérifier que l'utilisateur existe
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new ResourceNotFoundException(
-                        MessageFormat.format("User not found with ID: {0}", userId)));
+                        MessageFormat.format(
+                                "Utilisateur non trouvé avec ID: {0}", userId)));
 
         // 2. Vérifier que l'utilisateur a le rôle ETUDIANT
         if (!user.getRole().getName().equals("ETUDIANT")) {
-            throw new IllegalStateException("Only ETUDIANT can purchase tickets");
+            throw new IllegalStateException(
+                    "Seuls les ETUDIANT peuvent acheter des tickets");
         }
 
-        // 3. Récupérer et valider les tickets
-        List<Ticket> tickets = ticketRepository.findAllById(ticketIds);
+        // 3. créer les tickets et les associer à l'utilisateur
+        List<Ticket> tickets = new ArrayList<>();
+        for (int i = 0; i < countA; i++) tickets.add(buildTicket(TicketType.A, user));
+        for (int i = 0; i < countB; i++) tickets.add(buildTicket(TicketType.B, user));
 
-        // Check if all tickets were found
-        if (tickets.size() != ticketIds.size()) {
-            throw new ResourceNotFoundException("One or more tickets not found");
-        }
+        List<Ticket> saved = ticketRepository.saveAll(tickets);
+        log.info("✅ {} tickets créés pour: {}", saved.size(), user.getUsername());
 
-        // 4. Validate tickets and calculate total price + count ticket types
-        double totalPrice = 0.0;
-        List<Ticket> availableTickets = new ArrayList<>();
-        int countAPurchased = 0;
-        int countBPurchased = 0;
+        // 4. RECORD PURCHASE TRANSACTION : Enregistrer dans l'historique des transactions
+        transactionHistoryService.recordPurchase(user, saved, TicketPricing.total(countA, countB));
 
-        for (Ticket ticket : tickets) {
-            // Check eligibility for purchase: NOT booked AND TicketStatus.AVAILABLE
-            if (ticket.isBooked() || ticket.getStatus() != TicketStatus.AVAILABLE) {
-                throw new IllegalStateException(MessageFormat.format(
-                        "Ticket with ID: {0} is not available for purchase",
-                        ticket.getId()));
-            }
 
-            // Ensure ticket price is set based on type
-            if (ticket.getPrice() == null) {
-                if (ticket.getType() == TicketType.A) {
-                    ticket.setPrice(100.0);
-                } else if (ticket.getType() == TicketType.B) {
-                    ticket.setPrice(150.0);
-                } else {
-                    throw new IllegalStateException(MessageFormat.format(
-                            "Invalid ticket type for ticket ID: {0}", ticket.getId()));
-                }
-            }
-
-            totalPrice += ticket.getPrice();
-            availableTickets.add(ticket);
-
-            // Count ticket types
-            if (ticket.getType() == TicketType.A) {
-                countAPurchased++;
-            } else if (ticket.getType() == TicketType.B) {
-                countBPurchased++;
-            }
-        }
-
-        // 5. Mettre à jour les tickets achetés
-        List<Ticket> inPurchasingTickets = new ArrayList<>();
-        for (Ticket ticket : availableTickets) {
-            ticket.setBooked(true);
-            ticket.setStatus(TicketStatus.BOOKED);
-            ticket.setUser(user);
-            //collect purchased tickets
-            inPurchasingTickets.add(ticket);
-        }
-        List<Ticket> purchasedTickets = ticketRepository.saveAll(inPurchasingTickets);
-
-        // 6. BEGIN BUILDING TICKETS
-        log.info("BEGIN BUILDING TICKETS - Type A: {}, Type B: {}",
-                countAPurchased, countBPurchased);
-
-        if (countAPurchased > 0 || countBPurchased > 0) {
-            List<Ticket> newTicketsToSave = new ArrayList<>();
-            LocalDateTime creationTime = LocalDateTime.now();
-
-            for (int i = 0; i < countAPurchased; i++) {
-                Ticket ticketA = Ticket.builder()
-                        .type(TicketType.A)
-                        .price(100.0)
-                        .status(TicketStatus.AVAILABLE)
-                        .booked(false)
-                        .creationDate(creationTime)
-                        .user(user)
-                        .build();
-                newTicketsToSave.add(ticketA);
-            }
-
-            for (int i = 0; i < countBPurchased; i++) {
-                Ticket ticketB = Ticket.builder()
-                        .type(TicketType.B)
-                        .price(150.0)
-                        .status(TicketStatus.AVAILABLE)
-                        .booked(false)
-                        .creationDate(creationTime)
-                        .user(user)
-                        .build();
-                newTicketsToSave.add(ticketB);
-            }
-
-            // Use saveAll for efficient batch insertion
-            ticketRepository.saveAll(newTicketsToSave);
-
-            log.info("{} nouveaux tickets créés", newTicketsToSave.size());
-        }
-
-        // 7. RECORD PURCHASE TRANSACTION : Enregistrer dans l'historique des transactions
-        transactionHistoryService.recordPurchase(user, purchasedTickets);
-
-        log.info("Achat réussi pour l'utilisateur: {}, {} tickets", user.getUsername(), purchasedTickets.size());
-
-        // 8. Retourner les tickets achetés en DTO
-        return purchasedTickets.stream()
+        // 5. Retourner les tickets achetés en DTO
+        return saved.stream()
                 .map(ticketMapper::toDto)
                 .collect(Collectors.toList());
     }
 
-    /*
-    // ✅ NOUVELLE SIGNATURE — crée les tickets au moment du paiement
-    @Transactional
-    public List<TicketDTO> executePurchase(Long userId, int countA, int countB) {
-
-    log.info("EXÉCUTION DE L'ACHAT POUR L'UTILISATEUR: {}", userId);
-    log.info("Tickets à créer — Type A: {}, Type B: {}", countA, countB);
-
-    if (countA < 0 || countB < 0 || (countA + countB) == 0) {
-        throw new IllegalArgumentException("Le nombre de tickets doit être positif");
+    private Ticket buildTicket(TicketType type, User owner) {
+        return Ticket.builder()
+                .type(type)
+                .price(TicketPricing.priceOf(type))
+                .status(TicketStatus.BOOKED)
+                .user(owner)
+                .build();
     }
-
-    // 1. Vérifier que l'utilisateur existe et est ETUDIANT
-    User user = userRepository.findById(userId)
-            .orElseThrow(() -> new ResourceNotFoundException(
-                    MessageFormat.format("User not found with ID: {0}", userId)));
-
-    if (!user.getRole().getName().equals("ETUDIANT")) {
-        throw new IllegalStateException("Only ETUDIANT can purchase tickets");
-    }
-
-    // 2. Créer les tickets DIRECTEMENT en statut BOOKED
-    //    → Pas de sélection d'IDs existants, pas de vérification AVAILABLE
-    List<Ticket> newTickets = new ArrayList<>();
-    LocalDateTime now = LocalDateTime.now();
-
-    for (int i = 0; i < countA; i++) {
-        newTickets.add(Ticket.builder()
-                .type(TicketType.A)
-                .price(100.0)
-                .status(TicketStatus.BOOKED)  // ← directement BOOKED
-                .booked(true)                  // ← directement true
-                .creationDate(now)
-                .user(user)
-                .build());
-    }
-
-    for (int i = 0; i < countB; i++) {
-        newTickets.add(Ticket.builder()
-                .type(TicketType.B)
-                .price(150.0)
-                .status(TicketStatus.BOOKED)  // ← directement BOOKED
-                .booked(true)                  // ← directement true
-                .creationDate(now)
-                .user(user)
-                .build());
-    }
-
-    List<Ticket> savedTickets = ticketRepository.saveAll(newTickets);
-    log.info("✅ {} tickets créés directement en BOOKED pour: {}",
-            savedTickets.size(), user.getUsername());
-
-    // 3. Enregistrer dans l'historique
-    transactionHistoryService.recordPurchase(user, savedTickets);
-
-    // 4. Retourner les tickets créés
-    return savedTickets.stream()
-            .map(ticketMapper::toDto)
-            .collect(Collectors.toList());
-}
-     */
 
     /// ******** debitAccount service *********
     @Transactional
@@ -381,6 +209,7 @@ public class TicketServiceImpl implements TicketService {
         }
     }
 
+    // ── validateTickets —─────────
     private void validateTickets(List<Ticket> tickets, int expectedCount, User student) {
         // Check if all tickets were found
         if (tickets.size() != expectedCount) {
@@ -397,31 +226,30 @@ public class TicketServiceImpl implements TicketService {
                         "Ticket " + ticket.getId() + " does not belong to the specified student");
             }
 
-            // Check eligibility for debit (must be booked with BOOKED status)
-            if (!ticket.isBooked() || ticket.getStatus() != TicketStatus.BOOKED) {
+            // Check eligibility for debit
+            if (ticket.getStatus() != TicketStatus.BOOKED) {
                 throw new IllegalStateException(MessageFormat.format(
-                        "Ticket ID {0} is not eligible for debit. Must be booked with BOOKED status. Current: {1}, Booked: {2}",
-                        ticket.getId(), ticket.getStatus(), ticket.isBooked()));
+                        "Ticket ID {0} is not eligible for debit. Current status: {1}",
+                        ticket.getId(), ticket.getStatus()));
             }
         }
     }
 
+    // ── processTicketsDebit ──────────────────────────────────────────
     private void processTicketsDebit(List<Ticket> tickets, User porter, User student) {
-        List<Ticket> updatedTickets = new ArrayList<>();
 
         for (Ticket ticket : tickets) {
-            ticket.setStatus(TicketStatus.USED);
-            updatedTickets.add(ticket);
+            ticket.markAsUsed();
         }
         // Batch save all updated tickets
-        ticketRepository.saveAll(updatedTickets);
+        ticketRepository.saveAll(tickets);
 
-        log.debug("Batch updated {} tickets to USED status", updatedTickets);
+        log.debug("Batch updated {} tickets to USED status", tickets);
 
         log.info("RECORD DEBIT TRANSACTION:");
 
         // Après avoir validé et traité le débit, enregistrement dans l'historique unifié
-        transactionHistoryService.recordDebit(porter, student, updatedTickets);
+        transactionHistoryService.recordDebit(porter, student, tickets);
 
         // ✅ Notifier l'étudiant du débit (ne fait jamais échouer le débit)
         if (student.getFcmToken() != null) {
@@ -434,6 +262,7 @@ public class TicketServiceImpl implements TicketService {
         }
     }
 
+    // ── getPurchasedTicketsByUser ───────────────────
     @Override
     public List<TicketDTO> getPurchasedTicketsByUser(Long userId, TicketType ticketType) {
         log.info("Récupération des tickets achetés pour l'utilisateur ID: {} avec type: {}", userId, ticketType);
@@ -446,16 +275,12 @@ public class TicketServiceImpl implements TicketService {
         // 2. Vérifier que l'utilisateur a le rôle ETUDIANT ---
         if (!user.getRole().getName().equals("ETUDIANT")) {
             throw new IllegalStateException(
-                    "Seuls les utilisateurs avec le rôle ETUDIANT peuvent avoir des tickets achetés");
+                    "Seuls les utilisateurs avec le rôle ETUDIANT peuvent avoir des tickets");
         }
 
-        // 3. Récupérer les tickets selon les critères: user, ticketType, booked & ticketStatus
-        List<Ticket> tickets = ticketRepository.findByUserAndTypeAndBookedAndStatus(
-                user,
-                ticketType,
-                true,
-                TicketStatus.BOOKED
-        );
+        // 3. Récupérer les tickets selon les critères: user, ticketType & ticketStatus
+        List<Ticket> tickets = ticketRepository.findByUserAndTypeAndStatus(
+                user, ticketType, TicketStatus.BOOKED);
 
         log.info("Trouvé {} tickets achetés pour l'utilisateur ID: {} avec type: {}",
                 tickets.size(), userId, ticketType);
@@ -587,20 +412,12 @@ public class TicketServiceImpl implements TicketService {
             throw new IllegalArgumentException("Invalid password");
         }
     }
-  /*  private void validatePassword(String providedPassword, String storedPasswordHash) {
-        if (!matches(providedPassword, storedPasswordHash)) {
-            throw new IllegalArgumentException("Invalid password");
-        }
-    }*/
+
     private List<Ticket> findTicketsForTransfer(User sender, TicketType ticketType, int numberOfTickets) {
 
-        // Find sender's tickets that are booked, have BOOKED status, and match the ticket type
-        List<Ticket> availableTickets = ticketRepository.findByUserAndTypeAndBookedAndStatus(
-                sender,
-                ticketType,
-                true,
-                TicketStatus.BOOKED
-        );
+        // Find sender's tickets that have BOOKED status, and match the ticket type
+        List<Ticket> availableTickets = ticketRepository
+                .findByUserAndTypeAndStatus(sender, ticketType, TicketStatus.BOOKED);
 
         if (availableTickets.size() < numberOfTickets) {
             throw new IllegalStateException(String.format(
@@ -609,7 +426,8 @@ public class TicketServiceImpl implements TicketService {
         }
 
         // Select the first N tickets (you might want to use a specific selection strategy)
-        return availableTickets.subList(0, numberOfTickets);
+        // new ArrayList<>(...) évite de manipuler une vue subList pendant le saveAll.
+        return new ArrayList<>(availableTickets.subList(0, numberOfTickets));
     }
 
     private TransactionHistory processTicketTransfer(List<Ticket> tickets, User sender, User recipient) {
@@ -774,120 +592,74 @@ public class TicketServiceImpl implements TicketService {
 
     /// ********* end of cancelTransferTickets service ***********
 
+    /// ------— getTicketStatistics()---------------------------------------------------
     /**
      * Service pour récupérer les statistiques des tickets
-     * Retourne toutes les statistiques demandées : par utilisateur, globales, disponibles
+     * Retourne toutes les statistiques demandées : par utilisateur et globales
      * @param userId (optionnel) - Si fourni, retourne les stats uniquement pour cet utilisateur
      * @return TicketStatisticsDTO contenant toutes les statistiques
      */
     @Override
+    @Transactional(readOnly = true)
     public TicketStatisticsDTO getTicketStatistics(Long userId) {
         log.info("Fetching ticket statistics for userId: {}", userId);
 
-        // 1. Récupérer tous les utilisateurs ayant le rôle ETUDIANT
-        List<User> students = userRepository.findByRoleName("ETUDIANT");
+        // 1. Étudiants concernés : un seul si userId fourni, sinon tous
+        List<User> students;
+        if (userId != null) {
+            User u = userRepository.findById(userId)
+                    .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + userId));
+            students = "ETUDIANT".equals(u.getRole().getName()) ? List.of(u) : List.of();
+        } else {
+            students = userRepository.findByRoleName("ETUDIANT");
+        }
         log.debug("Found {} students", students.size());
 
-        // 2. Construire les statistiques par utilisateur
+        // 2. stats par utilisateur (requêtes COUNT) --------------------------------------
         // Map pour stocker les statistiques de chaque étudiant (clé = username)
         Map<String, TicketStatisticsDTO.UserTicketStats> userStatsMap = new LinkedHashMap<>();
-
         for (User student : students) {
             // 2.1 Récupérer les tickets achetés par l'utilisateur
-            // Critères: booked=true ET status=BOOKED
-            List<Ticket> purchasedTickets = ticketRepository.findByUserAndBookedAndStatus(
-                    student, true, TicketStatus.BOOKED);
-            log.debug("Student {} has {} purchased tickets", student.getUsername(), purchasedTickets.size());
-
+            int purchased = (int) ticketRepository.countByUserAndStatus(student, TicketStatus.BOOKED);
+            log.debug("Student {} has {} purchased tickets", student.getUsername(), purchased);
             // 2.2 Récupérer les tickets débités pour cet utilisateur
-            // Critères: status=USED
-            List<Ticket> debitedTickets = ticketRepository.findByUserAndStatus(
-                    student, TicketStatus.USED);
-            log.debug("Student {} has {} debited tickets", student.getUsername(), debitedTickets.size());
+            int debited   = (int) ticketRepository.countByUserAndStatus(student, TicketStatus.USED);
+            log.debug("Student {} has {} debited tickets", student.getUsername(), debited);
 
-            // 2.3 Construire les statistiques pour cet étudiant
-            TicketStatisticsDTO.UserTicketStats stats = TicketStatisticsDTO.UserTicketStats.builder()
-                    .userId(student.getId())
-                    .username(student.getUsername())
-                    .firstName(student.getFirstName())
-                    .lastName(student.getLastName())
-                    .purchasedTicketsCount(purchasedTickets.size())   // Nombre de tickets achetés
-                    .debitedTicketsCount(debitedTickets.size())       // Nombre de tickets débités
-                    .totalTicketsCount(purchasedTickets.size() + debitedTickets.size()) // Total
-                    .build();
-
-            userStatsMap.put(student.getUsername(), stats);
+            // 2.3 stats pour cet utilisateur étudiant
+            userStatsMap.put(student.getUsername(),
+                    TicketStatisticsDTO.UserTicketStats.builder()
+                            .userId(student.getId())
+                            .username(student.getUsername())
+                            .firstName(student.getFirstName())
+                            .lastName(student.getLastName())
+                            .purchasedTicketsCount(purchased) // Nombre de tickets achetés
+                            .debitedTicketsCount(debited) // Nombre de tickets débités
+                            .totalTicketsCount(purchased + debited) // Total = achetés + débités
+                            .build());
         }
 
-        // ==================== 3. Filtrer par utilisateur spécifique si userId fourni ====================
-        // Si un userId est passé en paramètre, on ne garde que les stats de cet utilisateur
-        if (userId != null) {
-            User specificUser = userRepository.findById(userId)
-                    .orElseThrow(() -> new ResourceNotFoundException("User not found with ID: " + userId));
+        // 3. Stats globales -------------------------------------------------
+        // 3.1 Total des tickets achetés (tous utilisateurs confondus)
+        long totalPurchased = ticketRepository.countByStatus(TicketStatus.BOOKED);
+        log.debug("Total purchased tickets (all users): {}", totalPurchased);
+        // 3.2 Total des tickets débités (tous utilisateurs confondus)
+        long totalDebited   = ticketRepository.countByStatus(TicketStatus.USED);
+        log.debug("Total debited tickets (all users): {}", totalDebited);
 
-            // Créer une nouvelle map filtrée
-            Map<String, TicketStatisticsDTO.UserTicketStats> filteredStats = new LinkedHashMap<>();
-            if (userStatsMap.containsKey(specificUser.getUsername())) {
-                filteredStats.put(specificUser.getUsername(), userStatsMap.get(specificUser.getUsername()));
-                log.info("Filtered statistics for user: {}", specificUser.getUsername());
-            } else {
-                log.warn("User {} is not a student or has no tickets", specificUser.getUsername());
-            }
-            userStatsMap = filteredStats;
-        }
+        TicketStatisticsDTO.GlobalTicketStats globalStats =
+                TicketStatisticsDTO.GlobalTicketStats.builder()
+                        .totalPurchasedTickets(totalPurchased) // Total achetés
+                        .totalDebitedTickets(totalDebited)  // Total débités
+                        .totalTicketsProcessed(totalPurchased + totalDebited) // Total = achetés + débités
+                        .build();
 
-        // ==================== 4. Calculer les statistiques globales ====================
-        // 4.1 Total des tickets achetés (tous utilisateurs confondus)
-        // Critères: booked=true ET status=BOOKED
-        List<Ticket> allPurchasedTickets = ticketRepository.findByBookedAndStatus(true, TicketStatus.BOOKED);
-        long totalPurchasedTickets = allPurchasedTickets.size();
-        log.debug("Total purchased tickets (all users): {}", totalPurchasedTickets);
-
-        // 4.2 Total des tickets débités (tous utilisateurs confondus)
-        // Critères: status=USED
-        List<Ticket> allDebitedTickets = ticketRepository.findByStatus(TicketStatus.USED);
-        long totalDebitedTickets = allDebitedTickets.size();
-        log.debug("Total debited tickets (all users): {}", totalDebitedTickets);
-
-        // 4.3 Construction des statistiques globales
-        TicketStatisticsDTO.GlobalTicketStats globalStats = TicketStatisticsDTO.GlobalTicketStats.builder()
-                .totalPurchasedTickets(totalPurchasedTickets)                    // Total achetés
-                .totalDebitedTickets(totalDebitedTickets)                        // Total débités
-                .totalTicketsProcessed(totalPurchasedTickets + totalDebitedTickets) // Total traité
-                .build();
-
-        // ==================== 5. Calculer les statistiques des tickets disponibles ====================
-        // Tickets disponibles = status = AVAILABLE (ni achetés, ni débités)
-        List<Ticket> availableTickets = ticketRepository.findByStatus(TicketStatus.AVAILABLE);
-
-        // 5.1 Compter les tickets Type A disponibles
-        long typeATicketsAvailable = availableTickets.stream()
-                .filter(t -> t.getType() == TicketType.A)
-                .count();
-        log.debug("Available Type A tickets: {}", typeATicketsAvailable);
-
-        // 5.2 Compter les tickets Type B disponibles
-        long typeBTicketsAvailable = availableTickets.stream()
-                .filter(t -> t.getType() == TicketType.B)
-                .count();
-        log.debug("Available Type B tickets: {}", typeBTicketsAvailable);
-
-        // 5.3 Construction des statistiques des tickets disponibles
-        TicketStatisticsDTO.AvailableTicketsStats availableStats = TicketStatisticsDTO.AvailableTicketsStats.builder()
-                .typeATicketsAvailable((int) typeATicketsAvailable)     // Type A disponibles
-                .typeBTicketsAvailable((int) typeBTicketsAvailable)     // Type B disponibles
-                .totalTicketsAvailable(availableTickets.size())         // Total disponibles
-                .build();
-
-        // ==================== 6. Construire la réponse finale ====================
-        log.info("Statistics built successfully: {} users, {} global, {} available",
-                userStatsMap.size(), totalPurchasedTickets + totalDebitedTickets, availableTickets.size());
+        // 4. la réponse finale -----------------------------------------
+        log.info("Statistics built: {} users, {} global tickets", userStatsMap.size(), totalPurchased + totalDebited);
 
         return TicketStatisticsDTO.builder()
-                .userStats(userStatsMap)      // Statistiques par utilisateur
-                .globalStats(globalStats)     // Statistiques globales
-                .availableStats(availableStats) // Statistiques des tickets disponibles
+                .userStats(userStatsMap)  // Stats par utilisateur
+                .globalStats(globalStats) // Stats globales
                 .build();
     }
-
 }

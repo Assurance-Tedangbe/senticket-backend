@@ -8,6 +8,7 @@ import jakarta.annotation.PostConstruct;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import sn.estm.managingrestauranttickets.config.TicketPricing;
 import sn.estm.managingrestauranttickets.dto.paymentdtos.PaymentInitiationDTO;
 import sn.estm.managingrestauranttickets.dto.paymentdtos.PaymentResponseDTO;
 import sn.estm.managingrestauranttickets.entities.PendingPayment;
@@ -78,9 +79,9 @@ public class PaymentServiceImpl implements PaymentService {
                 .build();
     }
 
-    /** ÉTAPE 1: INITIATION DU PAIEMENT
+    /** ÉTAPE 1 : INITIATION DU PAIEMENT
      * Crée une facture PayDunya et retourne l'URL de paiement à Flutter
-     * Déroulement:
+     * Déroulement :
      * 1. Sauvegarde du panier dans pending_payments
      * 2. Construction de la facture PayDunya (JSON)
      * 3. Envoi de la requête à l'API PayDunya
@@ -90,127 +91,118 @@ public class PaymentServiceImpl implements PaymentService {
     @Transactional
     @Override
     public PaymentResponseDTO initiatePayment(PaymentInitiationDTO request) {
-        log.info("INITIATION PAIEMENT SENTICKET ");
-        log.info("User ID: {}, Montant: {} FCFA", request.getUserId(), request.getTotalAmount());
+        log.info("INITIATION PAIEMENT — userId: {}, A: {}, B: {}",
+                request.getUserId(), request.getCountA(), request.getCountB());
+
+        // Validation de la commande
+        if (request.getCountA() < 0 || request.getCountB() < 0
+                || (request.getCountA() + request.getCountB()) == 0) {
+            throw new IllegalArgumentException("La commande doit contenir au moins un ticket");
+        }
+
+        // Le montant est TOUJOURS recalculé côté serveur
+        double totalAmount = TicketPricing.total(request.getCountA(), request.getCountB());
+        if (Math.abs(totalAmount - request.getTotalAmount()) > 0.01) {
+            log.warn("Montant client {} ≠ montant serveur {}", request.getTotalAmount(), totalAmount);
+            throw new IllegalArgumentException("Montant incohérent avec la quantité de tickets");
+        }
 
         try {
-            /// 1. Sauvegarde du panier
-            // Convertit la liste d'IDs de tickets en chaîne CSV : [1, 2] → "1,2"
-            // Cette chaîne sera stockée dans la colonne ticket_ids de pending_payments
-            String ticketIdsStr = request.getSelectedTicketIds().stream()
-                    .map(String::valueOf)
-                    .collect(Collectors.joining(","));
-
-            // Crée un enregistrement temporaire dans pending_payments avec statut PENDING
-            // Le transactionId est d'abord un ID temporaire (TMP_xxx)
-            // Il sera remplacé par le vrai token PayDunya après la réponse de l'API
-            PendingPayment pending = PendingPayment.builder()
-                    .transactionId(generateTempId())
-                    .userId(request.getUserId())
-                    .ticketIds(ticketIdsStr)
-                    .countA(request.getCountA())
-                    .countB(request.getCountB())
-                    .amount(request.getTotalAmount())
-                    .build();
-            pending = pendingPaymentRepository.save(pending);
-            log.info("Panier sauvegardé avec ID: {}", pending.getId());
-
-            /// 2. Récupération des informations utilisateur
-            // Nécessaire pour renseigner le champ "customer" dans la facture PayDunya
             User user = userRepository.findById(request.getUserId())
                     .orElseThrow(() -> new RuntimeException("Utilisateur non trouvé"));
 
-            /// 3. Construction de l'objet STORE
+            if (!"ETUDIANT".equals(user.getRole().getName())) {
+                throw new IllegalStateException("Seuls les ETUDIANT peuvent acheter des tickets");
+            }
+
+            /// 1. Sauvegarde de la commande (aucun ticket n'existe encore)
+            PendingPayment pending = PendingPayment.builder()
+                    .transactionId(generateTempId())
+                    .userId(request.getUserId())
+                    .countA(request.getCountA())
+                    .countB(request.getCountB())
+                    .amount(totalAmount)
+                    .build();
+            pending = pendingPaymentRepository.save(pending);
+            log.info("Commande sauvegardée avec ID: {}", pending.getId());
+
+            /// 2. STORE
             // Informations de la boutique affichées sur la page de paiement PayDunya
             Map<String, String> store = new HashMap<>();
             store.put("name", "Senticket - Gestion de Tickets");
             store.put("tagline", "Achetez et transférez vos tickets facilement");
             store.put("postal_address", "Dakar, Sénégal");
             store.put("phone", "+221 77 766 99 94");
-            store.put("logo_url", "https://senticket.sn/logo.png");
-            store.put("website_url", "https://senticket.sn");
+            store.put("logo_url", " ");
+            store.put("website_url", " ");
 
-            /// 4. Construction des ARTICLES (items)
+            /// 3. ARTICLES (items)
             // PayDunya attend un objet JSON avec des clés numérotées : "item_1", "item_2"
             // (pas un tableau JSON, mais un objet avec des clés string)
             Map<String, Object> items = new HashMap<>();
             int itemIndex = 1;
-
             if (request.getCountA() > 0) {
-                Map<String, Object> itemA = new HashMap<>();
-                itemA.put("name", "Ticket Type A");
-                itemA.put("quantity", request.getCountA());
-                itemA.put("unit_price", 100.0);
-                itemA.put("total_price", request.getCountA() * 100.0);
-                itemA.put("description", "Ticket pour petit-déjeuner");
-                items.put("item_" + itemIndex++, itemA);
+                items.put("item_" + itemIndex++, buildItem("Ticket Type A",
+                        "Ticket pour petit-déjeuner", request.getCountA(), TicketPricing.PRICE_A));
             }
-
             if (request.getCountB() > 0) {
-                Map<String, Object> itemB = new HashMap<>();
-                itemB.put("name", "Ticket Type B");
-                itemB.put("quantity", request.getCountB());
-                itemB.put("unit_price", 150.0);
-                itemB.put("total_price", request.getCountB() * 150.0);
-                itemB.put("description", "Ticket pour déjeuner/dîner");
-                items.put("item_" + itemIndex++, itemB);
+                items.put("item_" + itemIndex++, buildItem("Ticket Type B",
+                        "Ticket pour déjeuner/dîner", request.getCountB(), TicketPricing.PRICE_B));
             }
 
-            /// 5. Construction des TAXES (optionnel - vide si pas de taxes)
-            Map<String, Object> taxes = new HashMap<>();
-            // Si vous avez des taxes, ajoutez-les ici:
-            // taxes.put("tva", Map.of("name", "TVA (18%)", "amount", request.getTotalAmount() * 0.18));
-
-            /// 6. Construction du CLIENT
+            /// 4. CLIENT
             Map<String, String> customer = new HashMap<>();
             customer.put("name", user.getFirstName() + " " + user.getLastName());
             customer.put("email", user.getEmail() != null ? user.getEmail() : "");
             customer.put("phone", "");
 
-            /// 7. Configuration des CANAUX DE PAIEMENT (channels)(optionnel)
-            /// Moyens de paiement disponibles pour le client
+            /// 5. FACTURE (payload JSON envoyé à PayDunya)
+            // Objet principal de la requête PayDunya, contient tous les détails du paiement
+            Map<String, Object> invoice = new HashMap<>();
+            invoice.put("total_amount", totalAmount);
+            invoice.put("description", "Achat et transfert de tickets avec Senticket");
+            invoice.put("items", items);
+            invoice.put("taxes", new HashMap<String, Object>());
+            invoice.put("customer", customer);
+            invoice.put("channels", Arrays.asList("wave-senegal", "orange-money-senegal"));
+
+            /*/// 6. TAXES (optionnel - vide si pas de taxes)
+            Map<String, Object> taxes = new HashMap<>();
+            // Si vous avez des taxes, ajoutez-les ici:
+            // taxes.put("tva", Map.of("name", "TVA (18%)", "amount", request.getTotalAmount() * 0.18));
+
+            /// 7. CANAUX DE PAIEMENT (channels)(optionnel)
             // L'utilisateur choisira entre Wave et Orange Money sur la page PayDunya
             List<String> channels = Arrays.asList(
                     "wave-senegal",           // Wave Sénégal
                     "orange-money-senegal"   // Orange Money Sénégal
-            );
+            );*/
 
-            /// 8. Construction de l'objet INVOICE (Facture)
-            // Objet principal de la requête PayDunya, contient tous les détails du paiement
-            Map<String, Object> invoice = new HashMap<>();
-            invoice.put("total_amount", request.getTotalAmount());
-            invoice.put("description", "Achat de tickets Senticket");
-            invoice.put("items", items);
-            invoice.put("taxes", taxes);
-            invoice.put("customer", customer);
-            invoice.put("channels", channels);
-
-            /// 9. Construction des DONNÉES PERSONNALISÉES (custom_data)(optionnel)
-            /// Ces données seront retournées par PayDunya dans le webhook
-            // Permet d'identifier quel utilisateur et quels tickets sont concernés
+            /// 6. DONNÉES PERSONNALISÉES (custom_data)(optionnel)
+            // Ces données seront retournées par PayDunya dans le webhook
             // sans avoir à maintenir un état côté serveur
             Map<String, String> customData = new HashMap<>();
             customData.put("user_id", String.valueOf(request.getUserId()));
-            customData.put("ticket_ids", ticketIdsStr);
+            customData.put("count_a", String.valueOf(request.getCountA()));
+            customData.put("count_b", String.valueOf(request.getCountB()));
 
-            /// 10. Construction des ACTIONS (URLs de callback)
-            // return_url  : URL du navigateur après paiement réussi (ouverte dans le WebView)
-            // cancel_url  : URL si l'utilisateur clique "Annuler" sur la page PayDunya
+            /// 7. ACTIONS (URLs de callback)
+            // return_url : URL du navigateur après paiement réussi (ouverte dans le WebView)
+            // cancel_url : URL si l'utilisateur clique "Annuler" sur la page PayDunya
             // callback_url: URL appelée serveur→serveur par PayDunya après confirmation (IPN)
-            // Doit être une URL publique (ngrok en développement)
             Map<String, String> actions = new HashMap<>();
             actions.put("return_url", payDunyaConfig.getReturnUrl());
             actions.put("cancel_url", payDunyaConfig.getCancelUrl());
             actions.put("callback_url", payDunyaConfig.getCallbackUrl());
 
-            /// 11. Assemblage du corps de la requête COMPLET
+            /// 8. Assemblage du corps de la requête COMPLET
             Map<String, Object> requestBody = new HashMap<>();
             requestBody.put("store", store);
             requestBody.put("invoice", invoice);
             requestBody.put("custom_data", customData);
             requestBody.put("actions", actions);
 
-            /// 12. Envoi de la requête à PayDunya
+            /// 9. Envoi de la requête à PayDunya
             // Sérialise le payload Java en JSON string
             String jsonBody = objectMapper.writeValueAsString(requestBody);
             log.info("Requête PayDunya: {}", jsonBody);
@@ -232,8 +224,7 @@ public class PaymentServiceImpl implements PaymentService {
 
             try (Response response = httpClient.newCall(payDunyaRequest).execute()) {
                 String responseBody = response.body() != null ? response.body().string() : "";
-                log.info("Status code: {}", response.code());
-                log.info("Réponse PayDunya: {}", responseBody);
+                log.info("Status code: {}, réponse: {}", response.code(), responseBody);
 
                 // Si PayDunya retourne un code HTTP d'erreur (4xx, 5xx), lever une exception
                 if (!response.isSuccessful()) {
@@ -245,10 +236,11 @@ public class PaymentServiceImpl implements PaymentService {
                 JsonNode jsonResponse = objectMapper.readTree(responseBody);
 
                 // Vérifie le code de réponse métier PayDunya : "00" = succès
-                String responseCode = jsonResponse.has("response_code") ? jsonResponse.get("response_code").asText() : "";
+                String responseCode = jsonResponse.path("response_code").asText("");
+               // String responseCode = jsonResponse.has("response_code") ? jsonResponse.get("response_code").asText() : "";
                 if (!"00".equals(responseCode)) {
-                    String responseText = jsonResponse.has("response_text") ? jsonResponse.get("response_text").asText() : "Erreur inconnue";
-                    throw new RuntimeException("PayDunya error: " + responseCode + " - " + responseText);
+                    throw new RuntimeException("PayDunya error: " + responseCode + " - "
+                            + jsonResponse.path("response_text").asText("Erreur inconnue"));
                 }
 
                 /// La réponse contient directement le token et l'URL
@@ -267,12 +259,12 @@ public class PaymentServiceImpl implements PaymentService {
                 pending.setTransactionId(transactionId);
                 pendingPaymentRepository.save(pending);
 
-                log.info("PAIEMENT INITIALISE - Transaction ID: {}, URL: {}", transactionId, paymentUrl);
+                log.info("PAIEMENT INITIALISÉ — Transaction: {}", transactionId);
 
                 // Retourne le DTO avec l'URL et le token à Flutter
                 return PaymentResponseDTO.builder()
-                        .paymentUrl(paymentUrl)             // URL PayDunya à ouvrir dans WebView
-                        .transactionId(transactionId)       // Token pour le polling de statut
+                        .paymentUrl(paymentUrl)           // URL PayDunya à ouvrir dans WebView
+                        .transactionId(transactionId)     // Token pour le polling de statut
                         .status(PaymentStatus.PENDING)
                         .message("Redirection vers la page de paiement")
                         .build();
@@ -284,41 +276,15 @@ public class PaymentServiceImpl implements PaymentService {
         }
     }
 
-    /* nouveau
-    @Transactional
-    @Override
-    public PaymentResponseDTO initiatePayment(PaymentInitiationDTO request) {
-    log.info("INITIATION PAIEMENT — userId: {}, countA: {}, countB: {}, montant: {}",
-            request.getUserId(), request.getCountA(),
-            request.getCountB(), request.getTotalAmount());
-
-    // Validation
-    if (!request.isValid()) {
-        throw new IllegalArgumentException(
-            "Commande invalide: au moins un ticket requis");
+    private Map<String, Object> buildItem(String name, String description, int qty, double unitPrice) {
+        Map<String, Object> item = new HashMap<>();
+        item.put("name", name);
+        item.put("description", description);
+        item.put("quantity", qty);
+        item.put("unit_price", unitPrice);
+        item.put("total_price", qty * unitPrice);
+        return item;
     }
-
-    // Vérifier le montant cohérent
-    double expectedAmount = request.getCountA() * 100.0 + request.getCountB() * 150.0;
-    if (Math.abs(expectedAmount - request.getTotalAmount()) > 0.01) {
-        throw new IllegalArgumentException(
-            "Montant incohérent avec la quantité de tickets");
-    }
-
-    try {
-        // ✅ Sauvegarde sans ticketIds — juste countA, countB, montant
-        PendingPayment pending = PendingPayment.builder()
-                .transactionId(generateTempId())
-                .userId(request.getUserId())
-                .ticketIds("")      // ← vide, plus utilisé
-                .countA(request.getCountA())
-                .countB(request.getCountB())
-                .amount(request.getTotalAmount())
-                .build();
-        pending = pendingPaymentRepository.save(pending);
-
-        // ... reste du code inchangé (appel PayDunya, URL, etc.)
-     */
 
     /**
      * Génère un ID temporaire avant la confirmation PayDunya
@@ -347,86 +313,27 @@ public class PaymentServiceImpl implements PaymentService {
     @Override
     @Transactional
     public void confirmPayment(String transactionId) {
-        log.info("CONFIRMATION PAIEMENT SENTICKET");
-        log.info("Transaction ID: {}", transactionId);
+        log.info("CONFIRMATION PAIEMENT — Transaction: {}", transactionId);
 
+        PendingPayment pending;
         try {
+            // Verrou : un second appel simultané (webhook + return) attend ici
             // ✅ Récupérer d'abord le panier avant de vérifier le statut
-            PendingPayment pending = pendingPaymentRepository
-                    .findByTransactionId(transactionId)
-                    .orElseThrow(() -> new RuntimeException(
-                            "Transaction non trouvée: " + transactionId));
-
-            // ✅ Idempotence — ne pas retraiter si déjà COMPLETED
-            if (PaymentStatus.COMPLETED.equals(pending.getStatus())) {
-                log.warn("Transaction {} déjà traitée — ignorée", transactionId);
-                return;
-            }
-
-            // Vérification du statut auprès de PayDunya
-            String status = checkPaymentStatus(transactionId);
-            log.info("Statut PayDunya: {}", status);
-
-            if (!"COMPLETED".equals(status)) {
-                log.warn("Paiement non complété - Statut: {}", status);
-                return;
-            }
-
-            // ✅ .trim() sur chaque ID pour éviter les espaces parasites
-            List<Long> ticketIds = Arrays.stream(pending.getTicketIds().split(","))
-                    .map(String::trim)
-                    .filter(s -> !s.isEmpty())
-                    .map(Long::parseLong)
-                    .collect(Collectors.toList());
-
-            log.info("Exécution achat - userId: {}, ticketIds: {}",
-                    pending.getUserId(), ticketIds);
-
-            ticketService.executePurchase(pending.getUserId(), ticketIds);
-
-            pending.setStatus(PaymentStatus.COMPLETED);
-            pendingPaymentRepository.save(pending);
-
-            log.info("✅ Paiement confirmé pour userId: {}", pending.getUserId());
-
-            // Notifier l'étudiant du paiement confirmé
-            // Récupérer l'utilisateur pour avoir son FCM token
-            userRepository.findById(pending.getUserId()).ifPresent(user -> {
-                if (user.getFcmToken() != null) {
-                    notificationService.notifyPaymentSuccess(
-                            user.getFcmToken(),
-                            pending.getCountA(),
-                            pending.getCountB(),
-                            pending.getAmount()
-                    );
-                }
-            });
-
+            pending = pendingPaymentRepository
+                    .findByTransactionIdForUpdate(transactionId)
+                    .orElseThrow(() -> new RuntimeException("Transaction non trouvée: " + transactionId));
         } catch (Exception e) {
-            log.error("❌ Erreur confirmation paiement: {}", e.getMessage(), e);
-            // Ne pas re-throw — le webhook doit toujours retourner 200 à PayDunya
+            log.error(" Commande introuvable: {}", e.getMessage());
+            return;
         }
-    }
 
-    /*
-    @Override
-    @Transactional
-    public void confirmPayment(String transactionId) {
-    log.info("CONFIRMATION PAIEMENT SENTICKET — Transaction: {}", transactionId);
-
-    try {
-        PendingPayment pending = pendingPaymentRepository
-                .findByTransactionId(transactionId)
-                .orElseThrow(() -> new RuntimeException(
-                        "Transaction non trouvée: " + transactionId));
-
-        // Idempotence
+        // Idempotence : le 2e appel voit COMPLETED et s'arrête
         if (PaymentStatus.COMPLETED.equals(pending.getStatus())) {
             log.warn("Transaction {} déjà traitée — ignorée", transactionId);
             return;
         }
 
-        // Vérification PayDunya
+        // Vérification du statut auprès de PayDunya
         String status = checkPaymentStatus(transactionId);
         log.info("Statut PayDunya: {}", status);
 
@@ -435,40 +342,36 @@ public class PaymentServiceImpl implements PaymentService {
             return;
         }
 
-        // ✅ NOUVEAU — utiliser countA et countB stockés dans PendingPayment
-        // Plus besoin de parser des ticketIds
-        int countA = pending.getCountA();
-        int countB = pending.getCountB();
+        int countA = pending.getCountA() != null ? pending.getCountA() : 0;
+        int countB = pending.getCountB() != null ? pending.getCountB() : 0;
 
-        log.info("Création tickets — userId: {}, countA: {}, countB: {}",
-                pending.getUserId(), countA, countB);
+        log.info("Création tickets — userId: {}, A: {}, B: {}", pending.getUserId(), countA, countB);
 
-        // ✅ NOUVELLE SIGNATURE — crée les tickets au moment de la confirmation
+        // Si ça échoue, l'exception remonte : rollback complet, statut reste PENDING
         ticketService.executePurchase(pending.getUserId(), countA, countB);
 
         pending.setStatus(PaymentStatus.COMPLETED);
         pendingPaymentRepository.save(pending);
 
-        log.info("✅ Paiement confirmé — tickets créés pour userId: {}",
-                pending.getUserId());
+        log.info("✅ Paiement confirmé pour userId: {}", pending.getUserId());
 
-        // Notification push si FCM token disponible
-        userRepository.findById(pending.getUserId()).ifPresent(user -> {
-            if (user.getFcmToken() != null) {
-                notificationService.notifyPaymentSuccess(
-                    user.getFcmToken(),
-                    countA,
-                    countB,
-                    pending.getAmount()
-                );
-            }
-        });
-
-    } catch (Exception e) {
-        log.error("❌ Erreur confirmation paiement: {}", e.getMessage(), e);
+        // Notifier l'étudiant du paiement confirmé
+        // Récupérer l'utilisateur pour avoir son FCM token
+        // Notification : ne doit jamais annuler l'achat
+        try {
+            userRepository.findById(pending.getUserId()).ifPresent(user -> {
+                if (user.getFcmToken() != null) {
+                    notificationService.notifyPaymentSuccess(
+                            user.getFcmToken(),
+                            countA,
+                            countB,
+                            pending.getAmount());
+                }
+            });
+        } catch (Exception e) {
+            log.warn("Notification non envoyée: {}", e.getMessage());
+        }
     }
-}
-     */
 
     /**
      * Vérifie le statut d'une transaction auprès de PayDunya

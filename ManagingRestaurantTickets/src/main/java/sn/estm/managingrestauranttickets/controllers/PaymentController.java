@@ -186,7 +186,6 @@ public class PaymentController {
         } catch (Exception e) {
             log.error("Erreur confirmPayment: {}", e.getMessage(), e);
         }
-
         return ResponseEntity.ok("OK");
     }
 

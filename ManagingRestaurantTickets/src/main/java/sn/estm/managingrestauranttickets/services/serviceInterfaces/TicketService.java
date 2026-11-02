@@ -4,9 +4,7 @@ package sn.estm.managingrestauranttickets.services.serviceInterfaces;
 import java.util.List;
 
 import sn.estm.managingrestauranttickets.dto.TicketDTO;
-import sn.estm.managingrestauranttickets.dto.customisedto.CreationTicketsRequestDTO;
 import sn.estm.managingrestauranttickets.dto.customisedto.DebitAccountRequestDTO;
-import sn.estm.managingrestauranttickets.dto.customisedto.PurchaseTicketsRequestDTO;
 import sn.estm.managingrestauranttickets.dto.customisedto.TransferTicketsRequestDTO;
 import sn.estm.managingrestauranttickets.dto.customisedto.CancelTransferTicketsRequestDTO;
 import sn.estm.managingrestauranttickets.dto.historydto.TransactionHistoryDTO;
@@ -16,11 +14,7 @@ import sn.estm.managingrestauranttickets.enumerations.TicketType;
 
 public interface TicketService {
 
-    List<TicketDTO> createTickets(CreationTicketsRequestDTO creationTicketsRequestDTO);
-
     List<TicketDTO> readTickets();
-
-    List<TicketDTO> purchaseTickets(PurchaseTicketsRequestDTO purchaseTicketsRequestDTO);
 
     void debitAccount(DebitAccountRequestDTO debitAccountRequestDTO);
 
@@ -39,17 +33,7 @@ public interface TicketService {
 
     /**
      * Exécute l'achat de tickets (logique complète)
-     * Cette méthode est réutilisable et contient TOUTE la logique d'achat
-     *
-     * @param userId ID de l'utilisateur
-     * @param ticketIds IDs des tickets à acheter
      * @return Liste des tickets achetés en DTO
      */
-    List<TicketDTO> executePurchase(Long userId, List<Long> ticketIds);
-
-    // Remplacer l'ancienne signature :
-    // List<TicketDTO> executePurchase(Long userId, List<Long> ticketIds);
-
-    // Par la nouvelle :
-   // List<TicketDTO> executePurchase(Long userId, int countA, int countB);
+    List<TicketDTO> executePurchase(Long userId, int countA, int countB);
 }

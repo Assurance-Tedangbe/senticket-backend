@@ -55,7 +55,7 @@ public class DataLoader implements CommandLineRunner {
                 .password(passwordEncoder.encode("Admin@1234"))
                 .firstName("Super")
                 .lastName("Admin")
-                .email("admin@senticket.sn")
+                .email("admin.senticket@gmail.com")
                 .role(adminRole)
                 .build();
 
