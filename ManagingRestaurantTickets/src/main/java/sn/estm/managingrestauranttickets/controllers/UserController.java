@@ -13,6 +13,7 @@ import sn.estm.managingrestauranttickets.services.serviceInterfaces.UserService;
 import org.springframework.security.core.Authentication;
 
 import java.util.List;
+import java.util.Map;
 
 @Slf4j
 //@Data
@@ -187,6 +188,17 @@ public class UserController {
         boolean isAdmin = authentication.getAuthorities().stream()
                 .anyMatch(a -> a.getAuthority().equals("ADMIN"));
         return connectedUsername.equals(targetUsername) || isAdmin;
+    }
+
+    @PutMapping("/{userId}/fcm-token")
+    public ResponseEntity<Void> updateFcmToken(
+            @PathVariable Long userId,
+            @RequestBody Map<String, String> body) {
+        String fcmToken = body.get("fcmToken");
+        if (fcmToken != null && !fcmToken.isBlank()) {
+            userService.updateFcmToken(userId, fcmToken);
+        }
+        return ResponseEntity.ok().build();
     }
 }
 

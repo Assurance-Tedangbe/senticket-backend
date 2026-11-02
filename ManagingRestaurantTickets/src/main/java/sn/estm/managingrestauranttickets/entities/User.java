@@ -37,7 +37,6 @@ public class User {
 
     @Column(nullable = false)
     @Size(min = 3, max = 100)
-    //@JsonProperty(access = JsonProperty.Access.WRITE_ONLY)
     private String password;
 
     @Column(name = "firstName")
@@ -62,4 +61,7 @@ public class User {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "role_id")
     private Role role;
+
+    @Column(name = "fcm_token")
+    private String fcmToken;
 }

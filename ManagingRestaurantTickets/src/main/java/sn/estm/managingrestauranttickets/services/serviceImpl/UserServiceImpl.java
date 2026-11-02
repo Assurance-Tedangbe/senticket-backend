@@ -16,7 +16,6 @@ import sn.estm.managingrestauranttickets.entities.User;
 import sn.estm.managingrestauranttickets.enumerations.TicketStatus;
 import sn.estm.managingrestauranttickets.enumerations.TicketType;
 import sn.estm.managingrestauranttickets.exceptions.ForbiddenActionException;
-import sn.estm.managingrestauranttickets.exceptions.InvalidCredentialsException;
 import sn.estm.managingrestauranttickets.exceptions.ResourceNotFoundException;
 import sn.estm.managingrestauranttickets.mappers.TicketMapper;
 import sn.estm.managingrestauranttickets.mappers.UserMapper;
@@ -209,7 +208,6 @@ public class UserServiceImpl implements UserService {
 
         log.info("deleteUser end ok - userId: {}", userId);
     }
-
     @Override
     public void updatePassword(Long userId, String password) {
 
@@ -237,7 +235,6 @@ public class UserServiceImpl implements UserService {
                         "User not found with ID: {0}", userId)));
         return userMapper.toDto(user);
     }
-
     @Override
     public UserDTO readUserByUsername(String username) {
 
@@ -248,15 +245,22 @@ public class UserServiceImpl implements UserService {
                         "User not found with username: {0}", username)));
         return userMapper.toDto(user);
     }
-
     @Override
     public void logout(String username) {
         log.info("Déconnexion de l'utilisateur : {}", username);
     }
-
     @Override
-    public void scanCodeQr(UserDTO userDto) {
+    public void updateFcmToken(Long userId, String fcmToken) {
+        log.info("Mise à jour du FCM token pour userId: {}", userId);
 
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new ResourceNotFoundException(MessageFormat.format(
+                        "User not found with ID: {0}", userId)));
+
+        user.setFcmToken(fcmToken);
+        userRepository.save(user);
+
+        log.info("✅ FCM token mis à jour pour: {}", user.getUsername());
     }
 }
 

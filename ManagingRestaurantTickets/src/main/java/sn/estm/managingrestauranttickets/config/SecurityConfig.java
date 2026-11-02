@@ -1,4 +1,4 @@
-package sn.estm.managingrestauranttickets.security.config;
+package sn.estm.managingrestauranttickets.config;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -63,6 +63,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/api/users/{userId}").authenticated()
                         .requestMatchers(HttpMethod.GET, "/api/users/username/{username}").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/api/users/{userId}").authenticated()
+                        .requestMatchers(HttpMethod.PUT, "/api/users/{userId}/fcm-token").authenticated()
                         .requestMatchers(HttpMethod.PUT, "/api/users/password/{userId}").authenticated()
                         // Suppression : ADMIN seulement
                         .requestMatchers(HttpMethod.DELETE, "/api/users/{userId}").hasAuthority("ADMIN")

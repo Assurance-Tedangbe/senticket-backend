@@ -24,5 +24,6 @@ public interface UserService {
 
     void logout(String username);
 
-    void scanCodeQr(UserDTO userDto);
+    // sauvegarde du FCM token pour les notifications push
+    void updateFcmToken(Long userId, String fcmToken);
 }

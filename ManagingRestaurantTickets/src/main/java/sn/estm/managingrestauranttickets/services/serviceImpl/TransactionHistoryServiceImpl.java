@@ -11,7 +11,6 @@ import sn.estm.managingrestauranttickets.dto.historydto.TransactionHistoryDTO;
 import sn.estm.managingrestauranttickets.dto.historydto.TransactionHistoryResponseDTO;
 import sn.estm.managingrestauranttickets.entities.Ticket;
 import sn.estm.managingrestauranttickets.entities.TransactionHistory;
-import sn.estm.managingrestauranttickets.entities.TransfertHistory;
 import sn.estm.managingrestauranttickets.entities.User;
 import sn.estm.managingrestauranttickets.enumerations.TransactionType;
 import sn.estm.managingrestauranttickets.exceptions.ResourceNotFoundException;
