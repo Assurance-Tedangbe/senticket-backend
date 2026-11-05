@@ -177,6 +177,9 @@ public class UserServiceImpl implements UserService {
     @Override
     public void updateFcmToken(Long userId, String fcmToken) {
         User user = findUserOrThrow(userId);
+        userRepository.findByFcmToken(fcmToken).stream()
+                .filter(u -> !u.getId().equals(userId))
+                .forEach(u -> { u.setFcmToken(null); userRepository.save(u); });
         user.setFcmToken(fcmToken);
         userRepository.save(user);
         log.info("✅ FCM token updated for : {}", user.getUsername());

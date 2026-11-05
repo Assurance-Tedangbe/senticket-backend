@@ -51,5 +51,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
      * @return List of users with this role
      */
     List<User> findByRoleName(String roleName);
+    List<User> findByFcmToken(String fcmToken);
 }
 

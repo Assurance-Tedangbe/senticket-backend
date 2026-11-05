@@ -314,7 +314,6 @@ public class PaymentServiceImpl implements PaymentService {
     @Transactional
     public void confirmPayment(String transactionId) {
         log.info("CONFIRMATION PAIEMENT — Transaction: {}", transactionId);
-
         PendingPayment pending;
         try {
             // Verrou : un second appel simultané (webhook + return) attend ici
@@ -342,22 +341,22 @@ public class PaymentServiceImpl implements PaymentService {
             return;
         }
 
+        // countA et countB stockés dans PendingPayment
         int countA = pending.getCountA() != null ? pending.getCountA() : 0;
         int countB = pending.getCountB() != null ? pending.getCountB() : 0;
 
         log.info("Création tickets — userId: {}, A: {}, B: {}", pending.getUserId(), countA, countB);
 
+        // ✅ crée les tickets au moment de la confirmation
         // Si ça échoue, l'exception remonte : rollback complet, statut reste PENDING
         ticketService.executePurchase(pending.getUserId(), countA, countB);
 
         pending.setStatus(PaymentStatus.COMPLETED);
         pendingPaymentRepository.save(pending);
 
-        log.info("✅ Paiement confirmé pour userId: {}", pending.getUserId());
+        log.info("✅ Paiement confirmé — tickets créés pour userId: {}\",", pending.getUserId());
 
-        // Notifier l'étudiant du paiement confirmé
-        // Récupérer l'utilisateur pour avoir son FCM token
-        // Notification : ne doit jamais annuler l'achat
+        // Notifier l'utilisateur du paiement confirmé
         try {
             userRepository.findById(pending.getUserId()).ifPresent(user -> {
                 if (user.getFcmToken() != null) {
