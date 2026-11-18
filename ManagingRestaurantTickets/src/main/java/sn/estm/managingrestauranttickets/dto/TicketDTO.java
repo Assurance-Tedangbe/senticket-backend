@@ -14,7 +14,6 @@ import lombok.NoArgsConstructor;
 import sn.estm.managingrestauranttickets.enumerations.TicketStatus;
 import sn.estm.managingrestauranttickets.enumerations.TicketType;
 
-
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -29,15 +28,13 @@ public class TicketDTO {
     @NotNull(message = "The ticket price is required.")
     private Double price;
 
-    @Column(nullable = false)
-    @NotNull(message = "The booked status is required.")
-    private boolean booked;
-
     @NotBlank(message = "The ticket status is required.")
     private TicketStatus status;
 
-    @NotNull(message = "The ticket creation date is required.")
-    private LocalDateTime creationDate;
+    @NotNull(message = "The ticket purchase date is required.")
+    private LocalDateTime purchasedAt;
+
+    private LocalDateTime usedAt;
 
     @Valid
     @NotNull(message = "The user is required.")

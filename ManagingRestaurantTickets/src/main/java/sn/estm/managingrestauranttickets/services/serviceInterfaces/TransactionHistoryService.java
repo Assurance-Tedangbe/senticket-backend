@@ -27,7 +27,7 @@ public interface TransactionHistoryService {
             int size
     );
 
-    TransactionHistory recordPurchase(User purchaseUser, List<Ticket> tickets );
+    TransactionHistory recordPurchase(User purchaseUser, List<Ticket> tickets, double amount);
     TransactionHistory recordDebit(User porter, User student, List<Ticket> tickets);
     TransactionHistory recordTransfer(User sender, User recipient, List<Ticket> tickets);
 

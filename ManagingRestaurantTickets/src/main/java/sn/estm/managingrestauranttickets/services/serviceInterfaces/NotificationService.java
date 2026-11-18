@@ -1,7 +1,5 @@
 package sn.estm.managingrestauranttickets.services.serviceInterfaces;
-import com.google.firebase.messaging.FirebaseMessaging;
-import com.google.firebase.messaging.Message;
-import com.google.firebase.messaging.Notification;
+import com.google.firebase.messaging.*;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -28,9 +26,14 @@ public class NotificationService {
             if (data != null) builder.putAllData(data);
             String response = firebaseMessaging.send(builder.build());
             log.info("Notification envoyée: {}", response);
-        } catch (Exception e) {
-            // Ne jamais faire échouer l'opération principale
+        } catch (FirebaseMessagingException e) {
             log.error("Erreur notification (ignorée): {}", e.getMessage());
+            if (e.getMessagingErrorCode() == MessagingErrorCode.UNREGISTERED) {
+                log.warn("Token périmé, à supprimer: {}", fcmToken);
+                // optionnel : appeler userRepository pour mettre fcm_token à null
+            }
+        } catch (Exception e) {
+            log.error("Erreur notification ignorée: {}", e.getMessage());
         }
     }
 
@@ -40,7 +43,7 @@ public class NotificationService {
         send(fcmToken,
                 " Débit effectué",
                 ticketCount + " ticket(s) de type " + ticketType
-                        + " débité(s) par " + porterName,
+                        + " débité(s)",
                 Map.of("type", "DEBIT",
                         "count", String.valueOf(ticketCount),
                         "ticketType", ticketType));
@@ -50,8 +53,8 @@ public class NotificationService {
     public void notifyTransferReceived(String fcmToken, String senderName,
                                        int ticketCount, String ticketType) {
         send(fcmToken,
-                " Tickets transférés",
-                ticketCount + " ticket(s) de type " + ticketType +  " transféré(s)",
+                " Tickets reçus",
+                senderName + " vous a transféré " + ticketCount + " ticket(s) de type " + ticketType,
                 Map.of("type", "TRANSFER_RECEIVED",
                         "count", String.valueOf(ticketCount),
                         "ticketType", ticketType,
@@ -71,5 +74,29 @@ public class NotificationService {
                         "countA", String.valueOf(countA),
                         "countB", String.valueOf(countB),
                         "amount", String.valueOf(amount)));
+    }
+
+    /** Confirme à l'expéditeur que son transfert a été effectué */
+    public void notifyTransferSent(String fcmToken, String recipientName,
+                                   int ticketCount, String ticketType) {
+        send(fcmToken,
+                "Transfert effectué",
+                ticketCount + " ticket(s) de type " + ticketType
+                        + " envoyé(s) à " + recipientName,
+                Map.of("type", "TRANSFER_SENT",
+                        "count", String.valueOf(ticketCount),
+                        "ticketType", ticketType,
+                        "recipientName", recipientName));
+    }
+
+    public void notifyDebitConfirmed(String fcmToken, String studentName,
+                                     int ticketCount, String ticketType) {
+        send(fcmToken, "Débit confirmé",
+                 ticketCount + " ticket(s) de type "
+                        + ticketType + " debité(s) du compte de " + studentName,
+                Map.of("type", "DEBIT_CONFIRMED",
+                        "count", String.valueOf(ticketCount),
+                        "ticketType", ticketType,
+                        "studentName", studentName));
     }
 }

@@ -3,6 +3,7 @@
 
 package sn.estm.managingrestauranttickets.dto.paymentdtos;
 
+import jakarta.validation.constraints.Min;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
@@ -21,32 +22,20 @@ public class PaymentInitiationDTO {
     @NotNull(message = "L'ID utilisateur est requis")
     private Long userId;
 
-    /** IDs des tickets sélectionnés pour l'achat */
-    @NotNull(message = "La liste des tickets est requise")
-    private List<Long> selectedTicketIds;
-
     /** Montant total à payer (calculé côté frontend) */
     @NotNull(message = "Le montant est requis")
     @Positive(message = "Le montant doit être positif")
     private Double totalAmount;
 
-    /** Nombre de tickets Type A à créer après l'achat (pour maintenir le stock) */
+    /** Nombre de tickets Type A souhaités */
+    @Min(0)
     private int countA;
 
+    /** Nombre de tickets Type B souhaités */
+    @Min(0)
     private int countB;
 
     /*
-    // ✅ SUPPRIMÉ : selectedTicketIds — les tickets n'existent pas encore
-
-    @Min(0)
-    private int countA; // Nombre de tickets Type A souhaités
-
-    @Min(0)
-    private int countB; // Nombre de tickets Type B souhaités
-
-    @Positive
-    private double totalAmount; // countA * 100 + countB * 150
-
     // Validation métier
     public boolean isValid() {
         return (countA + countB) > 0 && totalAmount > 0;

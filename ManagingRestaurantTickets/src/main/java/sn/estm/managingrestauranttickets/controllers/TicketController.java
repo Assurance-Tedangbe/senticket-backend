@@ -20,7 +20,6 @@ import lombok.extern.slf4j.Slf4j;
 import sn.estm.managingrestauranttickets.dto.TicketDTO;
 import sn.estm.managingrestauranttickets.dto.customisedto.CancelTransferTicketsRequestDTO;
 import sn.estm.managingrestauranttickets.dto.customisedto.DebitAccountRequestDTO;
-import sn.estm.managingrestauranttickets.dto.customisedto.PurchaseTicketsRequestDTO;
 import sn.estm.managingrestauranttickets.dto.customisedto.TransferTicketsRequestDTO;
 import sn.estm.managingrestauranttickets.dto.historydto.TransactionHistoryDTO;
 import sn.estm.managingrestauranttickets.dto.statisticsdto.TicketStatisticsDTO;
@@ -49,16 +48,6 @@ public class TicketController {
         log.info("Fetched tickets: {}", tickets);
 
         return new ResponseEntity<>(tickets, HttpStatus.OK);
-    }
-
-    @PutMapping(value = "/purchase", consumes = "application/json", produces = "application/json")
-    public ResponseEntity<List<TicketDTO>> purchaseTickets(@Valid @RequestBody PurchaseTicketsRequestDTO purchaseTicketsRequestDTO) {
-
-        List<TicketDTO> purchasedTickets = ticketService.purchaseTickets(purchaseTicketsRequestDTO);
-
-        log.info("Tickets purchased successfully: {}", purchasedTickets);
-
-        return new ResponseEntity<>(purchasedTickets, HttpStatus.OK);
     }
 
     @PutMapping(value = "/debit", consumes = "application/json", produces = "application/json")

@@ -12,6 +12,7 @@ import sn.estm.managingrestauranttickets.dto.historydto.TransactionHistoryRespon
 import sn.estm.managingrestauranttickets.entities.Ticket;
 import sn.estm.managingrestauranttickets.entities.TransactionHistory;
 import sn.estm.managingrestauranttickets.entities.User;
+import sn.estm.managingrestauranttickets.enumerations.TicketType;
 import sn.estm.managingrestauranttickets.enumerations.TransactionType;
 import sn.estm.managingrestauranttickets.exceptions.ResourceNotFoundException;
 import sn.estm.managingrestauranttickets.mappers.TransactionHistoryMapper;
@@ -23,6 +24,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -101,79 +103,75 @@ public class TransactionHistoryServiceImpl implements TransactionHistoryService 
     }
 
     /// Méthodes utilitaires pour enregistrer les transactions
-
     @Transactional
-    public TransactionHistory recordPurchase(User purchaseUser, List<Ticket> tickets ) {
-        String ticketIds = tickets.stream()
-                .map(t -> t.getId().toString())
-                .collect(Collectors.joining(","));
-
-        String ticketTypes = tickets.stream()
-                .map(t -> t.getType().name())
-                .collect(Collectors.joining(","));
+    @Override
+    public TransactionHistory recordPurchase(User purchaser, List<Ticket> tickets, double amount) {
 
         TransactionHistory history = TransactionHistory.builder()
                 .transactionType(TransactionType.PURCHASE)
-                .date(LocalDateTime.now())
                 .ticketsCount(tickets.size())
-                .purchaser(purchaseUser)
-                .ticketIds(ticketIds)
-                .ticketTypes(ticketTypes)
+                .purchaser(purchaser)
+                .ticketIds(joinIds(tickets))
+                .ticketSummary(summarize(tickets))
+                .amount(amount)
                 .build();
 
-        log.info("Recorded purchase transaction for user: {}, tickets: {}", purchaseUser.getUsername(), tickets.size());
+        log.info("RecordPurchase for user: {}, tickets: {}", purchaser.getUsername(), tickets.size());
         return transactionHistoryRepository.save(history);
     }
 
     @Transactional
+    @Override
     public TransactionHistory recordDebit(User porter, User student, List<Ticket> tickets) {
-        String ticketIds = tickets.stream()
-                .map(t -> t.getId().toString())
-                .collect(Collectors.joining(","));
 
-        String ticketTypes = tickets.stream()
-                .map(t -> t.getType().name())
-                .collect(Collectors.joining(","));
-
+        double amount = tickets.stream().mapToDouble(Ticket::getPrice).sum();
         TransactionHistory history = TransactionHistory.builder()
                 .transactionType(TransactionType.DEBIT)
-                .date(LocalDateTime.now())
                 .ticketsCount(tickets.size())
                 .porter(porter)
                 .student(student)
-                .ticketIds(ticketIds)
-                .ticketTypes(ticketTypes)
+                .ticketIds(joinIds(tickets))
+                .ticketSummary(summarize(tickets))
+                .amount(amount)
                 .build();
 
-        log.info("Recorded debit transaction by porter: {} for student: {}, tickets: {}",
+        log.info("RecordDebit by porter: {} for student: {}, tickets: {}",
                 porter.getUsername(), student.getUsername(), tickets.size());
         return transactionHistoryRepository.save(history);
     }
 
     @Transactional
+    @Override
     public TransactionHistory recordTransfer(User sender, User recipient, List<Ticket> tickets) {
-        String ticketIds = tickets.stream()
-                .map(t -> t.getId().toString())
-                .collect(Collectors.joining(","));
-
-        String ticketTypes = tickets.stream()
-                .map(t -> t.getType().name())
-                .collect(Collectors.joining(","));
 
         TransactionHistory history = TransactionHistory.builder()
                 .transactionType(TransactionType.TRANSFER)
-                .date(LocalDateTime.now())
                 .ticketsCount(tickets.size())
                 .sender(sender)
                 .recipient(recipient)
-                .ticketIds(ticketIds)
-                .ticketTypes(ticketTypes)
+                .ticketIds(joinIds(tickets))
+                .ticketSummary(summarize(tickets))
                 .transferCanceled(false)
                 .build();
 
-        log.info("Recorded transfer transaction from: {} to: {}, tickets: {}",
+        log.info("RecordTransfer from: {} to: {}, tickets: {}",
                 sender.getUsername(), recipient.getUsername(), tickets.size());
         return transactionHistoryRepository.save(history);
+    }
+    private String joinIds(List<Ticket> tickets) {
+        return tickets.stream()
+                .map(t -> t.getId().toString())
+                .collect(Collectors.joining(","));
+    }
+
+    private String summarize(List<Ticket> tickets) {
+        long a = tickets.stream().filter(t -> t.getType() == TicketType.A).count();
+        long b = tickets.stream().filter(t -> t.getType() == TicketType.B).count();
+        // build a summary string like "2×A, 1×B"
+        List<String> parts = new ArrayList<>();
+        if (a > 0) parts.add(a + "×A");
+        if (b > 0) parts.add(b + "×B");
+        return String.join(", ", parts);
     }
 
     /**
