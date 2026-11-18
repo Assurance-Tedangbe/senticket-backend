@@ -235,7 +235,6 @@ public class TicketServiceImpl implements TicketService {
         }
     }
 
-    // ── processTicketsDebit ──────────────────────────────────────────
     private void processTicketsDebit(List<Ticket> tickets, User porter, User student) {
 
         for (Ticket ticket : tickets) {
@@ -245,24 +244,35 @@ public class TicketServiceImpl implements TicketService {
         ticketRepository.saveAll(tickets);
 
         log.debug("Batch updated {} tickets to USED status", tickets);
-
         log.info("RECORD DEBIT TRANSACTION:");
 
         // Après avoir validé et traité le débit, enregistrement dans l'historique unifié
         transactionHistoryService.recordDebit(porter, student, tickets);
 
-        // ✅ Notifier l'étudiant du débit (ne fait jamais échouer le débit)
+        String type = tickets.get(0).getType().name();
+
+        // ✅ Notifier l'utilisateur étudiant du débit de son compte
         if (student.getFcmToken() != null) {
             notificationService.notifyDebit(
                     student.getFcmToken(),
                     porter.getUsername(),
                     tickets.size(),
-                    tickets.get(0).getType().name()
+                    type
             );
+        } else {
+            log.warn("Pas de FCM token pour {} : notif de débit non reçue", student.getUsername());
+        }
+        if (porter.getFcmToken() != null) {
+            notificationService.notifyDebitConfirmed(
+                    porter.getFcmToken(),
+                    student.getUsername(),
+                    tickets.size(),
+                    type);
+        } else {
+            log.warn("Pas de FCM token pour {} : notif. de débit non envoyée", porter.getUsername());
         }
     }
 
-    // ── getPurchasedTicketsByUser ───────────────────
     @Override
     public List<TicketDTO> getPurchasedTicketsByUser(Long userId, TicketType ticketType) {
         log.info("Récupération des tickets achetés pour l'utilisateur ID: {} avec type: {}", userId, ticketType);
@@ -447,14 +457,29 @@ public class TicketServiceImpl implements TicketService {
         TransactionHistory history = transactionHistoryService.recordTransfer(
                 sender, recipient, tickets);
 
+        String type = tickets.get(0).getType().name();
+
         // ✅ Notifier le destinataire du transfert reçu
         if (recipient.getFcmToken() != null) {
             notificationService.notifyTransferReceived(
                     recipient.getFcmToken(),
                     sender.getUsername(),
                     tickets.size(),
+                    type
+            );
+        } else {
+            log.warn("Pas de FCM token pour {} — notif. non reçue", recipient.getUsername());
+        }
+        // ✅ Notifier l'expéditeur du transfert effectué
+        if (sender.getFcmToken() != null) {
+            notificationService.notifyTransferSent(
+                    sender.getFcmToken(),
+                    recipient.getUsername(),
+                    tickets.size(),
                     tickets.get(0).getType().name()
             );
+        }else {
+            log.warn("Pas de FCM token pour {} : notif. de transf. non envoyée", sender.getUsername());
         }
 
         return history;

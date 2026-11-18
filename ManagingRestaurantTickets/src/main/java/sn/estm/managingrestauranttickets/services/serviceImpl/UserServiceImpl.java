@@ -198,6 +198,10 @@ public class UserServiceImpl implements UserService {
     }
     @Override
     public void logout(String username) {
+        userRepository.findByUsername(username).ifPresent(u -> {
+            u.setFcmToken(null);
+            userRepository.save(u);
+        });
         log.info("Déconnexion de : {}", username);
     }
 
