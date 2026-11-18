@@ -24,11 +24,8 @@ import okhttp3.*;
 import org.springframework.transaction.annotation.Transactional;
 import java.io.IOException;
 import java.util.*;
-
 import sn.estm.managingrestauranttickets.services.serviceInterfaces.TicketService;
-
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service
@@ -64,10 +61,8 @@ public class PaymentServiceImpl implements PaymentService {
     /**
      * Initialisation du client HTTP après la construction du bean.
      * Configure les timeouts pour éviter les appels bloquants.
-     *
      * @PostConstruct garantit que cette méthode est appelée après l'injection
      * de toutes les dépendances mais avant la première utilisation du service.
-     *
      */
     @PostConstruct
     public void init() {
