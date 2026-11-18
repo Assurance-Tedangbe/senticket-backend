@@ -103,7 +103,6 @@ public class TicketServiceImpl implements TicketService {
         // 4. RECORD PURCHASE TRANSACTION : Enregistrer dans l'historique des transactions
         transactionHistoryService.recordPurchase(user, saved, TicketPricing.total(countA, countB));
 
-
         // 5. Retourner les tickets achetés en DTO
         return saved.stream()
                 .map(ticketMapper::toDto)
@@ -119,7 +118,7 @@ public class TicketServiceImpl implements TicketService {
                 .build();
     }
 
-    /// ******** debitAccount service *********
+    /// ******** debitAccount service *******************************************
     @Transactional
     @Override
     public void debitAccount(DebitAccountRequestDTO debitAccountRequestDTO) {
@@ -209,7 +208,6 @@ public class TicketServiceImpl implements TicketService {
         }
     }
 
-    // ── validateTickets —─────────
     private void validateTickets(List<Ticket> tickets, int expectedCount, User student) {
         // Check if all tickets were found
         if (tickets.size() != expectedCount) {
@@ -484,7 +482,7 @@ public class TicketServiceImpl implements TicketService {
 
         return history;
     }
-    /// ******** End transfert service *********
+    /// ******** End transfert service ********************
 
     /// ********* cancelTransferTickets service ***********
     @Transactional
